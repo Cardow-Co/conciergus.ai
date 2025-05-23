@@ -1,15 +1,5 @@
 import { createContext } from 'react';
-
-// TODO: Import ProactiveRule from './useProactiveEngagement'
-// Placeholder until the ProactiveRule type is implemented
-interface ProactiveRule {
-  id: string;
-  triggerType: string;
-  conditions: Record<string, unknown>;
-  action: Record<string, unknown>;
-  cooldown?: number;
-  enabled?: boolean;
-}
+import { ProactiveRule } from './useProactiveEngagement';
 
 /**
  * Configuration options for the Conciergus assistant
