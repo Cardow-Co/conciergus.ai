@@ -289,8 +289,8 @@
           "title": "Develop ConciergusMessageItem Component Structure",
           "description": "Set up the base React component with TypeScript, defining the ConciergusMessageItemProps interface and ensuring proper prop typing.",
           "dependencies": [],
-          "details": "Create the component file, define the props interface as specified, and ensure the component accepts all required props including message, className, avatarComponent, isLastMessage, onAudioPlay, onAudioPause, and any additional props.",
-          "status": "pending",
+          "details": "Create the component file, define the props interface as specified, and ensure the component accepts all required props including message, className, avatarComponent, isLastMessage, onAudioPlay, onAudioPause, and any additional props.\n<info added on 2025-05-23T23:16:18.423Z>\nCreate a new file at `src/components/ConciergusMessageItem.tsx`. Import React and the necessary types from `@ai-sdk/react`. Define the `ConciergusMessageItemProps` interface with the following properties:\n- `message: Message` - chat message object\n- `className?: string` - optional CSS class\n- `avatarComponent?: ReactNode` - optional avatar element\n- `isLastMessage?: boolean` - flag for styling last message\n- `onAudioPlay?: () => void` - callback for audio start\n- `onAudioPause?: () => void` - callback for audio pause\n- `[key: string]: any` - allow other props\n\nImplement a functional component that accepts these props and renders a basic message display. The component should destructure all props and use rest parameters to allow additional props to be passed through. For initial implementation, render the message content in a div with the provided className and any other props.\n\nVerify the component compiles correctly with TypeScript and accepts all required props. Optionally, create a basic test to ensure the component renders with a dummy Message object.\n</info added on 2025-05-23T23:16:18.423Z>",
+          "status": "done",
           "testStrategy": "Verify the component renders without errors and accepts all props as defined in the interface."
         },
         {
@@ -301,7 +301,7 @@
             1
           ],
           "details": "Install and configure react-markdown, remark-gfm, and rehype-sanitize. Ensure that Markdown is rendered correctly and securely, preventing XSS vulnerabilities.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Test rendering of various Markdown inputs, including edge cases and potentially unsafe content, to confirm correct and safe output."
         },
         {
@@ -312,7 +312,7 @@
             2
           ],
           "details": "Detect and render any rich UI elements specified in the message object. Integrate audio playback controls for TTS messages, wiring up onAudioPlay and onAudioPause callbacks.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Test with messages containing UI/tool_calls and TTS audio to ensure correct rendering and playback functionality."
         },
         {
@@ -323,7 +323,7 @@
             3
           ],
           "details": "Implement CSS or styling logic to visually distinguish user and assistant messages. Add a timestamp display, formatted appropriately, for each message.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Check that messages are styled correctly for each role and that timestamps are visible and formatted as expected."
         },
         {
@@ -334,7 +334,7 @@
             4
           ],
           "details": "Detect missing or invalid message fields and render fallback UI or error messages as needed, ensuring the component does not crash.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Test with various malformed message objects to confirm that errors are handled gracefully and informative feedback is provided."
         }
       ]

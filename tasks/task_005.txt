@@ -29,31 +29,45 @@ interface ConciergusMessageItemProps {
 Test rendering of various message types (text, Markdown, code blocks). Verify sanitization of HTML in messages. Test audio playback UI with mock audio data. Verify custom avatar components render correctly. Test error handling with malformed messages.
 
 # Subtasks:
-## 1. Develop ConciergusMessageItem Component Structure [pending]
+## 1. Develop ConciergusMessageItem Component Structure [done]
 ### Dependencies: None
 ### Description: Set up the base React component with TypeScript, defining the ConciergusMessageItemProps interface and ensuring proper prop typing.
 ### Details:
 Create the component file, define the props interface as specified, and ensure the component accepts all required props including message, className, avatarComponent, isLastMessage, onAudioPlay, onAudioPause, and any additional props.
+<info added on 2025-05-23T23:16:18.423Z>
+Create a new file at `src/components/ConciergusMessageItem.tsx`. Import React and the necessary types from `@ai-sdk/react`. Define the `ConciergusMessageItemProps` interface with the following properties:
+- `message: Message` - chat message object
+- `className?: string` - optional CSS class
+- `avatarComponent?: ReactNode` - optional avatar element
+- `isLastMessage?: boolean` - flag for styling last message
+- `onAudioPlay?: () => void` - callback for audio start
+- `onAudioPause?: () => void` - callback for audio pause
+- `[key: string]: any` - allow other props
 
-## 2. Implement Markdown Rendering with Security [pending]
+Implement a functional component that accepts these props and renders a basic message display. The component should destructure all props and use rest parameters to allow additional props to be passed through. For initial implementation, render the message content in a div with the provided className and any other props.
+
+Verify the component compiles correctly with TypeScript and accepts all required props. Optionally, create a basic test to ensure the component renders with a dummy Message object.
+</info added on 2025-05-23T23:16:18.423Z>
+
+## 2. Implement Markdown Rendering with Security [done]
 ### Dependencies: 5.1
 ### Description: Integrate react-markdown with remark-gfm and rehype-sanitize to render message content safely with Markdown support.
 ### Details:
 Install and configure react-markdown, remark-gfm, and rehype-sanitize. Ensure that Markdown is rendered correctly and securely, preventing XSS vulnerabilities.
 
-## 3. Add Rich UI and Audio Playback Support [pending]
+## 3. Add Rich UI and Audio Playback Support [done]
 ### Dependencies: 5.2
 ### Description: Render additional UI elements from message.ui or message.tool_calls and implement audio playback UI for TTS messages.
 ### Details:
 Detect and render any rich UI elements specified in the message object. Integrate audio playback controls for TTS messages, wiring up onAudioPlay and onAudioPause callbacks.
 
-## 4. Style Messages and Add Timestamps [pending]
+## 4. Style Messages and Add Timestamps [done]
 ### Dependencies: 5.3
 ### Description: Apply conditional styling based on message role (user/assistant) and display message timestamps.
 ### Details:
 Implement CSS or styling logic to visually distinguish user and assistant messages. Add a timestamp display, formatted appropriately, for each message.
 
-## 5. Implement Error Handling for Malformed Messages [pending]
+## 5. Implement Error Handling for Malformed Messages [done]
 ### Dependencies: 5.4
 ### Description: Add robust error handling to gracefully manage and display issues with malformed or incomplete message data.
 ### Details:
