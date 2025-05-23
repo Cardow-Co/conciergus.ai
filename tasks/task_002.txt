@@ -31,6 +31,32 @@ Write unit tests to verify that the context correctly provides configuration val
 ### Description: Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.
 ### Details:
 Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.
+<info added on 2025-05-23T14:45:14.382Z>
+# Define ConciergusConfig TypeScript Interface
+
+## Implementation Plan:
+1. Create `src/context/ConciergusContext.tsx` or `src/context/ConciergusProvider.tsx` folder structure.
+2. Define `export interface ConciergusConfig { ... }` including configuration options:
+   - `apiUrl?: string` - Base URL for API requests
+   - `enableDebug?: boolean` - Toggle debug mode for verbose logging
+   - `theme?: 'light' | 'dark'` - UI theme preference
+   - `initialPrompt?: string` - Default prompt to start conversations
+   - `defaultTTSVoice?: string` - Default voice for text-to-speech
+   - `isTTSEnabledByDefault?: boolean` - Whether TTS is enabled by default
+   - `ttsApiEndpoint?: string` - Endpoint for text-to-speech API
+   - `proactiveRules?: ProactiveRule[]` - Rules for proactive suggestions
+   - Additional placeholder for future options
+
+3. Add JSDoc/TSDoc comments for each property to provide clear documentation.
+4. Export the `ConciergusConfig` interface from the module.
+5. Update `README.md` stub to reference configuration options.
+
+## Dependencies: 
+None
+
+## Test Strategy:
+- Verify that IDE and `tsc` recognize the interface in import contexts.
+</info added on 2025-05-23T14:45:14.382Z>
 
 ## 2. Create Conciergus React Context [pending]
 ### Dependencies: 2.1

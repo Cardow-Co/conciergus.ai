@@ -8,15 +8,15 @@
       "testStrategy": "Verify that the build process works correctly by running `pnpm build` and checking that both ESM and CommonJS builds are generated. Ensure all dependencies are correctly specified and the package can be imported in a test React application.",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "subtasks": [
         {
           "id": 1,
           "title": "Initialize Project Structure",
           "description": "Set up the basic project structure with pnpm, TypeScript configuration, and essential files.",
           "dependencies": [],
-          "details": "Run `pnpm init` to create package.json, configure TypeScript with strict mode in tsconfig.json, create src directory structure, set up .gitignore for node_modules and build directories, and initialize Git repository.",
-          "status": "pending",
+          "details": "Run `pnpm init` to create package.json, configure TypeScript with strict mode in tsconfig.json, create src directory structure, set up .gitignore for node_modules and build directories, and initialize Git repository.\n<info added on 2025-05-23T14:08:05.484Z>\n# Project Setup Implementation Plan\n\n## Initial Setup\n- Run `pnpm init -y` to generate package.json\n- Update package.json with:\n  - name: \"@conciergus/ai\"\n  - version: \"0.1.0\"\n  - main: \"dist/index.cjs.js\"\n  - module: \"dist/index.esm.js\"\n  - types: \"dist/index.d.ts\"\n  - scripts for clean, build, and prepare commands\n\n## TypeScript Configuration\n- Create tsconfig.json with:\n  - ES2020 target\n  - ESNext module\n  - Strict mode enabled\n  - Declaration files generation\n  - Other recommended settings (esModuleInterop, skipLibCheck, etc.)\n\n## Directory Structure\n- Create `src/` folder\n- Add minimal `src/index.ts` as entry point\n\n## Version Control Setup\n- Update .gitignore to exclude:\n  - /node_modules\n  - /dist\n  - .DS_Store\n\n## Documentation\n- Create README.md with installation and build instructions\n\n## Required Dependencies\n- Install development dependencies:\n  ```bash\n  pnpm init -y\n  pnpm add -D typescript @types/node\n  ```\n</info added on 2025-05-23T14:08:05.484Z>",
+          "status": "done",
           "testStrategy": "Verify package.json contains correct metadata and TypeScript configuration has strict mode enabled."
         },
         {
@@ -26,8 +26,8 @@
           "dependencies": [
             1
           ],
-          "details": "Install Rollup and plugins: `@rollup/plugin-typescript`, `@rollup/plugin-commonjs`, `@rollup/plugin-node-resolve`, `rollup-plugin-peer-deps-external`, `rollup-plugin-dts`, and `@rollup/plugin-terser`. Create rollup.config.js with configurations for both ESM and CJS outputs with tree-shaking support.",
-          "status": "pending",
+          "details": "Install Rollup and plugins: `@rollup/plugin-typescript`, `@rollup/plugin-commonjs`, `@rollup/plugin-node-resolve`, `rollup-plugin-peer-deps-external`, `rollup-plugin-dts`, and `@rollup/plugin-terser`. Create rollup.config.js with configurations for both ESM and CJS outputs with tree-shaking support.\n<info added on 2025-05-23T14:19:49.247Z>\n## Implementation Plan\n\n1. Install Rollup and required plugins as development dependencies:\n   ```bash\n   pnpm add -D rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs @rollup/plugin-typescript rollup-plugin-terser\n   ```\n\n2. Create `rollup.config.js` in the project root with the following configuration:\n   - Input: `src/index.ts`\n   - Outputs:\n     - CommonJS: `package.json` → `main` field, format `cjs`, with sourcemap\n     - ESM: `package.json` → `module` field, format `esm`, with sourcemap\n   - Plugins:\n     - `@rollup/plugin-node-resolve`\n     - `@rollup/plugin-commonjs`\n     - `@rollup/plugin-typescript` (using existing `tsconfig.json`)\n     - `rollup-plugin-terser` for minification\n   - External dependencies: use `peerDependencies` from `package.json`\n\n3. Verify the build by running `pnpm run build` and ensuring that `dist/index.cjs.js`, `dist/index.esm.js`, and type declarations in `dist/index.d.ts` are generated correctly.\n</info added on 2025-05-23T14:19:49.247Z>",
+          "status": "done",
           "testStrategy": "Run a test build to ensure both ESM and CJS outputs are generated correctly with proper TypeScript declarations."
         },
         {
@@ -37,8 +37,8 @@
           "dependencies": [
             1
           ],
-          "details": "Add peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`. Install direct dependencies: `@ai-sdk/react`, `ai`, Radix UI primitives, `react-textarea-autosize`, `@babel/runtime`, markdown stack, and virtualization libraries. Configure package.json with proper peerDependencies section.",
-          "status": "pending",
+          "details": "Add peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`. Install direct dependencies: `@ai-sdk/react`, `ai`, Radix UI primitives, `react-textarea-autosize`, `@babel/runtime`, markdown stack, and virtualization libraries. Configure package.json with proper peerDependencies section.\n<info added on 2025-05-23T14:23:24.880Z>\n1. Update `package.json` to add **peerDependencies** for React and ReactDOM:\n   ```json\n   \"peerDependencies\": {\n     \"react\": \"^18.0.0\",\n     \"react-dom\": \"^18.0.0\"\n   }\n   ```\n\n2. Add **dependencies** required at runtime for core functionality:\n   ```json\n   \"dependencies\": {\n     \"@vercel/ai\": \"^0.3.0\",\n     \"@radix-ui/react-dialog\": \"^1.0.0\",\n     \"react-markdown\": \"^8.0.0\",\n     \"remark-gfm\": \"^3.0.1\",\n     \"rehype-sanitize\": \"^5.0.1\",\n     \"react-textarea-autosize\": \"^8.0.0\"\n   }\n   ```\n\n3. Keep **devDependencies** as-is for tooling.\n\n4. After updating, run:\n   ```bash\n   pnpm install\n   ```\n   to ensure these dependencies are reflected in `pnpm-lock.yaml` and available for development.\n</info added on 2025-05-23T14:23:24.880Z>",
+          "status": "done",
           "testStrategy": "Verify all dependencies are correctly specified in package.json with appropriate version constraints."
         },
         {
@@ -49,8 +49,8 @@
             2,
             3
           ],
-          "details": "Configure package.json with `main` (CJS), `module` (ESM), and `types` fields. Set up `exports` field with conditional exports for different module systems. Add `files` array to specify which files should be published to npm. Configure TypeScript to generate declaration files.",
-          "status": "pending",
+          "details": "Configure package.json with `main` (CJS), `module` (ESM), and `types` fields. Set up `exports` field with conditional exports for different module systems. Add `files` array to specify which files should be published to npm. Configure TypeScript to generate declaration files.\n<info added on 2025-05-23T14:29:10.646Z>\n# Implementation Plan\n\n1. Modify `package.json`:\n   - Add a top-level `files` array to include only the `dist` directory.\n   - Add an `exports` field to define conditional exports:\n     ```json\n     \"exports\": {\n       \".\": {\n         \"import\": \"./dist/index.esm.js\",\n         \"require\": \"./dist/index.cjs.js\",\n         \"types\": \"./dist/index.d.ts\"\n       }\n     }\n     ```\n2. Ensure existing `main`, `module`, and `types` fields align with the exports.\n3. Save and run `pnpm pack --dry-run` to validate the published package contents.\n4. Test by importing the package in both CJS (`require('@conciergus/ai')`) and ESM (`import @conciergus/ai`) environments.\n</info added on 2025-05-23T14:29:10.646Z>",
+          "status": "done",
           "testStrategy": "Test importing the package in both ESM and CJS environments to ensure proper resolution."
         },
         {
@@ -61,8 +61,8 @@
             1,
             4
           ],
-          "details": "Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Create GitHub Actions workflow for CI/CD that runs tests, builds the package, and publishes to npm on release. Add npm scripts for linting, testing, building, and publishing.",
-          "status": "pending",
+          "details": "Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Create GitHub Actions workflow for CI/CD that runs tests, builds the package, and publishes to npm on release. Add npm scripts for linting, testing, building, and publishing.\n<info added on 2025-05-23T14:31:29.429Z>\n# Implementation Plan\n\n## 1. Install and configure ESLint, Prettier, Husky, and lint-staged\n- Add devDependencies: \n  ```\n  eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-import eslint-config-prettier eslint-plugin-prettier prettier husky lint-staged\n  ```\n\n## 2. Create configuration files\n- `.eslintrc.cjs` with TypeScript and React rules, extending Prettier\n- `.eslintignore` to exclude `node_modules` and `dist`\n- `.prettierrc` with formatting rules\n- `.prettierignore` to exclude `node_modules` and `dist`\n\n## 3. Update `package.json`\n- Add scripts:\n  ```json\n  \"lint\": \"eslint .\",\n  \"lint:fix\": \"eslint . --fix\",\n  \"format\": \"prettier --check .\",\n  \"format:fix\": \"prettier --write .\"\n  ```\n- Add `lint-staged` configuration for staged files\n\n## 4. Set up Git hooks\n- Run `npx husky install`\n- Add pre-commit hook: `npx husky add .husky/pre-commit \"pnpm lint:fix && pnpm format:fix\"`\n\n## 5. Add CI workflow\n- Create `.github/workflows/ci.yml` that runs on `push` and `pull_request`\n- Configure workflow to install dependencies, build, lint, and format check\n\n## Test Strategy\n- Run `pnpm run lint`, `pnpm run format`, and a dry-run commit to confirm hooks\n- Open a pull request to trigger CI and ensure all steps pass\n</info added on 2025-05-23T14:31:29.429Z>",
+          "status": "done",
           "testStrategy": "Run linting and formatting checks to ensure code quality standards are enforced. Test the CI workflow with a pull request."
         }
       ]
@@ -84,7 +84,7 @@
           "title": "Define ConciergusConfig TypeScript Interface",
           "description": "Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.",
           "dependencies": [],
-          "details": "Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.",
+          "details": "Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.\n<info added on 2025-05-23T14:45:14.382Z>\n# Define ConciergusConfig TypeScript Interface\n\n## Implementation Plan:\n1. Create `src/context/ConciergusContext.tsx` or `src/context/ConciergusProvider.tsx` folder structure.\n2. Define `export interface ConciergusConfig { ... }` including configuration options:\n   - `apiUrl?: string` - Base URL for API requests\n   - `enableDebug?: boolean` - Toggle debug mode for verbose logging\n   - `theme?: 'light' | 'dark'` - UI theme preference\n   - `initialPrompt?: string` - Default prompt to start conversations\n   - `defaultTTSVoice?: string` - Default voice for text-to-speech\n   - `isTTSEnabledByDefault?: boolean` - Whether TTS is enabled by default\n   - `ttsApiEndpoint?: string` - Endpoint for text-to-speech API\n   - `proactiveRules?: ProactiveRule[]` - Rules for proactive suggestions\n   - Additional placeholder for future options\n\n3. Add JSDoc/TSDoc comments for each property to provide clear documentation.\n4. Export the `ConciergusConfig` interface from the module.\n5. Update `README.md` stub to reference configuration options.\n\n## Dependencies: \nNone\n\n## Test Strategy:\n- Verify that IDE and `tsc` recognize the interface in import contexts.\n</info added on 2025-05-23T14:45:14.382Z>",
           "status": "pending",
           "testStrategy": "Verify that the interface enforces correct typing and all properties are optional as specified."
         },

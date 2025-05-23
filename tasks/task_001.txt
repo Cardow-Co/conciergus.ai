@@ -1,6 +1,6 @@
 # Task ID: 1
 # Title: Project Setup and Core Dependencies
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Initialize the project repository with proper configuration for React library development using TypeScript, pnpm, and Rollup. Set up peer dependencies, direct dependencies, and dev tooling.
@@ -24,33 +24,181 @@
 Verify that the build process works correctly by running `pnpm build` and checking that both ESM and CommonJS builds are generated. Ensure all dependencies are correctly specified and the package can be imported in a test React application.
 
 # Subtasks:
-## 1. Initialize Project Structure [pending]
+## 1. Initialize Project Structure [done]
 ### Dependencies: None
 ### Description: Set up the basic project structure with pnpm, TypeScript configuration, and essential files.
 ### Details:
 Run `pnpm init` to create package.json, configure TypeScript with strict mode in tsconfig.json, create src directory structure, set up .gitignore for node_modules and build directories, and initialize Git repository.
+<info added on 2025-05-23T14:08:05.484Z>
+# Project Setup Implementation Plan
 
-## 2. Configure Rollup Bundling [pending]
+## Initial Setup
+- Run `pnpm init -y` to generate package.json
+- Update package.json with:
+  - name: "@conciergus/ai"
+  - version: "0.1.0"
+  - main: "dist/index.cjs.js"
+  - module: "dist/index.esm.js"
+  - types: "dist/index.d.ts"
+  - scripts for clean, build, and prepare commands
+
+## TypeScript Configuration
+- Create tsconfig.json with:
+  - ES2020 target
+  - ESNext module
+  - Strict mode enabled
+  - Declaration files generation
+  - Other recommended settings (esModuleInterop, skipLibCheck, etc.)
+
+## Directory Structure
+- Create `src/` folder
+- Add minimal `src/index.ts` as entry point
+
+## Version Control Setup
+- Update .gitignore to exclude:
+  - /node_modules
+  - /dist
+  - .DS_Store
+
+## Documentation
+- Create README.md with installation and build instructions
+
+## Required Dependencies
+- Install development dependencies:
+  ```bash
+  pnpm init -y
+  pnpm add -D typescript @types/node
+  ```
+</info added on 2025-05-23T14:08:05.484Z>
+
+## 2. Configure Rollup Bundling [done]
 ### Dependencies: 1.1
 ### Description: Set up Rollup configuration for bundling the library with support for ESM and CommonJS formats.
 ### Details:
 Install Rollup and plugins: `@rollup/plugin-typescript`, `@rollup/plugin-commonjs`, `@rollup/plugin-node-resolve`, `rollup-plugin-peer-deps-external`, `rollup-plugin-dts`, and `@rollup/plugin-terser`. Create rollup.config.js with configurations for both ESM and CJS outputs with tree-shaking support.
+<info added on 2025-05-23T14:19:49.247Z>
+## Implementation Plan
 
-## 3. Set Up Dependencies Management [pending]
+1. Install Rollup and required plugins as development dependencies:
+   ```bash
+   pnpm add -D rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs @rollup/plugin-typescript rollup-plugin-terser
+   ```
+
+2. Create `rollup.config.js` in the project root with the following configuration:
+   - Input: `src/index.ts`
+   - Outputs:
+     - CommonJS: `package.json` → `main` field, format `cjs`, with sourcemap
+     - ESM: `package.json` → `module` field, format `esm`, with sourcemap
+   - Plugins:
+     - `@rollup/plugin-node-resolve`
+     - `@rollup/plugin-commonjs`
+     - `@rollup/plugin-typescript` (using existing `tsconfig.json`)
+     - `rollup-plugin-terser` for minification
+   - External dependencies: use `peerDependencies` from `package.json`
+
+3. Verify the build by running `pnpm run build` and ensuring that `dist/index.cjs.js`, `dist/index.esm.js`, and type declarations in `dist/index.d.ts` are generated correctly.
+</info added on 2025-05-23T14:19:49.247Z>
+
+## 3. Set Up Dependencies Management [done]
 ### Dependencies: 1.1
 ### Description: Configure peer dependencies, direct dependencies, and development dependencies.
 ### Details:
 Add peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`. Install direct dependencies: `@ai-sdk/react`, `ai`, Radix UI primitives, `react-textarea-autosize`, `@babel/runtime`, markdown stack, and virtualization libraries. Configure package.json with proper peerDependencies section.
+<info added on 2025-05-23T14:23:24.880Z>
+1. Update `package.json` to add **peerDependencies** for React and ReactDOM:
+   ```json
+   "peerDependencies": {
+     "react": "^18.0.0",
+     "react-dom": "^18.0.0"
+   }
+   ```
 
-## 4. Configure Package Entry Points and Exports [pending]
+2. Add **dependencies** required at runtime for core functionality:
+   ```json
+   "dependencies": {
+     "@vercel/ai": "^0.3.0",
+     "@radix-ui/react-dialog": "^1.0.0",
+     "react-markdown": "^8.0.0",
+     "remark-gfm": "^3.0.1",
+     "rehype-sanitize": "^5.0.1",
+     "react-textarea-autosize": "^8.0.0"
+   }
+   ```
+
+3. Keep **devDependencies** as-is for tooling.
+
+4. After updating, run:
+   ```bash
+   pnpm install
+   ```
+   to ensure these dependencies are reflected in `pnpm-lock.yaml` and available for development.
+</info added on 2025-05-23T14:23:24.880Z>
+
+## 4. Configure Package Entry Points and Exports [done]
 ### Dependencies: 1.2, 1.3
 ### Description: Set up package.json with proper entry points, exports configuration, and TypeScript declarations.
 ### Details:
 Configure package.json with `main` (CJS), `module` (ESM), and `types` fields. Set up `exports` field with conditional exports for different module systems. Add `files` array to specify which files should be published to npm. Configure TypeScript to generate declaration files.
+<info added on 2025-05-23T14:29:10.646Z>
+# Implementation Plan
 
-## 5. Set Up Development Tooling and CI/CD [pending]
+1. Modify `package.json`:
+   - Add a top-level `files` array to include only the `dist` directory.
+   - Add an `exports` field to define conditional exports:
+     ```json
+     "exports": {
+       ".": {
+         "import": "./dist/index.esm.js",
+         "require": "./dist/index.cjs.js",
+         "types": "./dist/index.d.ts"
+       }
+     }
+     ```
+2. Ensure existing `main`, `module`, and `types` fields align with the exports.
+3. Save and run `pnpm pack --dry-run` to validate the published package contents.
+4. Test by importing the package in both CJS (`require('@conciergus/ai')`) and ESM (`import @conciergus/ai`) environments.
+</info added on 2025-05-23T14:29:10.646Z>
+
+## 5. Set Up Development Tooling and CI/CD [done]
 ### Dependencies: 1.1, 1.4
 ### Description: Configure ESLint, Prettier, and CI/CD pipeline for testing and publishing.
 ### Details:
 Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Create GitHub Actions workflow for CI/CD that runs tests, builds the package, and publishes to npm on release. Add npm scripts for linting, testing, building, and publishing.
+<info added on 2025-05-23T14:31:29.429Z>
+# Implementation Plan
+
+## 1. Install and configure ESLint, Prettier, Husky, and lint-staged
+- Add devDependencies: 
+  ```
+  eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-import eslint-config-prettier eslint-plugin-prettier prettier husky lint-staged
+  ```
+
+## 2. Create configuration files
+- `.eslintrc.cjs` with TypeScript and React rules, extending Prettier
+- `.eslintignore` to exclude `node_modules` and `dist`
+- `.prettierrc` with formatting rules
+- `.prettierignore` to exclude `node_modules` and `dist`
+
+## 3. Update `package.json`
+- Add scripts:
+  ```json
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix",
+  "format": "prettier --check .",
+  "format:fix": "prettier --write ."
+  ```
+- Add `lint-staged` configuration for staged files
+
+## 4. Set up Git hooks
+- Run `npx husky install`
+- Add pre-commit hook: `npx husky add .husky/pre-commit "pnpm lint:fix && pnpm format:fix"`
+
+## 5. Add CI workflow
+- Create `.github/workflows/ci.yml` that runs on `push` and `pull_request`
+- Configure workflow to install dependencies, build, lint, and format check
+
+## Test Strategy
+- Run `pnpm run lint`, `pnpm run format`, and a dry-run commit to confirm hooks
+- Open a pull request to trigger CI and ensure all steps pass
+</info added on 2025-05-23T14:31:29.429Z>
 
