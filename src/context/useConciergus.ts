@@ -11,4 +11,4 @@ export function useConciergus(): ConciergusConfig {
     throw new Error('useConciergus must be used within a ConciergusProvider');
   }
   return context;
-} 
+}

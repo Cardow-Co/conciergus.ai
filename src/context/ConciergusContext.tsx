@@ -2,7 +2,14 @@ import { createContext } from 'react';
 
 // TODO: Import ProactiveRule from './useProactiveEngagement'
 // Placeholder until the ProactiveRule type is implemented
-type ProactiveRule = any;
+interface ProactiveRule {
+  id: string;
+  triggerType: string;
+  conditions: Record<string, unknown>;
+  action: Record<string, unknown>;
+  cooldown?: number;
+  enabled?: boolean;
+}
 
 /**
  * Configuration options for the Conciergus assistant
@@ -44,4 +51,4 @@ export interface ConciergusConfig {
  */
 export const ConciergusContext = createContext<ConciergusConfig | null>(null);
 
-ConciergusContext.displayName = 'ConciergusContext'; 
+ConciergusContext.displayName = 'ConciergusContext';

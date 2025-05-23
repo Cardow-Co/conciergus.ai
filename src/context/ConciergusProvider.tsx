@@ -32,7 +32,7 @@ export const ConciergusProvider = ({
     enableDebug,
   };
 
-  if (enableDebug) {
+  if (config.enableDebug) {
     console.debug('[ConciergusProvider] Configuration:', config);
   }
 
@@ -43,4 +43,4 @@ export const ConciergusProvider = ({
   );
 };
 
-ConciergusProvider.displayName = 'ConciergusProvider'; 
+ConciergusProvider.displayName = 'ConciergusProvider';
