@@ -1,0 +1,161 @@
+{
+    "mcpServers": {
+      "task-master-ai": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "--package=task-master-ai",
+          "task-master-ai"
+        ],
+        "env": {
+          "ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY_HERE",
+          "PERPLEXITY_API_KEY": "PERPLEXITY_API_KEY_HERE",
+          "OPENAI_API_KEY": "OPENAI_API_KEY_HERE",
+          "GOOGLE_API_KEY": "GOOGLE_API_KEY_HERE",
+          "XAI_API_KEY": "XAI_API_KEY_HERE",
+          "OPENROUTER_API_KEY": "OPENROUTER_API_KEY_HERE",
+          "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
+          "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
+          "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
+        }
+      },
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp"]
+      },
+      "eslint-mcp": {
+        "command": "npx",
+        "args": ["@eslint/mcp@latest"],
+        "env": {}
+      },
+      "TypeScript Core": {
+        "url": "https://gitmcp.io/microsoft/TypeScript"
+      },
+      "React Core": {
+        "url": "https://gitmcp.io/facebook/react"
+      },
+      "Node.js": {
+        "url": "https://gitmcp.io/nodejs/node"
+      },
+      "Vercel AI SDK (Main Repo - Core & UI)": {
+        "url": "https://gitmcp.io/vercel/ai"
+      },
+      "Radix UI Primitives": {
+        "url": "https://gitmcp.io/radix-ui/primitives"
+      },
+      "pnpm": {
+        "url": "https://gitmcp.io/pnpm/pnpm"
+      },
+      "Rollup": {
+        "url": "https://gitmcp.io/rollup/rollup"
+      },
+      "Rollup Plugins": {
+        "url": "https://gitmcp.io/rollup/plugins"
+      },
+      "Babel": {
+        "url": "https://gitmcp.io/babel/babel"
+      },
+      "ESLint": {
+        "url": "https://gitmcp.io/eslint/eslint"
+      },
+      "TypeScript ESLint": {
+        "url": "https://gitmcp.io/typescript-eslint/typescript-eslint"
+      },
+      "Prettier": {
+        "url": "https://gitmcp.io/prettier/prettier"
+      },
+      "Jest": {
+        "url": "https://gitmcp.io/jestjs/jest"
+      },
+      "React Testing Library": {
+        "url": "https://gitmcp.io/testing-library/react-testing-library"
+      },
+      "Husky": {
+        "url": "https://gitmcp.io/typicode/husky"
+      },
+      "lint-staged": {
+        "url": "https://gitmcp.io/lint-staged/lint-staged"
+      },
+      "React Markdown": {
+        "url": "https://gitmcp.io/remarkjs/react-markdown"
+      },
+      "Remark GFM (GitHub Flavored Markdown)": {
+        "url": "https://gitmcp.io/remarkjs/remark-gfm"
+      },
+      "Rehype Sanitize (for Markdown Security)": {
+        "url": "https://gitmcp.io/rehypejs/rehype-sanitize"
+      },
+      "React Textarea Autosize": {
+        "url": "https://gitmcp.io/andreypopp/react-textarea-autosize"
+      },
+      "React Window": {
+        "url": "https://gitmcp.io/bvaughn/react-window"
+      },
+      "React Virtualized AutoSizer": {
+        "url": "https://gitmcp.io/bvaughn/react-virtualized-auto-sizer"
+      },
+      "Storybook": {
+        "url": "https://gitmcp.io/storybookjs/storybook"
+      },
+      "Docusaurus": {
+        "url": "https://gitmcp.io/facebook/docusaurus"
+      },
+      "Nextra": {
+        "url": "https://gitmcp.io/shuding/nextra"
+      },
+      "TypeDoc": {
+        "url": "https://gitmcp.io/TypeStrong/typedoc"
+      },
+      "TypeDoc Plugin Markdown": {
+        "url": "https://gitmcp.io/tgreyuk/typedoc-plugin-markdown"
+      },
+      "Standard Version": {
+        "url": "https://gitmcp.io/conventional-changelog/standard-version"
+      },
+      "Changesets": {
+        "url": "https://gitmcp.io/changesets/changesets"
+      },
+      "Next.js": {
+        "url": "https://gitmcp.io/vercel/next.js"
+      },
+      "Supabase (Platform Monorepo)": {
+        "url": "https://gitmcp.io/supabase/supabase"
+      },
+      "Supabase JS Client": {
+        "url": "https://gitmcp.io/supabase/supabase-js"
+      },
+      "WorkOS Node SDK": {
+        "url": "https://gitmcp.io/workos/workos-node"
+      },
+      "Clerk JS SDK": {
+        "url": "https://gitmcp.io/clerk/javascript"
+      },
+      "UploadThing": {
+        "url": "https://gitmcp.io/pingdotgg/uploadthing"
+      },
+      "Stripe Node SDK": {
+        "url": "https://gitmcp.io/stripe/stripe-node"
+      },
+      "pgvector (Postgres Extension)": {
+        "url": "https://gitmcp.io/pgvector/pgvector"
+      },
+      "ChromaDB": {
+        "url": "https://gitmcp.io/chroma-core/chroma"
+      },
+      "OpenAI Node SDK": {
+        "url": "https://gitmcp.io/openai/openai-node"
+      },
+      "Google AI JS SDK (Gemini)": {
+        "url": "https://gitmcp.io/google/generative-ai-js"
+      },
+      "Anthropic TypeScript SDK": {
+        "url": "https://gitmcp.io/anthropics/anthropic-sdk-typescript"
+      },
+      "Cal.com": {
+        "url": "https://gitmcp.io/calcom/cal.com"
+      },
+      "Exa (Metaphor) API Client (Example for Web Search Tool)": {
+        "url": "null"
+      }
+    }
+  }
