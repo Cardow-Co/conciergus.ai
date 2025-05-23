@@ -1,7 +1,7 @@
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('@rollup/plugin-typescript');
-const { terser } = require('rollup-plugin-terser');
+const terser = require('@rollup/plugin-terser');
 const pkg = require('./package.json');
 
 module.exports = [
