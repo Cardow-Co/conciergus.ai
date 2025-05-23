@@ -77,15 +77,15 @@
       "dependencies": [
         1
       ],
-      "status": "pending",
+      "status": "done",
       "subtasks": [
         {
           "id": 1,
           "title": "Define ConciergusConfig TypeScript Interface",
           "description": "Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.",
           "dependencies": [],
-          "details": "Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.\n<info added on 2025-05-23T14:45:14.382Z>\n# Define ConciergusConfig TypeScript Interface\n\n## Implementation Plan:\n1. Create `src/context/ConciergusContext.tsx` or `src/context/ConciergusProvider.tsx` folder structure.\n2. Define `export interface ConciergusConfig { ... }` including configuration options:\n   - `apiUrl?: string` - Base URL for API requests\n   - `enableDebug?: boolean` - Toggle debug mode for verbose logging\n   - `theme?: 'light' | 'dark'` - UI theme preference\n   - `initialPrompt?: string` - Default prompt to start conversations\n   - `defaultTTSVoice?: string` - Default voice for text-to-speech\n   - `isTTSEnabledByDefault?: boolean` - Whether TTS is enabled by default\n   - `ttsApiEndpoint?: string` - Endpoint for text-to-speech API\n   - `proactiveRules?: ProactiveRule[]` - Rules for proactive suggestions\n   - Additional placeholder for future options\n\n3. Add JSDoc/TSDoc comments for each property to provide clear documentation.\n4. Export the `ConciergusConfig` interface from the module.\n5. Update `README.md` stub to reference configuration options.\n\n## Dependencies: \nNone\n\n## Test Strategy:\n- Verify that IDE and `tsc` recognize the interface in import contexts.\n</info added on 2025-05-23T14:45:14.382Z>",
-          "status": "pending",
+          "details": "Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.\n<info added on 2025-05-23T14:45:14.382Z>\n# Define ConciergusConfig TypeScript Interface\n\n## Implementation Plan:\n1. Create `src/context/ConciergusContext.tsx` or `src/context/ConciergusProvider.tsx` folder structure.\n2. Define `export interface ConciergusConfig { ... }` including configuration options:\n   - `apiUrl?: string` - Base URL for API requests\n   - `enableDebug?: boolean` - Toggle debug mode for verbose logging\n   - `theme?: 'light' | 'dark'` - UI theme preference\n   - `initialPrompt?: string` - Default prompt to start conversations\n   - `defaultTTSVoice?: string` - Default voice for text-to-speech\n   - `isTTSEnabledByDefault?: boolean` - Whether TTS is enabled by default\n   - `ttsApiEndpoint?: string` - Endpoint for text-to-speech API\n   - `proactiveRules?: ProactiveRule[]` - Rules for proactive suggestions\n   - Additional placeholder for future options\n\n3. Add JSDoc/TSDoc comments for each property to provide clear documentation.\n4. Export the `ConciergusConfig` interface from the module.\n5. Update `README.md` stub to reference configuration options.\n\n## Dependencies: \nNone\n\n## Test Strategy:\n- Verify that IDE and `tsc` recognize the interface in import contexts.\n</info added on 2025-05-23T14:45:14.382Z>\n<info added on 2025-05-23T15:01:29.231Z>\nI've created the `ConciergusConfig` interface in a new file at `src/context/ConciergusContext.tsx`. The interface includes all the specified properties with TSDoc comments:\n\n```typescript\n// src/context/ConciergusContext.tsx\n\n// TODO: Import ProactiveRule from './useProactiveEngagement'\n// Placeholder until the ProactiveRule type is implemented\ntype ProactiveRule = any;\n\n/**\n * Configuration options for the Conciergus assistant\n */\nexport interface ConciergusConfig {\n  /**\n   * Default voice to use for text-to-speech functionality\n   */\n  defaultTTSVoice?: string;\n  \n  /**\n   * Whether text-to-speech is enabled by default\n   */\n  isTTSEnabledByDefault?: boolean;\n  \n  /**\n   * API endpoint for text-to-speech service\n   */\n  ttsApiEndpoint?: string;\n  \n  /**\n   * Function to convert text to audio\n   * @param text The text to convert to audio\n   * @returns Promise resolving to audio as string URL or Blob\n   */\n  onTextToAudio?: (text: string) => Promise<string | Blob>;\n  \n  /**\n   * Function to process recorded audio and convert to text\n   * @param blob The audio blob to process\n   * @returns Promise resolving to the transcribed text\n   */\n  onProcessRecordedAudio?: (blob: Blob) => Promise<string>;\n  \n  /**\n   * Rules for proactive engagement with the user\n   */\n  proactiveRules?: ProactiveRule[];\n  \n  /**\n   * Enable debug mode for verbose logging\n   */\n  enableDebug?: boolean;\n}\n```\n\nI've also updated `src/index.ts` to re-export the context file:\n\n```typescript\n// src/index.ts\nexport * from './context/ConciergusContext';\n```\n\nThe implementation passes TypeScript compilation and is ready for the next subtask.\n</info added on 2025-05-23T15:01:29.231Z>",
+          "status": "done",
           "testStrategy": "Verify that the interface enforces correct typing and all properties are optional as specified."
         },
         {
@@ -95,8 +95,8 @@
           "dependencies": [
             1
           ],
-          "details": "Use React.createContext with ConciergusConfig | null as the type, and set the default value to null to enforce provider usage.",
-          "status": "pending",
+          "details": "Use React.createContext with ConciergusConfig | null as the type, and set the default value to null to enforce provider usage.\n<info added on 2025-05-23T15:02:24.488Z>\n## Exploration & Implementation Plan for Subtask 2.2 – Create Conciergus React Context\n\n1. Open the newly created file `src/context/ConciergusContext.tsx`.\n2. Import React and the `ConciergusConfig` interface:\n   ```typescript\n   import React, { createContext } from 'react';\n   import type { ConciergusConfig } from './ConciergusContext';\n   ```\n3. Create the context with null default to enforce provider usage:\n   ```typescript\n   /**\n    * React context for Conciergus configuration\n    * @internal\n    */\n   export const ConciergusContext = createContext<ConciergusConfig | null>(null);\n   ```\n4. (Optional) Set a displayName for better debugging in React DevTools:\n   ```typescript\n   ConciergusContext.displayName = 'ConciergusContext';\n   ```\n5. Ensure the context is exported from the module:\n   ```typescript\n   export { ConciergusContext };\n   ```\n6. Update `src/index.ts` to re-export the context:\n   ```typescript\n   export { ConciergusContext } from './context/ConciergusContext';\n   ```\n7. Run `tsc` to verify there are no type errors.\n\n**Next Steps:**\nOnce the context is created, proceed to Subtask 3 to implement the `ConciergusProvider` component that wraps children with this context.\n</info added on 2025-05-23T15:02:24.488Z>",
+          "status": "done",
           "testStrategy": "Check that the context is created without TypeScript errors and that consumers receive the correct type."
         },
         {
@@ -107,7 +107,7 @@
             2
           ],
           "details": "Ensure the provider wraps children and passes the configuration object as the context value.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Render the provider in a test tree and confirm that children can access the provided configuration."
         },
         {
@@ -118,7 +118,7 @@
             3
           ],
           "details": "The hook should throw a descriptive error if the context is null, guiding developers to wrap components with ConciergusProvider.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Test the hook both inside and outside the provider to ensure correct error handling and context access."
         },
         {
@@ -129,7 +129,7 @@
             3
           ],
           "details": "Integrate conditional logging throughout the provider and context logic to output relevant debug information when enabled.",
-          "status": "pending",
+          "status": "done",
           "testStrategy": "Enable debug mode and verify that logs appear as expected; disable and confirm no debug logs are output."
         }
       ]

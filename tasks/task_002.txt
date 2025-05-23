@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Create ConciergusProvider Context
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Implement the optional ConciergusProvider context component that provides global configuration for Conciergus features.
@@ -26,7 +26,7 @@ interface ConciergusConfig {
 Write unit tests to verify that the context correctly provides configuration values to child components. Test that the `useConciergus` hook throws appropriate errors when used outside of a provider. Verify that debug mode correctly logs information when enabled.
 
 # Subtasks:
-## 1. Define ConciergusConfig TypeScript Interface [pending]
+## 1. Define ConciergusConfig TypeScript Interface [done]
 ### Dependencies: None
 ### Description: Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.
 ### Details:
@@ -57,26 +57,124 @@ None
 ## Test Strategy:
 - Verify that IDE and `tsc` recognize the interface in import contexts.
 </info added on 2025-05-23T14:45:14.382Z>
+<info added on 2025-05-23T15:01:29.231Z>
+I've created the `ConciergusConfig` interface in a new file at `src/context/ConciergusContext.tsx`. The interface includes all the specified properties with TSDoc comments:
 
-## 2. Create Conciergus React Context [pending]
+```typescript
+// src/context/ConciergusContext.tsx
+
+// TODO: Import ProactiveRule from './useProactiveEngagement'
+// Placeholder until the ProactiveRule type is implemented
+type ProactiveRule = any;
+
+/**
+ * Configuration options for the Conciergus assistant
+ */
+export interface ConciergusConfig {
+  /**
+   * Default voice to use for text-to-speech functionality
+   */
+  defaultTTSVoice?: string;
+  
+  /**
+   * Whether text-to-speech is enabled by default
+   */
+  isTTSEnabledByDefault?: boolean;
+  
+  /**
+   * API endpoint for text-to-speech service
+   */
+  ttsApiEndpoint?: string;
+  
+  /**
+   * Function to convert text to audio
+   * @param text The text to convert to audio
+   * @returns Promise resolving to audio as string URL or Blob
+   */
+  onTextToAudio?: (text: string) => Promise<string | Blob>;
+  
+  /**
+   * Function to process recorded audio and convert to text
+   * @param blob The audio blob to process
+   * @returns Promise resolving to the transcribed text
+   */
+  onProcessRecordedAudio?: (blob: Blob) => Promise<string>;
+  
+  /**
+   * Rules for proactive engagement with the user
+   */
+  proactiveRules?: ProactiveRule[];
+  
+  /**
+   * Enable debug mode for verbose logging
+   */
+  enableDebug?: boolean;
+}
+```
+
+I've also updated `src/index.ts` to re-export the context file:
+
+```typescript
+// src/index.ts
+export * from './context/ConciergusContext';
+```
+
+The implementation passes TypeScript compilation and is ready for the next subtask.
+</info added on 2025-05-23T15:01:29.231Z>
+
+## 2. Create Conciergus React Context [done]
 ### Dependencies: 2.1
 ### Description: Establish a React context using the ConciergusConfig interface, ensuring proper default values and null safety.
 ### Details:
 Use React.createContext with ConciergusConfig | null as the type, and set the default value to null to enforce provider usage.
+<info added on 2025-05-23T15:02:24.488Z>
+## Exploration & Implementation Plan for Subtask 2.2 – Create Conciergus React Context
 
-## 3. Implement ConciergusProvider Component [pending]
+1. Open the newly created file `src/context/ConciergusContext.tsx`.
+2. Import React and the `ConciergusConfig` interface:
+   ```typescript
+   import React, { createContext } from 'react';
+   import type { ConciergusConfig } from './ConciergusContext';
+   ```
+3. Create the context with null default to enforce provider usage:
+   ```typescript
+   /**
+    * React context for Conciergus configuration
+    * @internal
+    */
+   export const ConciergusContext = createContext<ConciergusConfig | null>(null);
+   ```
+4. (Optional) Set a displayName for better debugging in React DevTools:
+   ```typescript
+   ConciergusContext.displayName = 'ConciergusContext';
+   ```
+5. Ensure the context is exported from the module:
+   ```typescript
+   export { ConciergusContext };
+   ```
+6. Update `src/index.ts` to re-export the context:
+   ```typescript
+   export { ConciergusContext } from './context/ConciergusContext';
+   ```
+7. Run `tsc` to verify there are no type errors.
+
+**Next Steps:**
+Once the context is created, proceed to Subtask 3 to implement the `ConciergusProvider` component that wraps children with this context.
+</info added on 2025-05-23T15:02:24.488Z>
+
+## 3. Implement ConciergusProvider Component [done]
 ### Dependencies: 2.2
 ### Description: Develop the ConciergusProvider component that accepts ConciergusConfig as props and supplies the context value to its children.
 ### Details:
 Ensure the provider wraps children and passes the configuration object as the context value.
 
-## 4. Develop useConciergus Hook with Error Handling [pending]
+## 4. Develop useConciergus Hook with Error Handling [done]
 ### Dependencies: 2.3
 ### Description: Create a custom useConciergus hook to access the Conciergus context, including error handling for missing provider usage.
 ### Details:
 The hook should throw a descriptive error if the context is null, guiding developers to wrap components with ConciergusProvider.
 
-## 5. Add Debug Mode Logging to Provider [pending]
+## 5. Add Debug Mode Logging to Provider [done]
 ### Dependencies: 2.3
 ### Description: Implement debug mode in ConciergusProvider to log helpful information when enableDebug is true in the configuration.
 ### Details:
