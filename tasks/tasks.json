@@ -1,0 +1,833 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Project Setup and Core Dependencies",
+      "description": "Initialize the project repository with proper configuration for React library development using TypeScript, pnpm, and Rollup. Set up peer dependencies, direct dependencies, and dev tooling.",
+      "details": "1. Initialize repository with `pnpm init`\n2. Configure TypeScript with strict mode\n3. Set up Rollup for both ESM and CommonJS builds with tree-shaking support\n4. Configure peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`\n5. Add direct dependencies:\n   - `@ai-sdk/react` and `ai` (Vercel AI SDK)\n   - Radix UI primitives: `@radix-ui/react-dialog`, `@radix-ui/react-scroll-area`, `@radix-ui/react-portal`\n   - `react-textarea-autosize`\n   - `@babel/runtime`\n   - Markdown stack: `react-markdown`, `remark-gfm`, `rehype-sanitize`\n   - Optional virtualization: `react-window`, `react-virtualized-auto-sizer`\n6. Set up ESLint and Prettier\n7. Configure package.json with proper entry points and exports\n8. Set up CI/CD pipeline for testing and publishing",
+      "testStrategy": "Verify that the build process works correctly by running `pnpm build` and checking that both ESM and CommonJS builds are generated. Ensure all dependencies are correctly specified and the package can be imported in a test React application.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize Project Structure",
+          "description": "Set up the basic project structure with pnpm, TypeScript configuration, and essential files.",
+          "dependencies": [],
+          "details": "Run `pnpm init` to create package.json, configure TypeScript with strict mode in tsconfig.json, create src directory structure, set up .gitignore for node_modules and build directories, and initialize Git repository.",
+          "status": "pending",
+          "testStrategy": "Verify package.json contains correct metadata and TypeScript configuration has strict mode enabled."
+        },
+        {
+          "id": 2,
+          "title": "Configure Rollup Bundling",
+          "description": "Set up Rollup configuration for bundling the library with support for ESM and CommonJS formats.",
+          "dependencies": [
+            1
+          ],
+          "details": "Install Rollup and plugins: `@rollup/plugin-typescript`, `@rollup/plugin-commonjs`, `@rollup/plugin-node-resolve`, `rollup-plugin-peer-deps-external`, `rollup-plugin-dts`, and `@rollup/plugin-terser`. Create rollup.config.js with configurations for both ESM and CJS outputs with tree-shaking support.",
+          "status": "pending",
+          "testStrategy": "Run a test build to ensure both ESM and CJS outputs are generated correctly with proper TypeScript declarations."
+        },
+        {
+          "id": 3,
+          "title": "Set Up Dependencies Management",
+          "description": "Configure peer dependencies, direct dependencies, and development dependencies.",
+          "dependencies": [
+            1
+          ],
+          "details": "Add peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`. Install direct dependencies: `@ai-sdk/react`, `ai`, Radix UI primitives, `react-textarea-autosize`, `@babel/runtime`, markdown stack, and virtualization libraries. Configure package.json with proper peerDependencies section.",
+          "status": "pending",
+          "testStrategy": "Verify all dependencies are correctly specified in package.json with appropriate version constraints."
+        },
+        {
+          "id": 4,
+          "title": "Configure Package Entry Points and Exports",
+          "description": "Set up package.json with proper entry points, exports configuration, and TypeScript declarations.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Configure package.json with `main` (CJS), `module` (ESM), and `types` fields. Set up `exports` field with conditional exports for different module systems. Add `files` array to specify which files should be published to npm. Configure TypeScript to generate declaration files.",
+          "status": "pending",
+          "testStrategy": "Test importing the package in both ESM and CJS environments to ensure proper resolution."
+        },
+        {
+          "id": 5,
+          "title": "Set Up Development Tooling and CI/CD",
+          "description": "Configure ESLint, Prettier, and CI/CD pipeline for testing and publishing.",
+          "dependencies": [
+            1,
+            4
+          ],
+          "details": "Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Create GitHub Actions workflow for CI/CD that runs tests, builds the package, and publishes to npm on release. Add npm scripts for linting, testing, building, and publishing.",
+          "status": "pending",
+          "testStrategy": "Run linting and formatting checks to ensure code quality standards are enforced. Test the CI workflow with a pull request."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Create ConciergusProvider Context",
+      "description": "Implement the optional ConciergusProvider context component that provides global configuration for Conciergus features.",
+      "details": "1. Create a React context with TypeScript interface for configuration options:\n```typescript\ninterface ConciergusConfig {\n  defaultTTSVoice?: string;\n  isTTSEnabledByDefault?: boolean;\n  ttsApiEndpoint?: string;\n  onTextToAudio?: (text: string) => Promise<string | Blob>;\n  onProcessRecordedAudio?: (blob: Blob) => Promise<string>;\n  proactiveRules?: ProactiveRule[];\n  enableDebug?: boolean;\n}\n```\n2. Implement the `ConciergusProvider` component that accepts these configuration options as props\n3. Create a `useConciergus` hook to access the context\n4. Add debug mode that logs helpful information when `enableDebug` is true\n5. Implement proper error handling for missing context usage",
+      "testStrategy": "Write unit tests to verify that the context correctly provides configuration values to child components. Test that the `useConciergus` hook throws appropriate errors when used outside of a provider. Verify that debug mode correctly logs information when enabled.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Define ConciergusConfig TypeScript Interface",
+          "description": "Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.",
+          "dependencies": [],
+          "details": "Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.",
+          "status": "pending",
+          "testStrategy": "Verify that the interface enforces correct typing and all properties are optional as specified."
+        },
+        {
+          "id": 2,
+          "title": "Create Conciergus React Context",
+          "description": "Establish a React context using the ConciergusConfig interface, ensuring proper default values and null safety.",
+          "dependencies": [
+            1
+          ],
+          "details": "Use React.createContext with ConciergusConfig | null as the type, and set the default value to null to enforce provider usage.",
+          "status": "pending",
+          "testStrategy": "Check that the context is created without TypeScript errors and that consumers receive the correct type."
+        },
+        {
+          "id": 3,
+          "title": "Implement ConciergusProvider Component",
+          "description": "Develop the ConciergusProvider component that accepts ConciergusConfig as props and supplies the context value to its children.",
+          "dependencies": [
+            2
+          ],
+          "details": "Ensure the provider wraps children and passes the configuration object as the context value.",
+          "status": "pending",
+          "testStrategy": "Render the provider in a test tree and confirm that children can access the provided configuration."
+        },
+        {
+          "id": 4,
+          "title": "Develop useConciergus Hook with Error Handling",
+          "description": "Create a custom useConciergus hook to access the Conciergus context, including error handling for missing provider usage.",
+          "dependencies": [
+            3
+          ],
+          "details": "The hook should throw a descriptive error if the context is null, guiding developers to wrap components with ConciergusProvider.",
+          "status": "pending",
+          "testStrategy": "Test the hook both inside and outside the provider to ensure correct error handling and context access."
+        },
+        {
+          "id": 5,
+          "title": "Add Debug Mode Logging to Provider",
+          "description": "Implement debug mode in ConciergusProvider to log helpful information when enableDebug is true in the configuration.",
+          "dependencies": [
+            3
+          ],
+          "details": "Integrate conditional logging throughout the provider and context logic to output relevant debug information when enabled.",
+          "status": "pending",
+          "testStrategy": "Enable debug mode and verify that logs appear as expected; disable and confirm no debug logs are output."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Implement ConciergusChatWidget Component",
+      "description": "Create the main chat widget container component using Radix UI Dialog for the modal interface.",
+      "details": "1. Create a `ConciergusChatWidget` component using Radix UI's Dialog component\n2. Implement the component with the following props:\n```typescript\ninterface ConciergusChatWidgetProps {\n  isOpen: boolean;\n  onOpenChange: (open: boolean) => void;\n  className?: string;\n  children?: React.ReactNode;\n  triggerComponent?: React.ReactNode;\n  headerComponent?: React.ReactNode;\n  footerComponent?: React.ReactNode;\n  [key: string]: any; // For ...rest props\n}\n```\n3. Structure the component to include slots for header, content area, and footer\n4. Ensure all Radix UI accessibility features are preserved\n5. Pass through className and ...rest props to the root element\n6. Add data-* attributes for styling hooks\n7. Implement responsive behavior for mobile and desktop views",
+      "testStrategy": "Test the component renders correctly with various prop combinations. Verify that the dialog opens and closes as expected when isOpen changes. Test that custom trigger, header, and footer components render correctly. Verify accessibility attributes are correctly applied.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set Up ConciergusChatWidget Component Structure with Radix UI Dialog",
+          "description": "Initialize the ConciergusChatWidget component using Radix UI's Dialog primitives, ensuring the modal structure is in place.",
+          "dependencies": [],
+          "details": "Import and configure Dialog.Root, Dialog.Trigger, Dialog.Portal, Dialog.Overlay, and Dialog.Content to establish the modal dialog structure as the container for the chat widget.",
+          "status": "pending",
+          "testStrategy": "Render the component and verify that the modal opens and closes as expected when triggered."
+        },
+        {
+          "id": 2,
+          "title": "Implement Props Interface and Propagation",
+          "description": "Apply the ConciergusChatWidgetProps interface, ensuring all props are accepted and correctly passed to the root element.",
+          "dependencies": [
+            1
+          ],
+          "details": "Integrate isOpen, onOpenChange, className, children, triggerComponent, headerComponent, footerComponent, and ...rest props. Pass className and ...rest to the root Dialog element.",
+          "status": "pending",
+          "testStrategy": "Write tests to confirm all props are received and propagated, and that className and additional props appear on the root element."
+        },
+        {
+          "id": 3,
+          "title": "Slot and Render Header, Content, and Footer Areas",
+          "description": "Structure the component to render headerComponent, content area (children), and footerComponent in their respective slots within the dialog.",
+          "dependencies": [
+            2
+          ],
+          "details": "Ensure headerComponent is rendered at the top, children in the main content area, and footerComponent at the bottom of the dialog.",
+          "status": "pending",
+          "testStrategy": "Test rendering with different header, content, and footer components to verify correct placement."
+        },
+        {
+          "id": 4,
+          "title": "Ensure Accessibility and Add Data Attributes",
+          "description": "Preserve all Radix UI accessibility features and add data-* attributes for styling hooks.",
+          "dependencies": [
+            3
+          ],
+          "details": "Verify focus management, ARIA attributes, and keyboard navigation. Add data attributes (e.g., data-chat-widget) to key elements for styling.",
+          "status": "pending",
+          "testStrategy": "Use accessibility testing tools to confirm compliance and check for presence of data-* attributes in the DOM."
+        },
+        {
+          "id": 5,
+          "title": "Implement Responsive Design for Mobile and Desktop",
+          "description": "Add responsive styles and logic to ensure the chat widget displays optimally on both mobile and desktop devices.",
+          "dependencies": [
+            4
+          ],
+          "details": "Apply CSS or utility classes to adjust layout, sizing, and interactions based on viewport size.",
+          "status": "pending",
+          "testStrategy": "Test the component in various viewport sizes and devices to confirm responsive behavior."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Implement ConciergusMessageList Component",
+      "description": "Create the message list component that displays the chat conversation history with proper scrolling behavior.",
+      "details": "1. Create a `ConciergusMessageList` component using Radix UI's ScrollArea\n2. Accept messages from Vercel AI SDK's `useChat` hook\n3. Implement auto-scrolling to the latest message\n4. Add support for message grouping by sender\n5. Implement basic list rendering with fallback to ScrollArea for v1.0\n6. Prepare component structure for future virtualization support\n7. Add proper TypeScript interfaces for all props:\n```typescript\ninterface ConciergusMessageListProps {\n  messages: Message[]; // From Vercel AI SDK\n  className?: string;\n  messageComponent?: React.ComponentType<ConciergusMessageItemProps>;\n  loadingComponent?: React.ReactNode;\n  emptyComponent?: React.ReactNode;\n  [key: string]: any; // For ...rest props\n}\n```\n8. Implement proper handling of loading states and empty states",
+      "testStrategy": "Test rendering with various message arrays. Verify auto-scrolling behavior works correctly. Test custom message component rendering. Verify loading and empty states display correctly. Test with large message arrays to ensure performance is acceptable.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set Up ConciergusMessageList Component Structure",
+          "description": "Create the initial component structure using Radix UI's ScrollArea as the scrollable container and define the basic layout for rendering messages.",
+          "dependencies": [],
+          "details": "Import and configure Radix UI's ScrollArea as the main wrapper. Set up the component skeleton to accept props as specified in the TypeScript interface, including messages, className, and optional components.",
+          "status": "pending",
+          "testStrategy": "Render the component with mock messages and verify that the ScrollArea displays content with correct scrollbars and layout."
+        },
+        {
+          "id": 2,
+          "title": "Implement Message Rendering and Grouping Logic",
+          "description": "Render the list of messages, grouping them by sender, and support custom message, loading, and empty components.",
+          "dependencies": [
+            1
+          ],
+          "details": "Map over the messages prop, group consecutive messages from the same sender, and render each group using the provided messageComponent or a default. Display loadingComponent or emptyComponent as appropriate.",
+          "status": "pending",
+          "testStrategy": "Provide test data with various sender sequences and verify correct grouping and fallback rendering for loading and empty states."
+        },
+        {
+          "id": 3,
+          "title": "Add Auto-Scrolling to Latest Message",
+          "description": "Ensure the message list automatically scrolls to the latest message when new messages arrive.",
+          "dependencies": [
+            2
+          ],
+          "details": "Use a ref to the ScrollArea viewport and implement an effect that scrolls to the bottom whenever the messages prop changes.",
+          "status": "pending",
+          "testStrategy": "Simulate incoming messages and verify that the scroll position updates to show the latest message."
+        },
+        {
+          "id": 4,
+          "title": "Define and Apply TypeScript Interfaces",
+          "description": "Implement and enforce TypeScript interfaces for all component props, ensuring type safety and extensibility.",
+          "dependencies": [
+            1
+          ],
+          "details": "Define ConciergusMessageListProps and related interfaces for messages and message items. Apply these interfaces to the component and its props.",
+          "status": "pending",
+          "testStrategy": "Run TypeScript checks and attempt to use the component with incorrect prop types to confirm type errors are caught."
+        },
+        {
+          "id": 5,
+          "title": "Prepare for Future Virtualization Support",
+          "description": "Structure the component to allow easy integration of list virtualization libraries in future versions.",
+          "dependencies": [
+            2,
+            4
+          ],
+          "details": "Abstract the message rendering logic and ScrollArea usage so that virtualization (e.g., react-virtual, react-window) can be added with minimal refactoring.",
+          "status": "pending",
+          "testStrategy": "Review the code to ensure message rendering is decoupled from the scroll container and document extension points for virtualization."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Implement ConciergusMessageItem Component",
+      "description": "Create the message item component that renders individual chat messages with Markdown support and rich UI elements.",
+      "details": "1. Create a `ConciergusMessageItem` component that renders a single message\n2. Implement Markdown rendering using `react-markdown` with `remark-gfm` and `rehype-sanitize`\n3. Add support for rendering rich UI elements from `message.ui` or `message.tool_calls`\n4. Implement audio playback UI for TTS messages\n5. Add proper TypeScript interfaces:\n```typescript\ninterface ConciergusMessageItemProps {\n  message: Message; // From Vercel AI SDK\n  className?: string;\n  avatarComponent?: React.ReactNode;\n  isLastMessage?: boolean;\n  onAudioPlay?: () => void;\n  onAudioPause?: () => void;\n  [key: string]: any; // For ...rest props\n}\n```\n6. Style message differently based on role (user/assistant)\n7. Add support for message timestamps\n8. Implement proper error handling for malformed messages",
+      "testStrategy": "Test rendering of various message types (text, Markdown, code blocks). Verify sanitization of HTML in messages. Test audio playback UI with mock audio data. Verify custom avatar components render correctly. Test error handling with malformed messages.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Develop ConciergusMessageItem Component Structure",
+          "description": "Set up the base React component with TypeScript, defining the ConciergusMessageItemProps interface and ensuring proper prop typing.",
+          "dependencies": [],
+          "details": "Create the component file, define the props interface as specified, and ensure the component accepts all required props including message, className, avatarComponent, isLastMessage, onAudioPlay, onAudioPause, and any additional props.",
+          "status": "pending",
+          "testStrategy": "Verify the component renders without errors and accepts all props as defined in the interface."
+        },
+        {
+          "id": 2,
+          "title": "Implement Markdown Rendering with Security",
+          "description": "Integrate react-markdown with remark-gfm and rehype-sanitize to render message content safely with Markdown support.",
+          "dependencies": [
+            1
+          ],
+          "details": "Install and configure react-markdown, remark-gfm, and rehype-sanitize. Ensure that Markdown is rendered correctly and securely, preventing XSS vulnerabilities.",
+          "status": "pending",
+          "testStrategy": "Test rendering of various Markdown inputs, including edge cases and potentially unsafe content, to confirm correct and safe output."
+        },
+        {
+          "id": 3,
+          "title": "Add Rich UI and Audio Playback Support",
+          "description": "Render additional UI elements from message.ui or message.tool_calls and implement audio playback UI for TTS messages.",
+          "dependencies": [
+            2
+          ],
+          "details": "Detect and render any rich UI elements specified in the message object. Integrate audio playback controls for TTS messages, wiring up onAudioPlay and onAudioPause callbacks.",
+          "status": "pending",
+          "testStrategy": "Test with messages containing UI/tool_calls and TTS audio to ensure correct rendering and playback functionality."
+        },
+        {
+          "id": 4,
+          "title": "Style Messages and Add Timestamps",
+          "description": "Apply conditional styling based on message role (user/assistant) and display message timestamps.",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement CSS or styling logic to visually distinguish user and assistant messages. Add a timestamp display, formatted appropriately, for each message.",
+          "status": "pending",
+          "testStrategy": "Check that messages are styled correctly for each role and that timestamps are visible and formatted as expected."
+        },
+        {
+          "id": 5,
+          "title": "Implement Error Handling for Malformed Messages",
+          "description": "Add robust error handling to gracefully manage and display issues with malformed or incomplete message data.",
+          "dependencies": [
+            4
+          ],
+          "details": "Detect missing or invalid message fields and render fallback UI or error messages as needed, ensuring the component does not crash.",
+          "status": "pending",
+          "testStrategy": "Test with various malformed message objects to confirm that errors are handled gracefully and informative feedback is provided."
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Implement ConciergusChatInput Component",
+      "description": "Create the chat input component with textarea auto-sizing and integration with Vercel AI SDK's useChat hook.",
+      "details": "1. Create a `ConciergusChatInput` component using `react-textarea-autosize`\n2. Wire props directly to Vercel AI SDK's `useChat` return values\n3. Implement TypeScript interface:\n```typescript\ninterface ConciergusChatInputProps {\n  input: string;\n  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | string) => void;\n  handleSubmit: (e?: React.FormEvent, chatRequestOptions?: any) => void;\n  isLoading: boolean;\n  placeholder?: string;\n  disabled?: boolean;\n  className?: string;\n  showMicButton?: boolean;\n  [key: string]: any; // For ...rest props\n}\n```\n4. Add microphone button that integrates with voice input hook\n5. Implement send button with loading state\n6. Add keyboard shortcuts (Enter to send, Shift+Enter for new line)\n7. Implement character limit and validation\n8. Add proper accessibility attributes",
+      "testStrategy": "Test input changes are correctly handled. Verify form submission works as expected. Test keyboard shortcuts. Verify loading states display correctly. Test with mock voice input hook. Verify accessibility attributes are correctly applied.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create ConciergusChatInput component with auto-sizing textarea",
+          "description": "Implement the core component using react-textarea-autosize for auto-resizing functionality.",
+          "dependencies": [],
+          "details": "Use react-textarea-autosize to create a textarea that automatically adjusts its height as content changes[1][4][5].",
+          "status": "pending",
+          "testStrategy": "Verify textarea resizes dynamically with user input."
+        },
+        {
+          "id": 2,
+          "title": "Integrate Vercel AI SDK useChat hook",
+          "description": "Wire up component props to Vercel AI SDK's useChat hook return values.",
+          "dependencies": [
+            1
+          ],
+          "details": "Pass input, handleInputChange, handleSubmit, and isLoading props from useChat to the component.",
+          "status": "pending",
+          "testStrategy": "Ensure component reacts to useChat state and callbacks."
+        },
+        {
+          "id": 3,
+          "title": "Implement TypeScript interface and props",
+          "description": "Define and apply the TypeScript interface for component props.",
+          "dependencies": [
+            1
+          ],
+          "details": "Use the provided interface to type props and handle rest props.",
+          "status": "pending",
+          "testStrategy": "Check TypeScript type safety and prop forwarding."
+        },
+        {
+          "id": 4,
+          "title": "Add microphone and send buttons with loading state",
+          "description": "Implement microphone button for voice input and send button with loading state.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Add microphone button that integrates with a voice input hook and a send button that reflects isLoading state.",
+          "status": "pending",
+          "testStrategy": "Test button visibility, loading state, and voice input integration."
+        },
+        {
+          "id": 5,
+          "title": "Implement keyboard shortcuts, character limit, and accessibility",
+          "description": "Add keyboard shortcuts, character limit validation, and accessibility attributes.",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Enable Enter to send, Shift+Enter for new line, character limit validation, and proper ARIA attributes.",
+          "status": "pending",
+          "testStrategy": "Test keyboard shortcuts, validation, and accessibility compliance."
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Implement Voice Input and TTS Hooks",
+      "description": "Create hooks for speech-to-text input and text-to-speech output with browser API fallbacks.",
+      "details": "1. Create `useConciergusVoiceInput` hook:\n   - Use `window.SpeechRecognition` for real-time transcription\n   - Implement fallback UI for unsupported browsers\n   - Add support for `MediaRecorder` when `onProcessRecordedAudio` is provided\n   - Handle permission requests and errors\n\n2. Create `useConciergusTTS` hook:\n   - Fetch audio from configured `ttsApiEndpoint`\n   - Implement streaming playback with controls\n   - Add fallback to `window.speechSynthesis` when needed\n   - Support custom TTS via `onTextToAudio` function\n   - Handle errors and loading states\n\n3. Implement TypeScript interfaces for both hooks\n4. Add browser compatibility detection\n5. Implement proper error handling and user feedback",
+      "testStrategy": "Test voice input with mock SpeechRecognition API. Verify fallback behavior works in unsupported browsers. Test TTS with mock audio endpoints. Verify error handling for permission denials and API failures. Test integration with ConciergusProvider context.",
+      "priority": "medium",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement SpeechRecognition API Integration",
+          "description": "Create the core functionality for the useConciergusVoiceInput hook using the Web Speech API's SpeechRecognition interface",
+          "dependencies": [],
+          "details": "Implement the useConciergusVoiceInput hook with SpeechRecognition API integration including: setting up continuous recognition, handling interim and final results, configuring language settings, and implementing maxAlternatives. Set up event listeners for results, errors, and state changes. Ensure proper initialization and cleanup of the SpeechRecognition object.",
+          "status": "pending",
+          "testStrategy": "Test the hook with various recognition scenarios in Chrome browser where SpeechRecognition is fully supported. Verify continuous mode works correctly and interim results are handled properly."
+        },
+        {
+          "id": 2,
+          "title": "Develop Browser Compatibility Detection and Fallbacks",
+          "description": "Implement detection for browser support of SpeechRecognition and create fallback mechanisms",
+          "dependencies": [
+            1
+          ],
+          "details": "Create a utility function to detect browser support for SpeechRecognition API. Implement fallback UI components for browsers that don't support the API. For the TTS hook, implement fallback to window.speechSynthesis when the primary TTS API endpoint is unavailable. Document browser compatibility limitations, noting that Chrome/Chromium browsers have the best support.",
+          "status": "pending",
+          "testStrategy": "Test across multiple browsers including Firefox and Safari to verify fallback mechanisms activate correctly. Ensure graceful degradation of functionality."
+        },
+        {
+          "id": 3,
+          "title": "Create MediaRecorder Integration for Audio Processing",
+          "description": "Implement MediaRecorder support as an alternative input method when onProcessRecordedAudio is provided",
+          "dependencies": [
+            1
+          ],
+          "details": "Add MediaRecorder functionality to the useConciergusVoiceInput hook that activates when onProcessRecordedAudio prop is provided. Implement audio capture, processing, and transmission. Handle permission requests for microphone access and manage recording states. Implement error handling for permission denials and device unavailability.",
+          "status": "pending",
+          "testStrategy": "Test with various audio inputs and verify the recorded audio is correctly processed and passed to the onProcessRecordedAudio callback."
+        },
+        {
+          "id": 4,
+          "title": "Develop Text-to-Speech Hook Implementation",
+          "description": "Create the useConciergusTTS hook with streaming audio playback and controls",
+          "dependencies": [],
+          "details": "Implement the useConciergusTTS hook to fetch audio from the configured ttsApiEndpoint. Create streaming playback functionality with play, pause, and stop controls. Implement audio buffering for smooth playback. Add support for custom TTS via the onTextToAudio function. Manage loading states during audio fetching and processing.",
+          "status": "pending",
+          "testStrategy": "Test with various text inputs, verify streaming works correctly, and ensure playback controls function as expected."
+        },
+        {
+          "id": 5,
+          "title": "Create TypeScript Interfaces and Error Handling",
+          "description": "Define comprehensive TypeScript interfaces and implement robust error handling for both hooks",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "details": "Create TypeScript interfaces for both hooks including props, return values, and internal state types. Implement comprehensive error handling for all potential failure points: API unavailability, permission denials, network failures, and unexpected errors. Add user feedback mechanisms for error states including meaningful error messages and recovery suggestions. Implement proper state management to handle loading, error, and success states.",
+          "status": "pending",
+          "testStrategy": "Test with TypeScript compiler to ensure type safety. Simulate various error conditions to verify error handling works correctly and provides appropriate user feedback."
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Implement ConciergusToolUIRenderer Component",
+      "description": "Create a component that renders UI for function calls and tool invocations from the Vercel AI SDK.",
+      "details": "1. Create a `ConciergusToolUIRenderer` component that renders UI based on function calls\n2. Implement support for Vercel AI SDK's tool_calls format\n3. Add patterns for rendering buttons, forms, and carousels\n4. Create TypeScript interface:\n```typescript\ninterface ConciergusToolUIRendererProps {\n  toolCalls: ToolCall[]; // From Vercel AI SDK\n  onToolCallSubmit: (toolCallId: string, result: any) => void;\n  className?: string;\n  customRenderers?: Record<string, React.ComponentType<any>>;\n  [key: string]: any; // For ...rest props\n}\n```\n5. Implement default renderers for common tool types\n6. Add support for custom renderers via props\n7. Handle loading and error states\n8. Implement proper accessibility for interactive elements",
+      "testStrategy": "Test rendering of various tool call types. Verify custom renderers work correctly. Test submission of tool call results. Verify accessibility of rendered UI elements. Test error handling with malformed tool calls.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Create Component Structure and TypeScript Interface",
+          "description": "Set up the basic component structure and implement the TypeScript interface for ConciergusToolUIRenderer",
+          "dependencies": [],
+          "details": "Create the component file with proper TypeScript interface as specified in the requirements. Implement the component skeleton that accepts toolCalls, onToolCallSubmit, className, customRenderers, and other props. Follow the Single Responsibility Principle to ensure the component focuses only on rendering UI based on tool calls.",
+          "status": "pending",
+          "testStrategy": "Write unit tests to verify the component accepts all required props and renders without errors when given valid inputs."
+        },
+        {
+          "id": 2,
+          "title": "Implement Parent-Child Component Architecture",
+          "description": "Design the component hierarchy with proper parent-child relationships for different tool call renderers",
+          "dependencies": [
+            1
+          ],
+          "details": "Create a container/presentational pattern where ConciergusToolUIRenderer acts as the parent container managing the overall structure and data flow, while child components handle specific UI elements for different tool types. Establish clear communication patterns between parent and child components following React's unidirectional data flow.",
+          "status": "pending",
+          "testStrategy": "Test the parent-child relationship by verifying data flows correctly from parent to children and events bubble up properly."
+        },
+        {
+          "id": 3,
+          "title": "Develop Default Renderers for Common Tool Types",
+          "description": "Create default renderer components for buttons, forms, carousels, and other common UI patterns",
+          "dependencies": [
+            2
+          ],
+          "details": "Implement reusable child components that render specific UI elements based on tool call types. Each renderer should follow the Single Responsibility Principle, focusing on one specific functionality. Create components for buttons, forms, carousels, and other UI patterns mentioned in the requirements.",
+          "status": "pending",
+          "testStrategy": "Create separate test cases for each renderer component to verify they correctly display the expected UI elements and handle interactions properly."
+        },
+        {
+          "id": 4,
+          "title": "Implement Custom Renderer Support",
+          "description": "Add functionality to allow custom renderers to be passed via props and override default renderers",
+          "dependencies": [
+            3
+          ],
+          "details": "Create a mechanism to register and use custom renderers passed via the customRenderers prop. Implement logic to check for custom renderers before falling back to default ones. Ensure the component can handle any type of custom renderer that follows the expected interface.",
+          "status": "pending",
+          "testStrategy": "Test that custom renderers properly override default renderers when provided and that they receive the correct props."
+        },
+        {
+          "id": 5,
+          "title": "Add State Management and Accessibility Features",
+          "description": "Implement loading and error states, and ensure proper accessibility for all interactive elements",
+          "dependencies": [
+            4
+          ],
+          "details": "Add state management for loading and error conditions when processing tool calls. Implement proper ARIA attributes, keyboard navigation, focus management, and other accessibility features for all interactive elements. Ensure the component follows WAI-ARIA guidelines and is fully accessible to users with disabilities.",
+          "status": "pending",
+          "testStrategy": "Use accessibility testing tools to verify ARIA attributes are correctly applied. Test keyboard navigation and focus management. Verify loading and error states display appropriate feedback to users."
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Implement ConciergusFormRenderer Component",
+      "description": "Create a component that renders dynamic forms based on LLM-defined schemas with validation.",
+      "details": "1. Create a `ConciergusFormRenderer` component that renders forms based on JSON schema\n2. Implement support for common field types: text, number, select, checkbox, etc.\n3. Add client-side validation based on schema rules\n4. Create TypeScript interface:\n```typescript\ninterface ConciergusFormRendererProps {\n  schema: FormSchema;\n  onSubmit: (data: any) => void;\n  initialValues?: Record<string, any>;\n  className?: string;\n  submitButtonText?: string;\n  cancelButtonText?: string;\n  onCancel?: () => void;\n  [key: string]: any; // For ...rest props\n}\n\ninterface FormSchema {\n  title?: string;\n  description?: string;\n  fields: FormField[];\n}\n\ninterface FormField {\n  name: string;\n  type: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'date';\n  label: string;\n  required?: boolean;\n  placeholder?: string;\n  options?: { label: string; value: string | number | boolean }[];\n  validation?: {\n    pattern?: string;\n    min?: number;\n    max?: number;\n    minLength?: number;\n    maxLength?: number;\n  };\n}\n```\n5. Implement form state management\n6. Add proper error messaging for validation failures\n7. Implement accessibility features for form fields",
+      "testStrategy": "Test rendering of various form schemas. Verify validation works correctly. Test form submission with valid and invalid data. Verify accessibility of form elements. Test with complex nested schemas.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        8
+      ],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Define TypeScript Interfaces for Form Schema and Props",
+          "description": "Create TypeScript interfaces for the form schema, form fields, and component props to ensure type safety and clear contract for the ConciergusFormRenderer component.",
+          "dependencies": [],
+          "details": "Implement the provided interfaces: ConciergusFormRendererProps, FormSchema, and FormField with all specified fields and types.",
+          "status": "pending",
+          "testStrategy": "Verify interfaces by creating mock schema and props objects and ensuring TypeScript type checking passes without errors."
+        },
+        {
+          "id": 2,
+          "title": "Implement Form Rendering Logic for Supported Field Types",
+          "description": "Develop the ConciergusFormRenderer component to dynamically render form fields based on the JSON schema, supporting text, number, select, checkbox, textarea, and date input types.",
+          "dependencies": [
+            1
+          ],
+          "details": "Use the schema.fields array to render corresponding input elements with labels, placeholders, and options where applicable.",
+          "status": "pending",
+          "testStrategy": "Test rendering with various schema configurations to confirm all field types display correctly with appropriate attributes."
+        },
+        {
+          "id": 3,
+          "title": "Implement Form State Management and Client-Side Validation",
+          "description": "Add state management to handle form data and implement validation rules defined in the schema, including required fields, patterns, min/max values, and length constraints.",
+          "dependencies": [
+            2
+          ],
+          "details": "Manage form state internally or with a library; validate inputs on change and on submit, preventing submission if validation fails.",
+          "status": "pending",
+          "testStrategy": "Create test cases with valid and invalid inputs to verify validation triggers correctly and state updates as expected."
+        },
+        {
+          "id": 4,
+          "title": "Add Error Messaging and Accessibility Features",
+          "description": "Display user-friendly error messages for validation failures and ensure all form fields meet accessibility standards, including proper labeling and keyboard navigation.",
+          "dependencies": [
+            3
+          ],
+          "details": "Show inline error messages near fields; use ARIA attributes and semantic HTML to enhance accessibility.",
+          "status": "pending",
+          "testStrategy": "Use accessibility testing tools and manual keyboard navigation to confirm compliance; verify error messages appear appropriately."
+        },
+        {
+          "id": 5,
+          "title": "Implement Form Submission and Cancellation Handling",
+          "description": "Add functionality to handle form submission via onSubmit callback and optional cancellation via onCancel callback, including customizable button texts and class names.",
+          "dependencies": [
+            4
+          ],
+          "details": "Trigger onSubmit with form data when validation passes; trigger onCancel when cancel action is invoked; support passing additional props and styling.",
+          "status": "pending",
+          "testStrategy": "Test form submission with valid data, cancellation action, and verify callbacks are called with correct parameters."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Implement Proactive Engagement Hook",
+      "description": "Create a hook for triggering proactive chat engagements based on user behavior rules.",
+      "status": "pending",
+      "dependencies": [
+        2
+      ],
+      "priority": "medium",
+      "details": "1. Create `useProactiveEngagement` hook that accepts rules configuration\n2. Implement support for various trigger types:\n   - Time-based (e.g., after X seconds on page)\n   - Scroll-based (e.g., scrolled X% of page)\n   - Focus-based (e.g., tab focus/blur)\n   - Exit intent (mouse leaving viewport)\n3. Create TypeScript interface:\n```typescript\ninterface ProactiveRule {\n  id: string;\n  triggerType: 'time' | 'scroll' | 'focus' | 'exit' | 'custom';\n  conditions: {\n    timeThreshold?: number; // milliseconds\n    scrollThreshold?: number; // percentage 0-100\n    focusAction?: 'focus' | 'blur';\n    customCheck?: () => boolean;\n  };\n  action: {\n    type: 'open' | 'message' | 'custom';\n    message?: string;\n    customAction?: () => void;\n  };\n  cooldown?: number; // milliseconds\n  enabled?: boolean;\n}\n\ninterface UseProactiveEngagementProps {\n  rules: ProactiveRule[];\n  onRuleTriggered?: (ruleId: string) => void;\n  enabled?: boolean;\n}\n```\n4. Implement rule evaluation logic\n5. Add cooldown and persistence mechanism\n6. Integrate with ConciergusProvider context",
+      "testStrategy": "Test various rule types with mock user behaviors. Verify cooldown periods work correctly. Test integration with ConciergusProvider context. Verify rules can be enabled/disabled dynamically. Test persistence of triggered rules across page reloads.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Design TypeScript Interfaces for Proactive Engagement Rules",
+          "description": "Define and implement the TypeScript interfaces for proactive engagement rules and hook properties, ensuring all trigger types, conditions, and actions are represented.",
+          "dependencies": [],
+          "details": "Create the ProactiveRule and UseProactiveEngagementProps interfaces as specified, supporting extensibility for future trigger types and actions.",
+          "status": "pending",
+          "testStrategy": "Validate TypeScript types via unit tests and ensure type safety in sample usage scenarios."
+        },
+        {
+          "id": 2,
+          "title": "Implement Trigger Detection Logic for Supported Rule Types",
+          "description": "Develop logic to detect and handle all specified trigger types (time-based, scroll-based, focus-based, exit intent, and custom) within the hook.",
+          "dependencies": [
+            1
+          ],
+          "details": "Set up event listeners and timers to monitor user behavior and evaluate trigger conditions as defined in the rules configuration.",
+          "status": "pending",
+          "testStrategy": "Simulate user interactions in tests to verify that each trigger type is detected and handled correctly."
+        },
+        {
+          "id": 3,
+          "title": "Develop Rule Evaluation and Action Execution Mechanism",
+          "description": "Implement the core logic to evaluate rules when triggers are detected and execute the corresponding actions, including invoking callbacks.",
+          "dependencies": [
+            2
+          ],
+          "details": "Ensure that rule conditions are checked accurately and that the specified action (open, message, or custom) is executed when a rule is triggered.",
+          "status": "pending",
+          "testStrategy": "Write integration tests to confirm that rules are evaluated and actions are executed as expected for various configurations."
+        },
+        {
+          "id": 4,
+          "title": "Add Cooldown and Persistence Mechanisms",
+          "description": "Implement cooldown logic to prevent repeated triggering of the same rule and persist engagement state as needed.",
+          "dependencies": [
+            3
+          ],
+          "details": "Track when rules are triggered and enforce cooldown periods; optionally persist state in local storage or context to maintain behavior across sessions.",
+          "status": "pending",
+          "testStrategy": "Test cooldown enforcement and persistence by triggering rules in rapid succession and across page reloads."
+        },
+        {
+          "id": 5,
+          "title": "Integrate Hook with ConciergusProvider Context",
+          "description": "Connect the proactive engagement hook with the ConciergusProvider context to enable seamless chat engagement and state management.",
+          "dependencies": [
+            4
+          ],
+          "details": "Ensure the hook can access and update chat state via the provider, and that triggered actions (e.g., opening chat) are reflected in the UI.",
+          "status": "pending",
+          "testStrategy": "Perform end-to-end tests to verify that proactive engagements result in correct chat UI behavior and state updates."
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Implement Human Handover Support",
+      "description": "Create functionality for detecting and handling human handover requests from AI responses.",
+      "status": "pending",
+      "dependencies": [
+        2,
+        8
+      ],
+      "priority": "medium",
+      "details": "1. Implement handover detection in tool call processing\n2. Add event callback to ConciergusProvider:\n```typescript\nonHandoverRequired?: (chatData: {\n  messages: Message[];\n  lastUserMessage?: Message;\n  toolInvocation?: ToolInvocation;\n}) => void;\n```\n3. Create example implementation for common handover scenarios\n4. Add documentation for integrating with human chat systems\n5. Implement UI state changes during handover\n6. Add support for handover cancellation\n7. Create TypeScript interfaces for handover data",
+      "testStrategy": "Test handover detection with various tool call patterns. Verify callback is triggered with correct data. Test UI state changes during handover. Verify handover cancellation works correctly. Test integration with mock human chat systems.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Sentiment Analysis for Handover Detection",
+          "description": "Develop a sentiment analysis system to detect user frustration or complex issues that require human intervention",
+          "dependencies": [],
+          "details": "Create a module that analyzes user messages for negative sentiment, confusion indicators, or explicit requests for human assistance. Integrate this with the existing tool call processing to trigger handover when appropriate thresholds are met.",
+          "status": "pending",
+          "testStrategy": "Test with various user messages expressing frustration, confusion, and explicit requests for human help to ensure accurate detection"
+        },
+        {
+          "id": 2,
+          "title": "Develop Context Preservation Mechanism",
+          "description": "Create a system to capture and transfer the complete conversation context during handover",
+          "dependencies": [
+            1
+          ],
+          "details": "Implement functionality to package conversation history, user query details, and AI response attempts into a structured format that can be passed to human agents. Ensure all relevant metadata and state information is preserved.",
+          "status": "pending",
+          "testStrategy": "Verify that all conversation history, including timestamps, user queries, and AI responses are correctly captured and formatted for human review"
+        },
+        {
+          "id": 3,
+          "title": "Create UI State Management for Handover Transitions",
+          "description": "Implement UI changes to indicate handover status, waiting periods, and agent connection",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Develop UI components and state management to show when handover is initiated, in progress, connected to an agent, or cancelled. Include appropriate loading indicators, status messages, and transition animations.",
+          "status": "pending",
+          "testStrategy": "Test all UI state transitions for smooth visual feedback during the handover process"
+        },
+        {
+          "id": 4,
+          "title": "Implement Handover Cancellation Functionality",
+          "description": "Add support for users or system to cancel an in-progress handover request",
+          "dependencies": [
+            3
+          ],
+          "details": "Create mechanisms for users to cancel a handover request before agent connection, and for the system to cancel handovers when appropriate (timeout, issue resolved, etc.). Ensure proper state restoration after cancellation.",
+          "status": "pending",
+          "testStrategy": "Test cancellation at various stages of the handover process to ensure the system returns to appropriate states"
+        },
+        {
+          "id": 5,
+          "title": "Develop Integration Documentation and Examples",
+          "description": "Create comprehensive documentation and example implementations for common handover scenarios",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "details": "Document the TypeScript interfaces, event callbacks, and integration patterns for connecting with human chat systems. Provide example implementations for common scenarios like customer support, technical troubleshooting, and sales inquiries.",
+          "status": "pending",
+          "testStrategy": "Verify documentation clarity by having developers implement test integrations following only the provided documentation"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Create Documentation and Examples",
+      "description": "Develop comprehensive documentation, TypeScript definitions, and example implementations for the library.",
+      "status": "pending",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "priority": "low",
+      "details": "1. Create README.md with quick-start guide\n2. Add TSDoc comments to all public APIs\n3. Create example implementations:\n   - Basic chat widget with Vercel AI SDK\n   - RAG implementation with Supabase pgvector\n   - Function calling examples (web search, calendar booking, lead capture)\n   - Voice chat implementation\n   - Proactive engagement configuration\n   - Styling examples with Tailwind CSS, plain CSS, and CSS-in-JS\n4. Implement console warnings for common misconfigurations\n5. Create contribution guide and code of conduct\n6. Add licensing information (Apache License 2.0)\n7. Prepare for future documentation expansion (Storybook, Docusaurus/Nextra)",
+      "testStrategy": "Verify documentation accuracy by testing all examples. Check that TSDoc comments generate correct type hints in IDEs. Test console warnings with various misconfigurations. Verify all required documentation sections are complete and accurate.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement TSDoc Comments for Public APIs",
+          "description": "Add standardized TSDoc comments to all public APIs in the codebase to ensure proper documentation generation.",
+          "dependencies": [],
+          "details": "Follow Microsoft's TSDoc standard for TypeScript documentation. Include descriptions for all parameters, return types, examples, and edge cases. Ensure comments provide real value beyond just repeating function names. Use proper formatting to enable automatic documentation generation tools.",
+          "status": "pending",
+          "testStrategy": "Verify documentation generation works correctly with TypeDoc or similar tools. Ensure all public APIs have complete documentation."
+        },
+        {
+          "id": 2,
+          "title": "Create Example Implementations",
+          "description": "Develop the specified example implementations to demonstrate library usage in various scenarios.",
+          "dependencies": [
+            1
+          ],
+          "details": "Implement all required examples: Basic chat widget with Vercel AI SDK, RAG with Supabase pgvector, function calling examples (web search, calendar booking, lead capture), voice chat implementation, proactive engagement configuration, and styling examples with Tailwind CSS, plain CSS, and CSS-in-JS. Each example should be well-commented and include a README explaining its purpose and setup.",
+          "status": "pending",
+          "testStrategy": "Test each example in isolation to ensure it works as expected. Verify examples work across different environments and with the current library version."
+        },
+        {
+          "id": 3,
+          "title": "Develop Comprehensive README and Quick-Start Guide",
+          "description": "Create a detailed README.md with installation instructions, quick-start guide, and links to examples and documentation.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Structure the README with clear sections: Introduction, Installation, Quick-Start Guide, Examples (with links to implementations), API Reference, Configuration Options, Troubleshooting, and Contributing. Include badges for build status, version, and license. Add code snippets for common use cases.",
+          "status": "pending",
+          "testStrategy": "Have team members follow the quick-start guide to verify clarity and completeness. Check all links work correctly."
+        },
+        {
+          "id": 4,
+          "title": "Implement Console Warnings for Misconfigurations",
+          "description": "Add helpful console warnings that alert developers about common misconfigurations during development.",
+          "dependencies": [],
+          "details": "Identify common misconfigurations based on existing user feedback and support requests. Implement descriptive console warnings with suggestions for fixes. Include links to relevant documentation sections where appropriate. Ensure warnings only appear in development mode, not production.",
+          "status": "pending",
+          "testStrategy": "Create test cases for each potential misconfiguration and verify appropriate warnings are displayed. Ensure warnings are clear and actionable."
+        },
+        {
+          "id": 5,
+          "title": "Create Contribution Guidelines and Documentation Infrastructure",
+          "description": "Develop contribution guide, code of conduct, licensing information, and prepare for future documentation expansion.",
+          "dependencies": [
+            3
+          ],
+          "details": "Create CONTRIBUTING.md with guidelines for code style, pull requests, and issue reporting. Add CODE_OF_CONDUCT.md based on Contributor Covenant. Include Apache License 2.0 information. Set up infrastructure for future documentation expansion with either Storybook, Docusaurus, or Nextra. Document the process for updating documentation.",
+          "status": "pending",
+          "testStrategy": "Review all documentation files for clarity and completeness. Verify documentation infrastructure can be extended as planned."
+        }
+      ]
+    }
+  ]
+}

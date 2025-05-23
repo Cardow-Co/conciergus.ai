@@ -1,0 +1,77 @@
+# Task ID: 10
+# Title: Implement Proactive Engagement Hook
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create a hook for triggering proactive chat engagements based on user behavior rules.
+# Details:
+1. Create `useProactiveEngagement` hook that accepts rules configuration
+2. Implement support for various trigger types:
+   - Time-based (e.g., after X seconds on page)
+   - Scroll-based (e.g., scrolled X% of page)
+   - Focus-based (e.g., tab focus/blur)
+   - Exit intent (mouse leaving viewport)
+3. Create TypeScript interface:
+```typescript
+interface ProactiveRule {
+  id: string;
+  triggerType: 'time' | 'scroll' | 'focus' | 'exit' | 'custom';
+  conditions: {
+    timeThreshold?: number; // milliseconds
+    scrollThreshold?: number; // percentage 0-100
+    focusAction?: 'focus' | 'blur';
+    customCheck?: () => boolean;
+  };
+  action: {
+    type: 'open' | 'message' | 'custom';
+    message?: string;
+    customAction?: () => void;
+  };
+  cooldown?: number; // milliseconds
+  enabled?: boolean;
+}
+
+interface UseProactiveEngagementProps {
+  rules: ProactiveRule[];
+  onRuleTriggered?: (ruleId: string) => void;
+  enabled?: boolean;
+}
+```
+4. Implement rule evaluation logic
+5. Add cooldown and persistence mechanism
+6. Integrate with ConciergusProvider context
+
+# Test Strategy:
+Test various rule types with mock user behaviors. Verify cooldown periods work correctly. Test integration with ConciergusProvider context. Verify rules can be enabled/disabled dynamically. Test persistence of triggered rules across page reloads.
+
+# Subtasks:
+## 1. Design TypeScript Interfaces for Proactive Engagement Rules [pending]
+### Dependencies: None
+### Description: Define and implement the TypeScript interfaces for proactive engagement rules and hook properties, ensuring all trigger types, conditions, and actions are represented.
+### Details:
+Create the ProactiveRule and UseProactiveEngagementProps interfaces as specified, supporting extensibility for future trigger types and actions.
+
+## 2. Implement Trigger Detection Logic for Supported Rule Types [pending]
+### Dependencies: 10.1
+### Description: Develop logic to detect and handle all specified trigger types (time-based, scroll-based, focus-based, exit intent, and custom) within the hook.
+### Details:
+Set up event listeners and timers to monitor user behavior and evaluate trigger conditions as defined in the rules configuration.
+
+## 3. Develop Rule Evaluation and Action Execution Mechanism [pending]
+### Dependencies: 10.2
+### Description: Implement the core logic to evaluate rules when triggers are detected and execute the corresponding actions, including invoking callbacks.
+### Details:
+Ensure that rule conditions are checked accurately and that the specified action (open, message, or custom) is executed when a rule is triggered.
+
+## 4. Add Cooldown and Persistence Mechanisms [pending]
+### Dependencies: 10.3
+### Description: Implement cooldown logic to prevent repeated triggering of the same rule and persist engagement state as needed.
+### Details:
+Track when rules are triggered and enforce cooldown periods; optionally persist state in local storage or context to maintain behavior across sessions.
+
+## 5. Integrate Hook with ConciergusProvider Context [pending]
+### Dependencies: 10.4
+### Description: Connect the proactive engagement hook with the ConciergusProvider context to enable seamless chat engagement and state management.
+### Details:
+Ensure the hook can access and update chat state via the provider, and that triggered actions (e.g., opening chat) are reflected in the UI.
+

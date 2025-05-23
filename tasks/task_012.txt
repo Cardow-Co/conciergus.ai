@@ -1,0 +1,55 @@
+# Task ID: 12
+# Title: Create Documentation and Examples
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+# Priority: low
+# Description: Develop comprehensive documentation, TypeScript definitions, and example implementations for the library.
+# Details:
+1. Create README.md with quick-start guide
+2. Add TSDoc comments to all public APIs
+3. Create example implementations:
+   - Basic chat widget with Vercel AI SDK
+   - RAG implementation with Supabase pgvector
+   - Function calling examples (web search, calendar booking, lead capture)
+   - Voice chat implementation
+   - Proactive engagement configuration
+   - Styling examples with Tailwind CSS, plain CSS, and CSS-in-JS
+4. Implement console warnings for common misconfigurations
+5. Create contribution guide and code of conduct
+6. Add licensing information (Apache License 2.0)
+7. Prepare for future documentation expansion (Storybook, Docusaurus/Nextra)
+
+# Test Strategy:
+Verify documentation accuracy by testing all examples. Check that TSDoc comments generate correct type hints in IDEs. Test console warnings with various misconfigurations. Verify all required documentation sections are complete and accurate.
+
+# Subtasks:
+## 1. Implement TSDoc Comments for Public APIs [pending]
+### Dependencies: None
+### Description: Add standardized TSDoc comments to all public APIs in the codebase to ensure proper documentation generation.
+### Details:
+Follow Microsoft's TSDoc standard for TypeScript documentation. Include descriptions for all parameters, return types, examples, and edge cases. Ensure comments provide real value beyond just repeating function names. Use proper formatting to enable automatic documentation generation tools.
+
+## 2. Create Example Implementations [pending]
+### Dependencies: 12.1
+### Description: Develop the specified example implementations to demonstrate library usage in various scenarios.
+### Details:
+Implement all required examples: Basic chat widget with Vercel AI SDK, RAG with Supabase pgvector, function calling examples (web search, calendar booking, lead capture), voice chat implementation, proactive engagement configuration, and styling examples with Tailwind CSS, plain CSS, and CSS-in-JS. Each example should be well-commented and include a README explaining its purpose and setup.
+
+## 3. Develop Comprehensive README and Quick-Start Guide [pending]
+### Dependencies: 12.1, 12.2
+### Description: Create a detailed README.md with installation instructions, quick-start guide, and links to examples and documentation.
+### Details:
+Structure the README with clear sections: Introduction, Installation, Quick-Start Guide, Examples (with links to implementations), API Reference, Configuration Options, Troubleshooting, and Contributing. Include badges for build status, version, and license. Add code snippets for common use cases.
+
+## 4. Implement Console Warnings for Misconfigurations [pending]
+### Dependencies: None
+### Description: Add helpful console warnings that alert developers about common misconfigurations during development.
+### Details:
+Identify common misconfigurations based on existing user feedback and support requests. Implement descriptive console warnings with suggestions for fixes. Include links to relevant documentation sections where appropriate. Ensure warnings only appear in development mode, not production.
+
+## 5. Create Contribution Guidelines and Documentation Infrastructure [pending]
+### Dependencies: 12.3
+### Description: Develop contribution guide, code of conduct, licensing information, and prepare for future documentation expansion.
+### Details:
+Create CONTRIBUTING.md with guidelines for code style, pull requests, and issue reporting. Add CODE_OF_CONDUCT.md based on Contributor Covenant. Include Apache License 2.0 information. Set up infrastructure for future documentation expansion with either Storybook, Docusaurus, or Nextra. Document the process for updating documentation.
+

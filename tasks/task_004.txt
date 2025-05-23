@@ -1,0 +1,60 @@
+# Task ID: 4
+# Title: Implement ConciergusMessageList Component
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Create the message list component that displays the chat conversation history with proper scrolling behavior.
+# Details:
+1. Create a `ConciergusMessageList` component using Radix UI's ScrollArea
+2. Accept messages from Vercel AI SDK's `useChat` hook
+3. Implement auto-scrolling to the latest message
+4. Add support for message grouping by sender
+5. Implement basic list rendering with fallback to ScrollArea for v1.0
+6. Prepare component structure for future virtualization support
+7. Add proper TypeScript interfaces for all props:
+```typescript
+interface ConciergusMessageListProps {
+  messages: Message[]; // From Vercel AI SDK
+  className?: string;
+  messageComponent?: React.ComponentType<ConciergusMessageItemProps>;
+  loadingComponent?: React.ReactNode;
+  emptyComponent?: React.ReactNode;
+  [key: string]: any; // For ...rest props
+}
+```
+8. Implement proper handling of loading states and empty states
+
+# Test Strategy:
+Test rendering with various message arrays. Verify auto-scrolling behavior works correctly. Test custom message component rendering. Verify loading and empty states display correctly. Test with large message arrays to ensure performance is acceptable.
+
+# Subtasks:
+## 1. Set Up ConciergusMessageList Component Structure [pending]
+### Dependencies: None
+### Description: Create the initial component structure using Radix UI's ScrollArea as the scrollable container and define the basic layout for rendering messages.
+### Details:
+Import and configure Radix UI's ScrollArea as the main wrapper. Set up the component skeleton to accept props as specified in the TypeScript interface, including messages, className, and optional components.
+
+## 2. Implement Message Rendering and Grouping Logic [pending]
+### Dependencies: 4.1
+### Description: Render the list of messages, grouping them by sender, and support custom message, loading, and empty components.
+### Details:
+Map over the messages prop, group consecutive messages from the same sender, and render each group using the provided messageComponent or a default. Display loadingComponent or emptyComponent as appropriate.
+
+## 3. Add Auto-Scrolling to Latest Message [pending]
+### Dependencies: 4.2
+### Description: Ensure the message list automatically scrolls to the latest message when new messages arrive.
+### Details:
+Use a ref to the ScrollArea viewport and implement an effect that scrolls to the bottom whenever the messages prop changes.
+
+## 4. Define and Apply TypeScript Interfaces [pending]
+### Dependencies: 4.1
+### Description: Implement and enforce TypeScript interfaces for all component props, ensuring type safety and extensibility.
+### Details:
+Define ConciergusMessageListProps and related interfaces for messages and message items. Apply these interfaces to the component and its props.
+
+## 5. Prepare for Future Virtualization Support [pending]
+### Dependencies: 4.2, 4.4
+### Description: Structure the component to allow easy integration of list virtualization libraries in future versions.
+### Details:
+Abstract the message rendering logic and ScrollArea usage so that virtualization (e.g., react-virtual, react-window) can be added with minimal refactoring.
+

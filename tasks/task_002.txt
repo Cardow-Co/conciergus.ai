@@ -1,0 +1,58 @@
+# Task ID: 2
+# Title: Create ConciergusProvider Context
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Implement the optional ConciergusProvider context component that provides global configuration for Conciergus features.
+# Details:
+1. Create a React context with TypeScript interface for configuration options:
+```typescript
+interface ConciergusConfig {
+  defaultTTSVoice?: string;
+  isTTSEnabledByDefault?: boolean;
+  ttsApiEndpoint?: string;
+  onTextToAudio?: (text: string) => Promise<string | Blob>;
+  onProcessRecordedAudio?: (blob: Blob) => Promise<string>;
+  proactiveRules?: ProactiveRule[];
+  enableDebug?: boolean;
+}
+```
+2. Implement the `ConciergusProvider` component that accepts these configuration options as props
+3. Create a `useConciergus` hook to access the context
+4. Add debug mode that logs helpful information when `enableDebug` is true
+5. Implement proper error handling for missing context usage
+
+# Test Strategy:
+Write unit tests to verify that the context correctly provides configuration values to child components. Test that the `useConciergus` hook throws appropriate errors when used outside of a provider. Verify that debug mode correctly logs information when enabled.
+
+# Subtasks:
+## 1. Define ConciergusConfig TypeScript Interface [pending]
+### Dependencies: None
+### Description: Create a TypeScript interface named ConciergusConfig that specifies all configuration options required for the Conciergus context.
+### Details:
+Include properties such as defaultTTSVoice, isTTSEnabledByDefault, ttsApiEndpoint, onTextToAudio, onProcessRecordedAudio, proactiveRules, and enableDebug in the interface.
+
+## 2. Create Conciergus React Context [pending]
+### Dependencies: 2.1
+### Description: Establish a React context using the ConciergusConfig interface, ensuring proper default values and null safety.
+### Details:
+Use React.createContext with ConciergusConfig | null as the type, and set the default value to null to enforce provider usage.
+
+## 3. Implement ConciergusProvider Component [pending]
+### Dependencies: 2.2
+### Description: Develop the ConciergusProvider component that accepts ConciergusConfig as props and supplies the context value to its children.
+### Details:
+Ensure the provider wraps children and passes the configuration object as the context value.
+
+## 4. Develop useConciergus Hook with Error Handling [pending]
+### Dependencies: 2.3
+### Description: Create a custom useConciergus hook to access the Conciergus context, including error handling for missing provider usage.
+### Details:
+The hook should throw a descriptive error if the context is null, guiding developers to wrap components with ConciergusProvider.
+
+## 5. Add Debug Mode Logging to Provider [pending]
+### Dependencies: 2.3
+### Description: Implement debug mode in ConciergusProvider to log helpful information when enableDebug is true in the configuration.
+### Details:
+Integrate conditional logging throughout the provider and context logic to output relevant debug information when enabled.
+

@@ -1,0 +1,61 @@
+# Task ID: 3
+# Title: Implement ConciergusChatWidget Component
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Create the main chat widget container component using Radix UI Dialog for the modal interface.
+# Details:
+1. Create a `ConciergusChatWidget` component using Radix UI's Dialog component
+2. Implement the component with the following props:
+```typescript
+interface ConciergusChatWidgetProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  className?: string;
+  children?: React.ReactNode;
+  triggerComponent?: React.ReactNode;
+  headerComponent?: React.ReactNode;
+  footerComponent?: React.ReactNode;
+  [key: string]: any; // For ...rest props
+}
+```
+3. Structure the component to include slots for header, content area, and footer
+4. Ensure all Radix UI accessibility features are preserved
+5. Pass through className and ...rest props to the root element
+6. Add data-* attributes for styling hooks
+7. Implement responsive behavior for mobile and desktop views
+
+# Test Strategy:
+Test the component renders correctly with various prop combinations. Verify that the dialog opens and closes as expected when isOpen changes. Test that custom trigger, header, and footer components render correctly. Verify accessibility attributes are correctly applied.
+
+# Subtasks:
+## 1. Set Up ConciergusChatWidget Component Structure with Radix UI Dialog [pending]
+### Dependencies: None
+### Description: Initialize the ConciergusChatWidget component using Radix UI's Dialog primitives, ensuring the modal structure is in place.
+### Details:
+Import and configure Dialog.Root, Dialog.Trigger, Dialog.Portal, Dialog.Overlay, and Dialog.Content to establish the modal dialog structure as the container for the chat widget.
+
+## 2. Implement Props Interface and Propagation [pending]
+### Dependencies: 3.1
+### Description: Apply the ConciergusChatWidgetProps interface, ensuring all props are accepted and correctly passed to the root element.
+### Details:
+Integrate isOpen, onOpenChange, className, children, triggerComponent, headerComponent, footerComponent, and ...rest props. Pass className and ...rest to the root Dialog element.
+
+## 3. Slot and Render Header, Content, and Footer Areas [pending]
+### Dependencies: 3.2
+### Description: Structure the component to render headerComponent, content area (children), and footerComponent in their respective slots within the dialog.
+### Details:
+Ensure headerComponent is rendered at the top, children in the main content area, and footerComponent at the bottom of the dialog.
+
+## 4. Ensure Accessibility and Add Data Attributes [pending]
+### Dependencies: 3.3
+### Description: Preserve all Radix UI accessibility features and add data-* attributes for styling hooks.
+### Details:
+Verify focus management, ARIA attributes, and keyboard navigation. Add data attributes (e.g., data-chat-widget) to key elements for styling.
+
+## 5. Implement Responsive Design for Mobile and Desktop [pending]
+### Dependencies: 3.4
+### Description: Add responsive styles and logic to ensure the chat widget displays optimally on both mobile and desktop devices.
+### Details:
+Apply CSS or utility classes to adjust layout, sizing, and interactions based on viewport size.
+

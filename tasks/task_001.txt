@@ -1,0 +1,56 @@
+# Task ID: 1
+# Title: Project Setup and Core Dependencies
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Initialize the project repository with proper configuration for React library development using TypeScript, pnpm, and Rollup. Set up peer dependencies, direct dependencies, and dev tooling.
+# Details:
+1. Initialize repository with `pnpm init`
+2. Configure TypeScript with strict mode
+3. Set up Rollup for both ESM and CommonJS builds with tree-shaking support
+4. Configure peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`
+5. Add direct dependencies:
+   - `@ai-sdk/react` and `ai` (Vercel AI SDK)
+   - Radix UI primitives: `@radix-ui/react-dialog`, `@radix-ui/react-scroll-area`, `@radix-ui/react-portal`
+   - `react-textarea-autosize`
+   - `@babel/runtime`
+   - Markdown stack: `react-markdown`, `remark-gfm`, `rehype-sanitize`
+   - Optional virtualization: `react-window`, `react-virtualized-auto-sizer`
+6. Set up ESLint and Prettier
+7. Configure package.json with proper entry points and exports
+8. Set up CI/CD pipeline for testing and publishing
+
+# Test Strategy:
+Verify that the build process works correctly by running `pnpm build` and checking that both ESM and CommonJS builds are generated. Ensure all dependencies are correctly specified and the package can be imported in a test React application.
+
+# Subtasks:
+## 1. Initialize Project Structure [pending]
+### Dependencies: None
+### Description: Set up the basic project structure with pnpm, TypeScript configuration, and essential files.
+### Details:
+Run `pnpm init` to create package.json, configure TypeScript with strict mode in tsconfig.json, create src directory structure, set up .gitignore for node_modules and build directories, and initialize Git repository.
+
+## 2. Configure Rollup Bundling [pending]
+### Dependencies: 1.1
+### Description: Set up Rollup configuration for bundling the library with support for ESM and CommonJS formats.
+### Details:
+Install Rollup and plugins: `@rollup/plugin-typescript`, `@rollup/plugin-commonjs`, `@rollup/plugin-node-resolve`, `rollup-plugin-peer-deps-external`, `rollup-plugin-dts`, and `@rollup/plugin-terser`. Create rollup.config.js with configurations for both ESM and CJS outputs with tree-shaking support.
+
+## 3. Set Up Dependencies Management [pending]
+### Dependencies: 1.1
+### Description: Configure peer dependencies, direct dependencies, and development dependencies.
+### Details:
+Add peer dependencies: `react ^19.1.0`, `react-dom ^19.1.0`. Install direct dependencies: `@ai-sdk/react`, `ai`, Radix UI primitives, `react-textarea-autosize`, `@babel/runtime`, markdown stack, and virtualization libraries. Configure package.json with proper peerDependencies section.
+
+## 4. Configure Package Entry Points and Exports [pending]
+### Dependencies: 1.2, 1.3
+### Description: Set up package.json with proper entry points, exports configuration, and TypeScript declarations.
+### Details:
+Configure package.json with `main` (CJS), `module` (ESM), and `types` fields. Set up `exports` field with conditional exports for different module systems. Add `files` array to specify which files should be published to npm. Configure TypeScript to generate declaration files.
+
+## 5. Set Up Development Tooling and CI/CD [pending]
+### Dependencies: 1.1, 1.4
+### Description: Configure ESLint, Prettier, and CI/CD pipeline for testing and publishing.
+### Details:
+Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Create GitHub Actions workflow for CI/CD that runs tests, builds the package, and publishes to npm on release. Add npm scripts for linting, testing, building, and publishing.
+

@@ -1,0 +1,58 @@
+# Task ID: 7
+# Title: Implement Voice Input and TTS Hooks
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create hooks for speech-to-text input and text-to-speech output with browser API fallbacks.
+# Details:
+1. Create `useConciergusVoiceInput` hook:
+   - Use `window.SpeechRecognition` for real-time transcription
+   - Implement fallback UI for unsupported browsers
+   - Add support for `MediaRecorder` when `onProcessRecordedAudio` is provided
+   - Handle permission requests and errors
+
+2. Create `useConciergusTTS` hook:
+   - Fetch audio from configured `ttsApiEndpoint`
+   - Implement streaming playback with controls
+   - Add fallback to `window.speechSynthesis` when needed
+   - Support custom TTS via `onTextToAudio` function
+   - Handle errors and loading states
+
+3. Implement TypeScript interfaces for both hooks
+4. Add browser compatibility detection
+5. Implement proper error handling and user feedback
+
+# Test Strategy:
+Test voice input with mock SpeechRecognition API. Verify fallback behavior works in unsupported browsers. Test TTS with mock audio endpoints. Verify error handling for permission denials and API failures. Test integration with ConciergusProvider context.
+
+# Subtasks:
+## 1. Implement SpeechRecognition API Integration [pending]
+### Dependencies: None
+### Description: Create the core functionality for the useConciergusVoiceInput hook using the Web Speech API's SpeechRecognition interface
+### Details:
+Implement the useConciergusVoiceInput hook with SpeechRecognition API integration including: setting up continuous recognition, handling interim and final results, configuring language settings, and implementing maxAlternatives. Set up event listeners for results, errors, and state changes. Ensure proper initialization and cleanup of the SpeechRecognition object.
+
+## 2. Develop Browser Compatibility Detection and Fallbacks [pending]
+### Dependencies: 7.1
+### Description: Implement detection for browser support of SpeechRecognition and create fallback mechanisms
+### Details:
+Create a utility function to detect browser support for SpeechRecognition API. Implement fallback UI components for browsers that don't support the API. For the TTS hook, implement fallback to window.speechSynthesis when the primary TTS API endpoint is unavailable. Document browser compatibility limitations, noting that Chrome/Chromium browsers have the best support.
+
+## 3. Create MediaRecorder Integration for Audio Processing [pending]
+### Dependencies: 7.1
+### Description: Implement MediaRecorder support as an alternative input method when onProcessRecordedAudio is provided
+### Details:
+Add MediaRecorder functionality to the useConciergusVoiceInput hook that activates when onProcessRecordedAudio prop is provided. Implement audio capture, processing, and transmission. Handle permission requests for microphone access and manage recording states. Implement error handling for permission denials and device unavailability.
+
+## 4. Develop Text-to-Speech Hook Implementation [pending]
+### Dependencies: None
+### Description: Create the useConciergusTTS hook with streaming audio playback and controls
+### Details:
+Implement the useConciergusTTS hook to fetch audio from the configured ttsApiEndpoint. Create streaming playback functionality with play, pause, and stop controls. Implement audio buffering for smooth playback. Add support for custom TTS via the onTextToAudio function. Manage loading states during audio fetching and processing.
+
+## 5. Create TypeScript Interfaces and Error Handling [pending]
+### Dependencies: 7.1, 7.2, 7.3, 7.4
+### Description: Define comprehensive TypeScript interfaces and implement robust error handling for both hooks
+### Details:
+Create TypeScript interfaces for both hooks including props, return values, and internal state types. Implement comprehensive error handling for all potential failure points: API unavailability, permission denials, network failures, and unexpected errors. Add user feedback mechanisms for error states including meaningful error messages and recovery suggestions. Implement proper state management to handle loading, error, and success states.
+

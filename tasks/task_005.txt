@@ -1,0 +1,61 @@
+# Task ID: 5
+# Title: Implement ConciergusMessageItem Component
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Create the message item component that renders individual chat messages with Markdown support and rich UI elements.
+# Details:
+1. Create a `ConciergusMessageItem` component that renders a single message
+2. Implement Markdown rendering using `react-markdown` with `remark-gfm` and `rehype-sanitize`
+3. Add support for rendering rich UI elements from `message.ui` or `message.tool_calls`
+4. Implement audio playback UI for TTS messages
+5. Add proper TypeScript interfaces:
+```typescript
+interface ConciergusMessageItemProps {
+  message: Message; // From Vercel AI SDK
+  className?: string;
+  avatarComponent?: React.ReactNode;
+  isLastMessage?: boolean;
+  onAudioPlay?: () => void;
+  onAudioPause?: () => void;
+  [key: string]: any; // For ...rest props
+}
+```
+6. Style message differently based on role (user/assistant)
+7. Add support for message timestamps
+8. Implement proper error handling for malformed messages
+
+# Test Strategy:
+Test rendering of various message types (text, Markdown, code blocks). Verify sanitization of HTML in messages. Test audio playback UI with mock audio data. Verify custom avatar components render correctly. Test error handling with malformed messages.
+
+# Subtasks:
+## 1. Develop ConciergusMessageItem Component Structure [pending]
+### Dependencies: None
+### Description: Set up the base React component with TypeScript, defining the ConciergusMessageItemProps interface and ensuring proper prop typing.
+### Details:
+Create the component file, define the props interface as specified, and ensure the component accepts all required props including message, className, avatarComponent, isLastMessage, onAudioPlay, onAudioPause, and any additional props.
+
+## 2. Implement Markdown Rendering with Security [pending]
+### Dependencies: 5.1
+### Description: Integrate react-markdown with remark-gfm and rehype-sanitize to render message content safely with Markdown support.
+### Details:
+Install and configure react-markdown, remark-gfm, and rehype-sanitize. Ensure that Markdown is rendered correctly and securely, preventing XSS vulnerabilities.
+
+## 3. Add Rich UI and Audio Playback Support [pending]
+### Dependencies: 5.2
+### Description: Render additional UI elements from message.ui or message.tool_calls and implement audio playback UI for TTS messages.
+### Details:
+Detect and render any rich UI elements specified in the message object. Integrate audio playback controls for TTS messages, wiring up onAudioPlay and onAudioPause callbacks.
+
+## 4. Style Messages and Add Timestamps [pending]
+### Dependencies: 5.3
+### Description: Apply conditional styling based on message role (user/assistant) and display message timestamps.
+### Details:
+Implement CSS or styling logic to visually distinguish user and assistant messages. Add a timestamp display, formatted appropriately, for each message.
+
+## 5. Implement Error Handling for Malformed Messages [pending]
+### Dependencies: 5.4
+### Description: Add robust error handling to gracefully manage and display issues with malformed or incomplete message data.
+### Details:
+Detect missing or invalid message fields and render fallback UI or error messages as needed, ensuring the component does not crash.
+
