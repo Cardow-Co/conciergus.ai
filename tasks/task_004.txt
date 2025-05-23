@@ -1,6 +1,6 @@
 # Task ID: 4
 # Title: Implement ConciergusMessageList Component
-# Status: pending
+# Status: done
 # Dependencies: 1, 2
 # Priority: high
 # Description: Create the message list component that displays the chat conversation history with proper scrolling behavior.
@@ -28,33 +28,172 @@ interface ConciergusMessageListProps {
 Test rendering with various message arrays. Verify auto-scrolling behavior works correctly. Test custom message component rendering. Verify loading and empty states display correctly. Test with large message arrays to ensure performance is acceptable.
 
 # Subtasks:
-## 1. Set Up ConciergusMessageList Component Structure [pending]
+## 1. Set Up ConciergusMessageList Component Structure [done]
 ### Dependencies: None
 ### Description: Create the initial component structure using Radix UI's ScrollArea as the scrollable container and define the basic layout for rendering messages.
 ### Details:
 Import and configure Radix UI's ScrollArea as the main wrapper. Set up the component skeleton to accept props as specified in the TypeScript interface, including messages, className, and optional components.
+<info added on 2025-05-23T15:34:07.058Z>
+I'll create a new file at `src/components/ConciergusMessageList.tsx` and set up the component skeleton. First, I'll define the TypeScript interface for the component props, ensuring it accepts messages array, optional className, and customizable components for messages, loading state, and empty state. I'll also allow additional props through rest parameters.
 
-## 2. Implement Message Rendering and Grouping Logic [pending]
+For dependencies, I'll use Radix UI's ScrollArea primitives from `@radix-ui/react-scroll-area` package, which needs to be confirmed as installed or added as a peer dependency.
+
+The component will use ScrollArea.Root as the main container with ScrollArea.Viewport wrapping the message list. It will map over the messages array to render either the default message component or a custom one provided via props. The component will also handle loading and empty states through the respective prop components.
+
+I'll ensure the file exports the component as both a default and named export for flexibility when importing in the ChatWidget component.
+</info added on 2025-05-23T15:34:07.058Z>
+
+## 2. Implement Message Rendering and Grouping Logic [done]
 ### Dependencies: 4.1
 ### Description: Render the list of messages, grouping them by sender, and support custom message, loading, and empty components.
 ### Details:
 Map over the messages prop, group consecutive messages from the same sender, and render each group using the provided messageComponent or a default. Display loadingComponent or emptyComponent as appropriate.
+<info added on 2025-05-23T15:35:46.378Z>
+Implement message grouping logic using the `reduce` method to combine consecutive messages from the same sender into groups. Create a `MessageGroup` interface with `sender` and `messages` properties. The grouping algorithm should:
 
-## 3. Add Auto-Scrolling to Latest Message [pending]
+1. Iterate through the `messages` array
+2. Compare each message's sender (via `message.role` or `message.author`) with the previous one
+3. Either add the message to the current group or create a new group when sender changes
+
+Render grouped messages by mapping over the resulting `MessageGroup[]` array:
+- Wrap each group in a container with appropriate data attributes (e.g., `<div data-message-group={sender}>`)
+- Within each group, map over individual messages using either:
+  - The provided `messageComponent` prop (if available)
+  - The default message rendering from subtask 4.1
+
+Add testing hooks via data attributes:
+- `data-sender-group` for message group containers
+- `data-message-index` for individual messages
+
+Prepare test cases with mock message sequences from multiple senders to verify correct grouping behavior and rendering.
+</info added on 2025-05-23T15:35:46.378Z>
+
+## 3. Add Auto-Scrolling to Latest Message [done]
 ### Dependencies: 4.2
 ### Description: Ensure the message list automatically scrolls to the latest message when new messages arrive.
 ### Details:
 Use a ref to the ScrollArea viewport and implement an effect that scrolls to the bottom whenever the messages prop changes.
+<info added on 2025-05-23T15:38:13.689Z>
+To implement auto-scrolling to the latest message:
 
-## 4. Define and Apply TypeScript Interfaces [pending]
+1. Create a ref to access the ScrollArea viewport:
+```tsx
+const viewportRef = useRef<HTMLDivElement>(null);
+```
+
+2. Attach the ref to the ScrollArea.Viewport component:
+```tsx
+<ScrollArea.Viewport ref={viewportRef}>
+  {/* message content */}
+</ScrollArea.Viewport>
+```
+
+3. Implement useEffect to scroll to the bottom when messages change:
+```tsx
+useEffect(() => {
+  if (viewportRef.current) {
+    viewportRef.current.scrollTo({ 
+      top: viewportRef.current.scrollHeight, 
+      behavior: 'smooth' 
+    });
+  }
+}, [messages]);
+```
+
+4. Add a fallback approach using ScrollArea.Root API if the direct DOM ref doesn't work.
+
+5. Include testing hooks:
+- Add `data-message-list` attribute to the container
+- Create tests that verify scroll behavior by:
+  - Simulating new messages being added
+  - Spying on the scrollTo method
+  - Asserting scrollTo is called with correct parameters
+</info added on 2025-05-23T15:38:13.689Z>
+
+## 4. Define and Apply TypeScript Interfaces [done]
 ### Dependencies: 4.1
 ### Description: Implement and enforce TypeScript interfaces for all component props, ensuring type safety and extensibility.
 ### Details:
 Define ConciergusMessageListProps and related interfaces for messages and message items. Apply these interfaces to the component and its props.
+<info added on 2025-05-23T15:40:31.088Z>
+Define TypeScript interfaces for the ConciergusMessageList component:
 
-## 5. Prepare for Future Virtualization Support [pending]
+1. Create a `MessageGroup` interface:
+```typescript
+interface MessageGroup {
+  sender: string;
+  items: { message: Message; index: number }[];
+}
+```
+
+2. Annotate the `groupedMessages` useMemo with proper typing:
+```typescript
+const groupedMessages = useMemo<MessageGroup[]>(() => {
+  // existing grouping logic
+}, [messages]);
+```
+
+3. Replace inline type assertions in the reduce function with the MessageGroup interface:
+```typescript
+return messages.reduce((groups: MessageGroup[], message, index) => {
+  // existing reduce logic
+}, []);
+```
+
+4. Define and export comprehensive props interfaces:
+```typescript
+export interface ConciergusMessageListProps {
+  messages: Message[];
+  isLoading?: boolean;
+  // other required props
+}
+
+export interface ConciergusMessageItemProps {
+  message: Message;
+  isLastInGroup?: boolean;
+  // other required props
+}
+```
+
+5. Replace `as any` casts with proper type guards:
+```typescript
+const isUserMessage = (message: Message): boolean => {
+  return message.role === 'user' || message.author === 'user';
+}
+```
+
+6. Update imports to include any necessary type definitions.
+</info added on 2025-05-23T15:40:31.088Z>
+
+## 5. Prepare for Future Virtualization Support [done]
 ### Dependencies: 4.2, 4.4
 ### Description: Structure the component to allow easy integration of list virtualization libraries in future versions.
 ### Details:
 Abstract the message rendering logic and ScrollArea usage so that virtualization (e.g., react-virtual, react-window) can be added with minimal refactoring.
+<info added on 2025-05-23T15:41:45.234Z>
+To prepare for future virtualization support:
+
+1. Abstract ScrollArea.Viewport and message rendering logic into separate components:
+   - Create a MessageGroup renderer component
+   - Extract ScrollArea.Viewport usage to allow replacement
+
+2. Implement component API changes:
+   - Add `virtualizationComponent` prop to ConciergusMessageListProps
+   - Design using Render Props pattern with interface:
+     ```tsx
+     interface VirtualizationProps {
+       items: MessageGroup[];
+       renderItem: (group: MessageGroup, index: number) => React.ReactNode;
+     }
+     ```
+   - Default to Radix ScrollArea when no virtualization component is provided
+
+3. Refactor rendering logic:
+   - Create helper function `renderGroups(groups: MessageGroup[])` to replace direct mapping
+   - Ensure message rendering is decoupled from scrolling container
+
+4. Testing strategy:
+   - Add tests with mock virtualization component
+   - Verify messages render correctly with different scrolling implementations
+</info added on 2025-05-23T15:41:45.234Z>
 

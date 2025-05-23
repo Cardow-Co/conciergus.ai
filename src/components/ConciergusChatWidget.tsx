@@ -9,8 +9,7 @@ export interface ConciergusChatWidgetProps {
   triggerComponent?: React.ReactNode;
   headerComponent?: React.ReactNode;
   footerComponent?: React.ReactNode;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+} & React.HTMLAttributes<HTMLDivElement>;
 }
 
 export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
@@ -24,9 +23,12 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   ...rest
 }: ConciergusChatWidgetProps) => {
   // Track viewport width for responsive layouts
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 768 : true
-  );
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    // Set initial value after mount to avoid SSR mismatch
+    setIsMobile(window.innerWidth < 768);
+  }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
