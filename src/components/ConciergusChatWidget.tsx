@@ -336,18 +336,18 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   const [currentModel, setCurrentModel] = useState<string | undefined>();
   
   // Memoize accessibility config to prevent infinite loops
-  const memoizedAccessibilityConfig = useMemo(() => accessibilityConfig, [
-    accessibilityConfig.enableReducedMotion,
-    accessibilityConfig.enableHighContrast,
-    accessibilityConfig.enableScreenReader,
-    accessibilityConfig.enableKeyboardNavigation,
-    accessibilityConfig.enableVoiceControl,
-    accessibilityConfig.ariaDescriptions,
-    accessibilityConfig.focusManagement,
+  const memoizedAccessibilityConfig = useMemo(() => accessibilityConfig || {}, [
+    accessibilityConfig?.enableReducedMotion,
+    accessibilityConfig?.enableHighContrast,
+    accessibilityConfig?.enableScreenReader,
+    accessibilityConfig?.enableKeyboardNavigation,
+    accessibilityConfig?.enableVoiceControl,
+    accessibilityConfig?.ariaDescriptions,
+    accessibilityConfig?.focusManagement,
   ]);
 
   // Memoize custom breakpoints to prevent infinite loops
-  const memoizedBreakpoints = useMemo(() => customBreakpoints, [
+  const memoizedBreakpoints = useMemo(() => customBreakpoints || {}, [
     customBreakpoints?.mobile,
     customBreakpoints?.tablet,
     customBreakpoints?.desktop,
