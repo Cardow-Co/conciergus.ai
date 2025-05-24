@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { ProactiveRule } from './useProactiveEngagement';
+import type { TelemetryEvent } from '../components/ConciergusMetadataDisplay';
 
 /**
  * Configuration for AI Gateway integration
@@ -159,17 +160,15 @@ export interface ConciergusConfig {
   /** Custom error boundary component */
   errorBoundary?: React.ComponentType<{ error: Error; errorInfo?: React.ErrorInfo }>;
 
-  /** Callback when telemetry event occurs */
-  onTelemetryEvent?: (event: TelemetryEvent) => void;
   // === Event Handlers ===
   /** Callback when model is changed */
   onModelChange?: (model: string) => void;
   /** Callback when telemetry event occurs */
-  onTelemetryEvent?: (event: any) => void;
+  onTelemetryEvent?: (event: TelemetryEvent) => void;
   /** Callback when error occurs */
-  onError?: (error: Error) => void;
+  onError?: (error: Error, source?: string) => void;
   /** Callback when cost threshold is reached */
-  onCostThreshold?: (cost: number) => void;
+  onCostThreshold?: (cost: number, threshold?: number) => void;
 }
 
 /**

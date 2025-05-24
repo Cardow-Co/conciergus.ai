@@ -4,6 +4,12 @@ import type { UIMessage } from '@ai-sdk/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
+import { MessageMetadata } from './MessageMetadata';
+import { ReasoningTrace } from './ReasoningTrace';
+import { SourcesDisplay } from './SourcesDisplay';
+import MessageStreamRenderer from './MessageStreamRenderer';
+import type { Source } from './SourcesDisplay';
+import type { TextStreamPart } from './MessageStreamRenderer';
 
 export interface ConciergusMessageItemProps {
   message: UIMessage;
@@ -15,6 +21,22 @@ export interface ConciergusMessageItemProps {
   showMetadata?: boolean;
   showReasoningTraces?: boolean;
   showSourceCitations?: boolean;
+  // Enhanced metadata and reasoning display props
+  metadataRenderer?: React.ComponentType<any>;
+  reasoningRenderer?: React.ComponentType<any>;
+  sourcesRenderer?: React.ComponentType<any>;
+  compactView?: boolean;
+  showDetailedMetadata?: boolean;
+  enableReasoningInteraction?: boolean;
+  enableSourceFiltering?: boolean;
+  // SSE Streaming props
+  streamParts?: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>;
+  isStreaming?: boolean;
+  enableStreaming?: boolean;
+  enableSmoothScrolling?: boolean;
+  onStreamComplete?: (finalMessage: UIMessage) => void;
+  onStreamError?: (error: Error) => void;
+  onTokenUpdate?: (tokenCount: number) => void;
   [key: string]: any;
 }
 
@@ -28,6 +50,22 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
   showMetadata = false,
   showReasoningTraces = false,
   showSourceCitations = false,
+  // Enhanced component props
+  metadataRenderer: CustomMetadataRenderer,
+  reasoningRenderer: CustomReasoningRenderer,
+  sourcesRenderer: CustomSourcesRenderer,
+  compactView = false,
+  showDetailedMetadata = false,
+  enableReasoningInteraction = true,
+  enableSourceFiltering = false,
+  // SSE Streaming props
+  streamParts,
+  isStreaming = false,
+  enableStreaming = false,
+  enableSmoothScrolling = true,
+  onStreamComplete,
+  onStreamError,
+  onTokenUpdate,
   ...rest
 }) => {
   const [audioObjectUrl, setAudioObjectUrl] = useState<string | null>(null);
@@ -81,44 +119,19 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
 
       case 'reasoning':
         if (!showReasoningTraces) return null;
+        const ReasoningComponent = CustomReasoningRenderer || ReasoningTrace;
         return (
           <div key={index} className="message-part message-part-reasoning">
-            <details className="reasoning-details">
-              <summary className="reasoning-summary">
-                🧠 Reasoning Process
-              </summary>
-              <div className="reasoning-content">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeSanitize]}
-                >
-                  {part.reasoning}
-                </ReactMarkdown>
-                {part.details && part.details.length > 0 && (
-                  <div className="reasoning-details-list">
-                    {part.details.map((detail: any, detailIndex: number) => (
-                      <div key={detailIndex} className="reasoning-detail">
-                        {detail.type === 'text' && (
-                          <span className="reasoning-detail-text">
-                            {detail.text}
-                            {detail.signature && (
-                              <span className="reasoning-signature">
-                                [{detail.signature}]
-                              </span>
-                            )}
-                          </span>
-                        )}
-                        {detail.type === 'redacted' && (
-                          <span className="reasoning-detail-redacted">
-                            [Redacted: {detail.data}]
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </details>
+            <ReasoningComponent
+              reasoning={part.reasoning}
+              details={part.details}
+              compactView={compactView}
+              showStepNumbers={true}
+              showConfidence={true}
+              enableSyntaxHighlighting={true}
+              collapsible={enableReasoningInteraction}
+              defaultExpanded={false}
+            />
           </div>
         );
 
@@ -152,21 +165,20 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
 
       case 'source':
         if (!showSourceCitations) return null;
+        const SourcesComponent = CustomSourcesRenderer || SourcesDisplay;
+        // Convert single source to array format for SourcesDisplay
+        const sources: Source[] = [part.source];
         return (
           <div key={index} className="message-part message-part-source">
-            <div className="source-citation">
-              📚 Source: {part.source.title || part.source.url || 'Unknown'}
-              {part.source.url && (
-                <a
-                  href={part.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="source-link"
-                >
-                  [View Source]
-                </a>
-              )}
-            </div>
+            <SourcesComponent
+              sources={sources}
+              compactView={compactView}
+              showRelevanceScores={true}
+              showSnippets={true}
+              showMetadata={showDetailedMetadata}
+              enableFiltering={enableSourceFiltering}
+              maxSources={1}
+            />
           </div>
         );
 
@@ -246,33 +258,52 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
 
       {/* Message Content */}
       <div className="message-content">
-        {/* Render parts if available (AI SDK 5 preferred approach) */}
-        {message.parts && message.parts.length > 0 ? (
-          <div className="message-parts">
-            {message.parts.map((part, index) => renderMessagePart(part, index))}
-          </div>
+        {/* Use streaming renderer if streaming is enabled and stream parts are available */}
+        {enableStreaming && (isStreaming || streamParts) ? (
+          <MessageStreamRenderer
+            message={message}
+            streamParts={streamParts}
+            isStreaming={isStreaming}
+            showMetadata={showMetadata}
+            showReasoningTraces={showReasoningTraces}
+            showSourceCitations={showSourceCitations}
+            enableSmoothScrolling={enableSmoothScrolling}
+            onStreamComplete={onStreamComplete}
+            onStreamError={onStreamError}
+            onTokenUpdate={onTokenUpdate}
+            className="streaming-message-content"
+          />
         ) : (
-          /* Fallback to content property for backward compatibility */
-          <div className="message-fallback-content">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeSanitize]}
-              components={{
-                a: ({ href, children, ...props }: any) => (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    {...props}
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {(message as any).content || ''}
-            </ReactMarkdown>
-          </div>
+          <>
+            {/* Render parts if available (AI SDK 5 preferred approach) */}
+            {message.parts && message.parts.length > 0 ? (
+              <div className="message-parts">
+                {message.parts.map((part, index) => renderMessagePart(part, index))}
+              </div>
+            ) : (
+              /* Fallback to content property for backward compatibility */
+              <div className="message-fallback-content">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeSanitize]}
+                  components={{
+                    a: ({ href, children, ...props }: any) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        {...props}
+                      >
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {(message as any).content || ''}
+                </ReactMarkdown>
+              </div>
+            )}
+          </>
         )}
 
         {/* Audio playback for TTS */}
@@ -289,36 +320,23 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
           </div>
         )}
 
-        {/* Metadata display */}
+        {/* Enhanced metadata display */}
         {showMetadata && metadata && (
-          <div className="message-metadata">
-            <div className="metadata-header">📊 Message Metadata</div>
-            <div className="metadata-content">
-              {metadata.model && (
-                <div className="metadata-item">
-                  <span className="metadata-label">Model:</span>
-                  <span className="metadata-value">{metadata.model}</span>
-                </div>
-              )}
-              {metadata.duration && (
-                <div className="metadata-item">
-                  <span className="metadata-label">Duration:</span>
-                  <span className="metadata-value">{metadata.duration}ms</span>
-                </div>
-              )}
-              {metadata.totalTokens && (
-                <div className="metadata-item">
-                  <span className="metadata-label">Tokens:</span>
-                  <span className="metadata-value">{metadata.totalTokens}</span>
-                </div>
-              )}
-              {metadata.finishReason && (
-                <div className="metadata-item">
-                  <span className="metadata-label">Finish Reason:</span>
-                  <span className="metadata-value">{metadata.finishReason}</span>
-                </div>
-              )}
-            </div>
+          <div className="message-metadata-container">
+            {(() => {
+              const MetadataComponent = CustomMetadataRenderer || MessageMetadata;
+              return (
+                <MetadataComponent
+                  metadata={{
+                    ...metadata,
+                    timestamp,
+                  }}
+                  compact={compactView}
+                  showDetailed={showDetailedMetadata}
+                  costWarningThreshold={1.0}
+                />
+              );
+            })()}
           </div>
         )}
 

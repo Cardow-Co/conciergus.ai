@@ -43,6 +43,24 @@ module.exports = {
     // Mock @testing-library/jest-dom to avoid ESM issues
     '^@testing-library/jest-dom$': '<rootDir>/src/test/mocks/jest-dom.mock.js',
     
+    // Mock dom-accessibility-api to avoid ESM issues
+    '^dom-accessibility-api$': '<rootDir>/src/test/mocks/dom-accessibility-api.mock.js',
+    
+    // Mock dequal to avoid ESM issues
+    '^dequal$': '<rootDir>/src/test/mocks/dequal.mock.js',
+    '^dequal/lite$': '<rootDir>/src/test/mocks/dequal.mock.js',
+    
+    // Mock aria-query to avoid ESM issues
+    '^aria-query$': '<rootDir>/src/test/mocks/aria-query.mock.js',
+    
+    // Mock Radix UI components to avoid ESM issues
+    '^@radix-ui/react-dialog$': '<rootDir>/src/test/mocks/radix-dialog.mock.js',
+    
+    // Mock markdown dependencies to avoid ESM issues
+    '^react-markdown$': '<rootDir>/src/test/mocks/react-markdown.mock.js',
+    '^remark-gfm$': '<rootDir>/src/test/mocks/remark-gfm.mock.js',
+    '^rehype-sanitize$': '<rootDir>/src/test/mocks/rehype-sanitize.mock.js',
+    
     // Package entry point mapping
     '^@conciergus/chat$': '<rootDir>/src/index.ts',
     '^@conciergus/chat/gateway$': '<rootDir>/src/gateway.ts',
@@ -69,7 +87,7 @@ module.exports = {
   
   // Transform ignore patterns for node_modules
   transformIgnorePatterns: [
-    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize|dedent|@adobe|@testing-library|dom-accessibility-api)/)',
+    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize|remark|rehype|micromark|unist|vfile|unified|dedent|@adobe|@testing-library|dom-accessibility-api|dequal|aria-query|@radix-ui)/)',
   ],
   
   // Coverage configuration

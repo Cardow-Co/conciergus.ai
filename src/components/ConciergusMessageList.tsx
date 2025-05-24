@@ -1,6 +1,8 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import type { UIMessage } from '@ai-sdk/react';
+import { useStreamingManager } from './useStreamingManager';
+import type { TextStreamPart } from './MessageStreamRenderer';
 
 export interface ConciergusMessageItemProps {
   message: UIMessage;
@@ -30,6 +32,15 @@ export interface ConciergusMessageListProps {
   showMetadata?: boolean;
   showReasoningTraces?: boolean;
   showSourceCitations?: boolean;
+  // SSE Streaming props
+  enableStreaming?: boolean;
+  streamingMessageId?: string;
+  streamParts?: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>;
+  isStreaming?: boolean;
+  enableSmoothScrolling?: boolean;
+  onStreamComplete?: (messageId: string, finalMessage: UIMessage) => void;
+  onStreamError?: (messageId: string, error: Error) => void;
+  onTokenUpdate?: (messageId: string, tokenCount: number) => void;
   [key: string]: any;
 }
 
@@ -43,18 +54,58 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
   showMetadata = false,
   showReasoningTraces = false,
   showSourceCitations = false,
+  // SSE Streaming props
+  enableStreaming = false,
+  streamingMessageId,
+  streamParts,
+  isStreaming = false,
+  enableSmoothScrolling = true,
+  onStreamComplete,
+  onStreamError,
+  onTokenUpdate,
   ...rest
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Initialize streaming manager
+  const streamingManager = useStreamingManager(
+    {
+      maxConcurrentStreams: 3,
+      enableAutoRetry: true,
+      enableFallback: true,
+    },
+    {
+      onStreamComplete: (streamId, finalMessage) => {
+        if (onStreamComplete && streamingMessageId) {
+          onStreamComplete(streamingMessageId, finalMessage);
+        }
+      },
+      onStreamError: (streamId, error) => {
+        if (onStreamError && streamingMessageId) {
+          onStreamError(streamingMessageId, error);
+        }
+      },
+      onStreamProgress: (streamId, progress, tokenCount) => {
+        if (onTokenUpdate && streamingMessageId) {
+          onTokenUpdate(streamingMessageId, tokenCount);
+        }
+      },
+    }
+  );
+
+  // Auto-scroll to bottom when new messages arrive or during streaming
   useEffect(() => {
     if (autoScroll && viewportRef.current) {
       const viewport = viewportRef.current;
-      viewport.scrollTop = viewport.scrollHeight;
+      // Use smooth scrolling during streaming for better UX
+      const behavior = (enableStreaming && isStreaming && enableSmoothScrolling) ? 'smooth' : 'auto';
+      viewport.scrollTo({ 
+        top: viewport.scrollHeight, 
+        behavior 
+      });
     }
-  }, [messages, autoScroll]);
+  }, [messages, autoScroll, isStreaming, enableStreaming, enableSmoothScrolling]);
 
   // Group consecutive messages from the same sender
   const messageGroups = useMemo(() => {
@@ -133,6 +184,14 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
                         showMetadata={showMetadata}
                         showReasoningTraces={showReasoningTraces}
                         showSourceCitations={showSourceCitations}
+                        // Pass streaming props if this is the streaming message
+                        enableStreaming={enableStreaming && message.id === streamingMessageId}
+                        isStreaming={isStreaming && message.id === streamingMessageId}
+                        streamParts={message.id === streamingMessageId ? streamParts : undefined}
+                        enableSmoothScrolling={enableSmoothScrolling}
+                        onStreamComplete={onStreamComplete ? (finalMessage) => onStreamComplete(message.id || '', finalMessage) : undefined}
+                        onStreamError={onStreamError ? (error) => onStreamError(message.id || '', error) : undefined}
+                        onTokenUpdate={onTokenUpdate ? (tokenCount) => onTokenUpdate(message.id || '', tokenCount) : undefined}
                       />
                     ) : (
                       <div className="default-message-item">

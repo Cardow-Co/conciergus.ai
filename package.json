@@ -35,9 +35,9 @@
     }
   },
   "scripts": {
-    "test": "jest --passWithNoTests",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "NODE_OPTIONS='--max-old-space-size=8192' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--max-old-space-size=8192' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--max-old-space-size=8192' jest --coverage",
     "clean": "rm -rf dist",
     "build": "rollup -c",
     "dev": "rollup -c --watch",
