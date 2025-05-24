@@ -7,6 +7,7 @@ import {
   useCostOptimizedModel,
   GatewayAuthStatus 
 } from '../context/GatewayProvider';
+import { usePerformanceMonitor, useIntelligentModelSelection } from '../context/FallbackHooks';
 import type { 
   GatewayConfig, 
   GatewayModelConfig, 
@@ -93,9 +94,21 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
   // Local state for UI management
   const [selectedModel, setSelectedModel] = useState(currentModel);
   const [selectedChain, setSelectedChain] = useState(currentChain);
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics[]>([]);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [costEstimate, setCostEstimate] = useState(0);
+  
+  // Real-time performance monitoring
+  const { 
+    metrics: performanceMetrics, 
+    topPerformer, 
+    worstPerformer, 
+    averageResponseTime, 
+    overallSuccessRate,
+    refresh: refreshMetrics 
+  } = usePerformanceMonitor(5000);
+  
+  // Intelligent model selection
+  const { analyzeAndSelectModel } = useIntelligentModelSelection();
 
   // Smart model selection state
   const [smartRequirements, setSmartRequirements] = useState<{
@@ -373,21 +386,49 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
       )}
 
       {/* Performance Metrics */}
-      {showPerformanceMetrics && enableRealTimeComparison && (
+      {showPerformanceMetrics && (
         <div className="performance-metrics-section">
-          <h4>Performance Metrics</h4>
+          <div className="metrics-header">
+            <h4>Performance Metrics</h4>
+            <button onClick={refreshMetrics} className="refresh-button">
+              🔄 Refresh
+            </button>
+          </div>
+          
+          {/* Summary Stats */}
+          {performanceMetrics.length > 0 && (
+            <div className="metrics-summary">
+              <div className="summary-stat">
+                <span className="stat-label">Overall Success Rate:</span>
+                <span className="stat-value">{(overallSuccessRate * 100).toFixed(1)}%</span>
+              </div>
+              <div className="summary-stat">
+                <span className="stat-label">Average Response Time:</span>
+                <span className="stat-value">{averageResponseTime.toFixed(0)}ms</span>
+              </div>
+              <div className="summary-stat">
+                <span className="stat-label">Top Performer:</span>
+                <span className="stat-value">{topPerformer ? availableModels[topPerformer]?.name || topPerformer : 'N/A'}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Detailed Metrics */}
           <div className="metrics-grid">
             {performanceMetrics.length > 0 ? (
               performanceMetrics.map((metric) => (
                 <div key={metric.modelId} className="metric-card">
                   <div className="metric-header">
                     <strong>{availableModels[metric.modelId]?.name || metric.modelId}</strong>
+                    {metric.modelId === topPerformer && <span className="top-performer-badge">🏆</span>}
+                    {metric.modelId === worstPerformer && <span className="worst-performer-badge">⚠️</span>}
                   </div>
                   <div className="metric-stats">
-                    <div>Response Time: {metric.responseTime}ms</div>
-                    <div>Tokens/sec: {metric.tokensPerSecond}</div>
+                    <div>Success Rate: {(metric.successRate * 100).toFixed(1)}%</div>
+                    <div>Avg Response: {metric.averageResponseTime.toFixed(0)}ms</div>
+                    <div>Total Requests: {metric.totalRequests}</div>
                     <div>Error Rate: {(metric.errorRate * 100).toFixed(1)}%</div>
-                    <div>Cost/Token: ${metric.costPerToken.toFixed(6)}</div>
+                    <div>Last Used: {metric.lastUsed.toLocaleTimeString()}</div>
                   </div>
                 </div>
               ))

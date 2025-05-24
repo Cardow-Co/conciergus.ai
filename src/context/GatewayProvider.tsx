@@ -13,6 +13,9 @@ import GatewayConfigLib, {
   createFallbackChain,
   selectOptimalModel
 } from './GatewayConfig';
+import { FallbackManager, type ModelPerformanceMetrics, type FallbackResult } from './FallbackManager';
+import CostTracker from './CostTracker';
+import { DebugManager } from './DebugManager';
 
 /**
  * Gateway Provider Context Interface
@@ -59,6 +62,38 @@ export interface GatewayContextValue {
   // Status and telemetry
   telemetryEnabled: boolean;
   setTelemetryEnabled: (enabled: boolean) => void;
+  
+  // Fallback management
+  fallbackManager: FallbackManager;
+  executeWithFallback: <T>(
+    chainName: string | string[],
+    operation: (modelId: string, model: any) => Promise<T>,
+    context?: {
+      query?: string;
+      requirements?: {
+        capabilities?: (keyof GatewayModelConfig['capabilities'])[];
+        costTier?: GatewayModelConfig['costTier'];
+      };
+    }
+  ) => Promise<FallbackResult<T>>;
+  performanceMetrics: ModelPerformanceMetrics[];
+  resetPerformanceMetrics: () => void;
+  
+  // Cost management
+  costTracker: CostTracker;
+  currentSpending: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+  };
+  budgetAlerts: ReturnType<CostTracker['getBudgetAlerts']>;
+  updateBudgetConfig: (config: Partial<import('./CostTracker').BudgetConfig>) => void;
+  
+  // Debug and administration
+  debugManager: DebugManager;
+  systemHealth: () => ReturnType<DebugManager['checkSystemHealth']>;
+  systemDiagnostics: () => ReturnType<DebugManager['getDiagnostics']>;
+  exportSystemData: (format?: 'json' | 'csv') => string;
 }
 
 /**
@@ -106,6 +141,24 @@ export function GatewayProvider({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authGuidance, setAuthGuidance] = useState<string>('');
   
+  // Debug manager, cost tracker and fallback manager instances
+  const [debugManager] = useState(() => new DebugManager({
+    logLevel: 'info',
+    maxLogs: 1000,
+    enableConsoleOutput: process.env.NODE_ENV === 'development',
+    categories: ['gateway', 'fallback', 'cost', 'performance', 'admin']
+  }));
+  
+  const [costTracker] = useState(() => new CostTracker({
+    dailyLimit: 50,
+    weeklyLimit: 300,
+    monthlyLimit: 1000,
+    alertThresholds: { warning: 0.8, critical: 0.95 },
+    autoScaleDown: true
+  }));
+  
+  const [fallbackManager] = useState(() => new FallbackManager(config, costTracker, debugManager));
+  
   // Update configuration
   const updateConfig = React.useCallback((updates: Partial<GatewayConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
@@ -122,6 +175,11 @@ export function GatewayProvider({
   useEffect(() => {
     updateConfig({ telemetryEnabled });
   }, [telemetryEnabled, updateConfig]);
+  
+  // Update fallback manager when config changes
+  useEffect(() => {
+    fallbackManager.updateConfig(config);
+  }, [fallbackManager, config]);
   const [userOverrideModel, setUserOverrideModel] = useState(false);
   const [userOverrideChain, setUserOverrideChain] = useState(false);
 
@@ -162,6 +220,77 @@ export function GatewayProvider({
   const validateConfig = () => {
     return GatewayAuth.validateConfig(config);
   };
+  
+  // Fallback execution wrapper
+  const executeWithFallback = React.useCallback(
+    function <T>(
+      chainName: string | string[],
+      operation: (modelId: string, model: any) => Promise<T>,
+      context?: {
+        query?: string;
+        requirements?: {
+          capabilities?: (keyof GatewayModelConfig['capabilities'])[];
+          costTier?: GatewayModelConfig['costTier'];
+        };
+      }
+    ) {
+      return fallbackManager.executeWithFallback(chainName, operation, context);
+    },
+    [fallbackManager]
+  );
+  
+  // Get current performance metrics
+  const getPerformanceMetrics = React.useCallback(() => {
+    return fallbackManager.getPerformanceMetrics();
+  }, [fallbackManager]);
+  
+  // Reset performance metrics
+  const resetPerformanceMetrics = React.useCallback(() => {
+    fallbackManager.resetMetrics();
+  }, [fallbackManager]);
+  
+  // Cost management methods
+  const getCurrentSpending = React.useCallback(() => ({
+    daily: costTracker.getCurrentSpending('day'),
+    weekly: costTracker.getCurrentSpending('week'),
+    monthly: costTracker.getCurrentSpending('month')
+  }), [costTracker]);
+  
+  const getBudgetAlerts = React.useCallback(() => {
+    return costTracker.getBudgetAlerts();
+  }, [costTracker]);
+  
+  const updateBudgetConfig = React.useCallback((config: Partial<import('./CostTracker').BudgetConfig>) => {
+    costTracker.updateBudgetConfig(config);
+  }, [costTracker]);
+  
+  // Debug and administrative methods
+  const getSystemHealth = React.useCallback(() => {
+    return debugManager.checkSystemHealth();
+  }, [debugManager]);
+  
+  const getSystemDiagnostics = React.useCallback(() => {
+    return debugManager.getDiagnostics();
+  }, [debugManager]);
+  
+  const exportSystemData = React.useCallback((format: 'json' | 'csv' = 'json') => {
+    const health = debugManager.checkSystemHealth();
+    const diagnostics = debugManager.getDiagnostics();
+    const logs = debugManager.getLogs({ limit: 100 });
+    
+    if (format === 'csv') {
+      return debugManager.exportLogs('csv');
+    }
+    
+    return JSON.stringify({
+      timestamp: new Date().toISOString(),
+      health,
+      diagnostics,
+      recentLogs: logs,
+      costData: costTracker.exportUsageData('json'),
+      performanceMetrics: fallbackManager.getPerformanceMetrics()
+    }, null, 2);
+  }, [debugManager, costTracker, fallbackManager]);
   
   // Log configuration changes in development
   useEffect(() => {
@@ -209,6 +338,24 @@ export function GatewayProvider({
     // Telemetry
     telemetryEnabled,
     setTelemetryEnabled,
+    
+    // Fallback management
+    fallbackManager,
+    executeWithFallback,
+    performanceMetrics: getPerformanceMetrics(),
+    resetPerformanceMetrics,
+    
+    // Cost management
+    costTracker,
+    currentSpending: getCurrentSpending(),
+    budgetAlerts: getBudgetAlerts(),
+    updateBudgetConfig,
+    
+    // Debug and administration
+    debugManager,
+    systemHealth: getSystemHealth,
+    systemDiagnostics: getSystemDiagnostics,
+    exportSystemData,
   };
   
   return (

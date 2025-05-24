@@ -6,6 +6,9 @@ export { default as ConciergusMessageItem } from './components/ConciergusMessage
 export { default as ConciergusMessageList } from './components/ConciergusMessageList';
 export { default as ConciergusChatWidget } from './components/ConciergusChatWidget';
 export { default as ConciergusAIGateway } from './components/ConciergusAIGateway';
+export { default as CostAnalyticsDashboard } from './components/CostAnalyticsDashboard';
+export { default as PerformanceComparisonDashboard } from './components/PerformanceComparisonDashboard';
+export { default as AdminDashboard } from './components/AdminDashboard';
 
 // Telemetry and Model Management Components
 export { default as ConciergusMetadataDisplay } from './components/ConciergusMetadataDisplay';
@@ -15,6 +18,9 @@ export { default as ConciergusModelSwitcher } from './components/ConciergusModel
 export type { ConciergusMessageListProps } from './components/ConciergusMessageList';
 export type { ConciergusMessageItemProps } from './components/ConciergusMessageItem';
 export type { ConciergusAIGatewayProps } from './components/ConciergusAIGateway';
+export type { CostAnalyticsDashboardProps } from './components/CostAnalyticsDashboard';
+export type { PerformanceComparisonDashboardProps } from './components/PerformanceComparisonDashboard';
+export type { AdminDashboardProps } from './components/AdminDashboard';
 export type { 
   ConciergusChatWidgetProps, 
   ChatStore, 
@@ -55,6 +61,20 @@ export type { ConciergusModelSwitcherProps, ModelInfo } from './components/Conci
 // Gateway and Error Handling Types
 export type { GatewayConfig, GatewayModelConfig, FallbackChainConfig } from './context/GatewayConfig';
 export type { ErrorCategory, ErrorSeverity, ConciergusError } from './errors/ErrorBoundary';
+
+// Fallback Management and Performance Monitoring
+export {
+  FallbackManager,
+  useFallbackManager,
+  useFallbackChat,
+  usePerformanceMonitor,
+  useIntelligentModelSelection,
+  useCostAwareModel,
+  type ModelPerformanceMetrics,
+  type FallbackResult,
+  type FallbackTrigger,
+  type FallbackAttempt
+} from './context/FallbackHooks';
 
 // ==========================================
 // ENHANCED AI SDK 5 TYPESCRIPT INTERFACES
