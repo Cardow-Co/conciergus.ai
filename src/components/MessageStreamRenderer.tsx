@@ -8,47 +8,23 @@ import { MessageMetadata } from './MessageMetadata';
 import { ReasoningTrace } from './ReasoningTrace';
 import { SourcesDisplay } from './SourcesDisplay';
 import StreamingIndicator from './StreamingIndicator';
-import type { Source, ReasoningStep } from './SourcesDisplay';
+import type { Source } from './SourcesDisplay';
+import type { ReasoningStep } from '../types/ai-sdk-5';
+import type { 
+  EnhancedStreamPart, 
+  StreamingType, 
+  StreamingState as EnhancedStreamingState,
+  ToolCall,
+  StructuredObject
+} from '../types/ai-sdk-5';
 
-// AI SDK 5 Stream Part Types
-export interface TextStreamPart {
-  type: 'text-delta' | 'reasoning' | 'reasoning-signature' | 'redacted-reasoning' | 
-        'source' | 'file' | 'tool-call' | 'tool-call-streaming-start' | 'tool-call-delta' | 
-        'tool-result' | 'step-start' | 'step-finish' | 'finish' | 'error';
-  textDelta?: string;
-  signature?: string;
-  data?: string;
-  source?: Source;
-  base64?: string;
-  uint8Array?: Uint8Array;
-  mimeType?: string;
-  toolCallId?: string;
-  toolName?: string;
-  args?: any;
-  argsTextDelta?: string;
-  result?: any;
-  finishReason?: string;
-  usage?: any;
-  error?: Error;
-  [key: string]: any;
-}
-
-export interface StreamingState {
-  isStreaming: boolean;
-  streamingType: 'text' | 'object' | 'tool' | 'reasoning' | 'loading';
-  progress: number;
-  tokenCount: number;
-  currentText: string;
-  reasoning: ReasoningStep[];
-  sources: Source[];
-  metadata: any;
-  toolCalls: any[];
-  errors: Error[];
-}
+// Re-export enhanced types for backward compatibility
+export type TextStreamPart = EnhancedStreamPart;
+export type StreamingState = EnhancedStreamingState;
 
 export interface MessageStreamRendererProps {
   message: UIMessage;
-  streamParts?: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>;
+  streamParts?: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
   isStreaming?: boolean;
   className?: string;
   showMetadata?: boolean;
@@ -75,7 +51,7 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
   onTokenUpdate,
   ...rest
 }) => {
-  const [streamingState, setStreamingState] = useState<StreamingState>({
+  const [streamingState, setStreamingState] = useState<EnhancedStreamingState>({
     isStreaming: isStreaming,
     streamingType: 'text',
     progress: 0,
@@ -86,13 +62,14 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
     metadata: {},
     toolCalls: [],
     errors: [],
+    objects: [],
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<boolean>(false);
 
   // Handle stream processing
-  const processStreamPart = useCallback((part: TextStreamPart) => {
+  const processStreamPart = useCallback((part: EnhancedStreamPart) => {
     setStreamingState(prev => {
       const newState = { ...prev };
 

@@ -64,6 +64,43 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  // Format model name for display
+  const formatModelName = useCallback((modelId: string): string => {
+    // Extract human-readable name from model ID
+    const parts = modelId.split('/');
+    const modelName = parts[parts.length - 1];
+    
+    if (!modelName) return modelId;
+    
+    return modelName
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }, []);
+
+  // Extract provider from model ID
+  const extractProvider = useCallback((modelId: string): string => {
+    if (modelId.includes('anthropic')) return 'Anthropic';
+    if (modelId.includes('openai')) return 'OpenAI';
+    if (modelId.includes('google')) return 'Google';
+    if (modelId.includes('meta')) return 'Meta';
+    if (modelId.includes('mistral')) return 'Mistral';
+    
+    const parts = modelId.split('/');
+    return parts.length > 1 ? (parts[0] || 'Unknown') : 'Unknown';
+  }, []);
+
+  // Get model capabilities
+  const getModelCapabilities = useCallback((modelId: string): string[] => {
+    const capabilities: string[] = [];
+    
+    if (modelId.includes('vision')) capabilities.push('Vision');
+    if (modelId.includes('code')) capabilities.push('Code');
+    if (modelId.includes('function')) capabilities.push('Functions');
+    if (modelId.includes('chat')) capabilities.push('Chat');
+    
+    return capabilities;
+  }, []);
+
   // Load available models
   const loadModels = useCallback(async () => {
     setIsLoading(true);
@@ -122,48 +159,11 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
       setError(err instanceof Error ? err.message : 'Failed to load models');
       setIsLoading(false);
     }
-  }, [modelManager, availableModels, showPerformanceIndicators]);
+  }, [modelManager, availableModels, showPerformanceIndicators, formatModelName, extractProvider, getModelCapabilities]);
 
   useEffect(() => {
     loadModels();
   }, [loadModels]);
-
-  // Format model name for display
-  const formatModelName = (modelId: string): string => {
-    // Extract human-readable name from model ID
-    const parts = modelId.split('/');
-    const modelName = parts[parts.length - 1];
-    
-    if (!modelName) return modelId;
-    
-    return modelName
-      .replace(/-/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  // Extract provider from model ID
-  const extractProvider = (modelId: string): string => {
-    if (modelId.includes('anthropic')) return 'Anthropic';
-    if (modelId.includes('openai')) return 'OpenAI';
-    if (modelId.includes('google')) return 'Google';
-    if (modelId.includes('meta')) return 'Meta';
-    if (modelId.includes('mistral')) return 'Mistral';
-    
-    const parts = modelId.split('/');
-    return parts.length > 1 ? (parts[0] || 'Unknown') : 'Unknown';
-  };
-
-  // Get model capabilities
-  const getModelCapabilities = (modelId: string): string[] => {
-    const capabilities: string[] = [];
-    
-    if (modelId.includes('vision')) capabilities.push('Vision');
-    if (modelId.includes('code')) capabilities.push('Code');
-    if (modelId.includes('function')) capabilities.push('Functions');
-    if (modelId.includes('chat')) capabilities.push('Chat');
-    
-    return capabilities;
-  };
 
   // Handle model selection
   const handleModelSelect = async (modelId: string) => {

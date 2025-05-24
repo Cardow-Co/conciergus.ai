@@ -1,11 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { UIMessage } from '@ai-sdk/react';
-import type { TextStreamPart, StreamingState } from './MessageStreamRenderer';
+import type { 
+  EnhancedStreamPart,
+  StreamingState as EnhancedStreamingState
+} from '../types/ai-sdk-5';
 
 export interface StreamingConnection {
   id: string;
   messageId?: string;
-  stream: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>;
+  stream: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
   abortController?: AbortController;
   startTime: number;
   status: 'connecting' | 'streaming' | 'completed' | 'error' | 'aborted';
@@ -37,7 +40,7 @@ export interface StreamingManagerHook {
   // Stream management
   startStream: (
     streamId: string, 
-    stream: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>,
+    stream: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>,
     messageId?: string
   ) => Promise<void>;
   stopStream: (streamId: string) => void;
@@ -143,8 +146,8 @@ export const useStreamingManager = (
   // Process individual stream parts
   const processStreamPart = useCallback((
     streamId: string, 
-    part: TextStreamPart,
-    streamingState: StreamingState
+    part: EnhancedStreamPart,
+    streamingState: EnhancedStreamingState
   ) => {
     // Calculate progress based on stream parts
     let progress = 0;
@@ -173,7 +176,7 @@ export const useStreamingManager = (
   // Start a new stream
   const startStream = useCallback(async (
     streamId: string,
-    stream: AsyncIterable<TextStreamPart> | ReadableStream<TextStreamPart>,
+    stream: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>,
     messageId?: string
   ) => {
     // Check concurrent stream limit
@@ -203,7 +206,7 @@ export const useStreamingManager = (
     updateConnectionStatus(streamId, 'streaming');
 
     try {
-      const streamingState: StreamingState = {
+      const streamingState: EnhancedStreamingState = {
         isStreaming: true,
         streamingType: 'text',
         progress: 0,
@@ -219,7 +222,7 @@ export const useStreamingManager = (
       // Process stream
       if (Symbol.asyncIterator in stream) {
         // AsyncIterable
-        for await (const part of stream as AsyncIterable<TextStreamPart>) {
+        for await (const part of stream as AsyncIterable<EnhancedStreamPart>) {
           if (abortController.signal.aborted) {
             updateConnectionStatus(streamId, 'aborted');
             return;
@@ -242,7 +245,7 @@ export const useStreamingManager = (
         }
       } else {
         // ReadableStream
-        const reader = (stream as ReadableStream<TextStreamPart>).getReader();
+        const reader = (stream as ReadableStream<EnhancedStreamPart>).getReader();
         try {
           while (!abortController.signal.aborted) {
             const { done, value } = await reader.read();

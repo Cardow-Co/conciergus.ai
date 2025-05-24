@@ -5,6 +5,7 @@
 export { default as ConciergusMessageItem } from './components/ConciergusMessageItem';
 export { default as ConciergusMessageList } from './components/ConciergusMessageList';
 export { default as ConciergusChatWidget } from './components/ConciergusChatWidget';
+export { default as ConciergusAIGateway } from './components/ConciergusAIGateway';
 
 // Telemetry and Model Management Components
 export { default as ConciergusMetadataDisplay } from './components/ConciergusMetadataDisplay';
@@ -13,6 +14,7 @@ export { default as ConciergusModelSwitcher } from './components/ConciergusModel
 // Re-export component prop types for TypeScript usage
 export type { ConciergusMessageListProps } from './components/ConciergusMessageList';
 export type { ConciergusMessageItemProps } from './components/ConciergusMessageItem';
+export type { ConciergusAIGatewayProps } from './components/ConciergusAIGateway';
 export type { 
   ConciergusChatWidgetProps, 
   ChatStore, 
@@ -24,7 +26,6 @@ export type {
 } from './components/ConciergusChatWidget';
 
 // Message metadata and reasoning display components
-export { MessageMetadata } from './components/MessageMetadata';
 export { ReasoningTrace } from './components/ReasoningTrace';
 export { SourcesDisplay } from './components/SourcesDisplay';
 
@@ -53,4 +54,78 @@ export type { ConciergusModelSwitcherProps, ModelInfo } from './components/Conci
 
 // Gateway and Error Handling Types
 export type { GatewayConfig, GatewayModelConfig, FallbackChainConfig } from './context/GatewayConfig';
-export type { ErrorCategory, ErrorSeverity, ConciergusError } from './errors/ErrorBoundary'; 
+export type { ErrorCategory, ErrorSeverity, ConciergusError } from './errors/ErrorBoundary';
+
+// ==========================================
+// ENHANCED AI SDK 5 TYPESCRIPT INTERFACES
+// ==========================================
+
+// Import and re-export all enhanced AI SDK 5 types
+export type {
+  // Core Enhanced Interfaces
+  EnhancedUIMessage,
+  MessageMetadata,
+  
+  // Streaming Interfaces
+  StreamPartType,
+  EnhancedStreamPart,
+  TokenUsage,
+  StreamingType,
+  
+  // Reasoning and Explainability
+  ReasoningStep as EnhancedReasoningStep,
+  ReasoningType,
+  
+  // Source Citations and RAG
+  Source as EnhancedSource,
+  SourceType,
+  
+  // Tool Calls and Function Execution
+  ToolCall,
+  ToolCallState,
+  
+  // Structured Objects
+  StructuredObject,
+  StructuredObjectState,
+  
+  // Performance and Telemetry
+  PerformanceMetrics,
+  MemoryUsage,
+  CostMetrics,
+  TelemetryData,
+  TelemetryEventType,
+  GeoLocation,
+  
+  // Enhanced Component Props
+  EnhancedMessageListProps,
+  EnhancedMessageItemProps,
+  MessageMetadataProps as EnhancedMessageMetadataProps,
+  ReasoningTraceProps as EnhancedReasoningTraceProps,
+  SourcesDisplayProps as EnhancedSourcesDisplayProps,
+  StreamingIndicatorProps as EnhancedStreamingIndicatorProps,
+  VirtualizationProps,
+  
+  // Backward Compatibility Aliases
+  UIMessageWithMetadata,
+  StreamPart,
+  MessageListProps,
+  MessageItemProps,
+  
+  // Event Types
+  AISDKEvent,
+  
+  // Type Guards
+  isTextDelta,
+  isToolCall,
+  isReasoning,
+  isSource,
+  isFinish,
+  isError
+} from './types/ai-sdk-5';
+
+// Context and Configuration Types
+export type { ConciergusConfig, AIGatewayConfig, ChatStoreConfig, TelemetryConfig, RateLimitConfig, MiddlewareFunction, MiddlewareArray } from './context/ConciergusContext';
+export type { EnhancedConciergusContextValue } from './context/EnhancedConciergusContext';
+
+// Debug and Development Types
+export type { DebugLevel, PerformanceMetrics as DebugPerformanceMetrics, AISDKEvent as DebugAISDKEvent } from './debug/ai-sdk-debug'; 
