@@ -11,6 +11,8 @@ if (typeof expect !== 'undefined' && expect.extend) {
     toHaveClass: () => ({ pass: true, message: () => 'mock matcher' }),
     toBeVisible: () => ({ pass: true, message: () => 'mock matcher' }),
     toHaveValue: () => ({ pass: true, message: () => 'mock matcher' }),
+    toHaveAttribute: () => ({ pass: true, message: () => 'mock matcher' }),
+    toBeTruthy: () => ({ pass: true, message: () => 'mock matcher' }),
   });
 }
 

@@ -1,7 +1,8 @@
 // Mock for react-markdown
 const React = require('react');
 
-const ReactMarkdown = ({ children, ...props }) => {
+const ReactMarkdown = ({ children, remarkPlugins, rehypePlugins, ...props }) => {
+  // Suppress warnings about remarkPlugins and rehypePlugins during testing
   return React.createElement('div', { 
     'data-testid': 'react-markdown',
     className: 'markdown-content',

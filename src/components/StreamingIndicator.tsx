@@ -24,6 +24,8 @@ export const StreamingIndicator: FC<StreamingIndicatorProps> = ({
   showProgressBar = false,
   customMessage,
   animationSpeed = 'medium',
+  currentProgress, // Extract and ignore currentProgress
+  totalTokens, // Extract and ignore totalTokens
   ...rest
 }) => {
   if (!isStreaming) {
