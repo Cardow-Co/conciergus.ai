@@ -14,6 +14,7 @@ export * from './context/ConciergusAgentHooks';
 export * from './context/ConciergusModelManagementHooks';
 export * from './context/ConciergusRAGKnowledgeHooks';
 export * from './context/ConciergusStreamingHooks';
+export * from './context/ConciergusVoiceHooks';
 
 // Re-export core context and config types for hook usage
 export type {

@@ -58,6 +58,7 @@
     "react-dom": "^19.1.0"
   },
   "dependencies": {
+    "@ai-sdk/openai": "2.0.0-canary.20",
     "@ai-sdk/provider-utils": "canary",
     "@ai-sdk/react": "canary",
     "@babel/runtime": "^7.0.0",

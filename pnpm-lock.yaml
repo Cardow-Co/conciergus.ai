@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/openai':
+        specifier: 2.0.0-canary.20
+        version: 2.0.0-canary.20(zod@3.25.23)
       '@ai-sdk/provider-utils':
         specifier: canary
         version: 3.0.0-canary.19(zod@3.25.23)
@@ -179,6 +182,12 @@ packages:
 
   '@adobe/css-tools@4.4.3':
     resolution: {integrity: sha512-VQKMkwriZbaOgVCby1UDY/LDk5fIjhQicCvVPFqfe+69fWaPWydbWJ3wRt59/YzIwda1I81loas3oCoHxnqvdA==}
+
+  '@ai-sdk/openai@2.0.0-canary.20':
+    resolution: {integrity: sha512-AipaQeOz/nIPTtZLJaqG9sxf8zWqZ1UGLG1QOLhNpWwSBDXPVw5k0cWhLtReuZrL/ncKvL6BrGN9aEZLqcmWAg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.24.0
 
   '@ai-sdk/provider-utils@3.0.0-alpha.3':
     resolution: {integrity: sha512-W9C7ZsaE85FpleZt15j28cbynbApbzz6rnJfnGPewTjRzaELf6nixOi22RDU3d296ecAX/LrFeY7PNm7qR6YoQ==}
@@ -3656,6 +3665,12 @@ packages:
 snapshots:
 
   '@adobe/css-tools@4.4.3': {}
+
+  '@ai-sdk/openai@2.0.0-canary.20(zod@3.25.23)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-canary.14
+      '@ai-sdk/provider-utils': 3.0.0-canary.19(zod@3.25.23)
+      zod: 3.25.23
 
   '@ai-sdk/provider-utils@3.0.0-alpha.3(zod@3.25.23)':
     dependencies:
