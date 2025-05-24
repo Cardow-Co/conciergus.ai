@@ -322,10 +322,10 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
           </div>
         )}
 
-        {/* Timestamp */}
-        <div className="message-timestamp">
-          {timestamp.toLocaleTimeString()}
-        </div>
+{/* Timestamp */}
+         <div className="message-timestamp">
+          {timestamp && timestamp.toLocaleTimeString ? timestamp.toLocaleTimeString() : ''}
+         </div>
       </div>
     </div>
   );

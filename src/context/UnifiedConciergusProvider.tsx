@@ -139,11 +139,11 @@ export function UnifiedConciergusProvider({
   
   // Use enhanced provider for AI SDK 5 features
   if (useEnhanced) {
-    const enhancedProps: any = {
-      config,
-      children,
-      ...(chatStore && { chatStore })
-    };
+    const enhancedProps: EnhancedConciergusProviderProps = {
+       config,
+       children,
+       ...(chatStore && { chatStore })
+     };
     
     return <EnhancedConciergusProvider {...enhancedProps} />;
   }

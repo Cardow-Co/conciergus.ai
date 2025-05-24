@@ -146,7 +146,7 @@ export function useConciergus(): EnhancedConciergusHookReturn {
   const isInitialized = isEnhanced ? enhancedContext.isInitialized : true;
   
   // Get the configuration from appropriate context
-  const config = isEnhanced ? enhancedContext.config : (basicContext || {});
+  const config = isEnhanced ? enhancedContext.config : basicContext!;
   
   // Create feature availability checker
   const getFeatureAvailability = (): FeatureAvailability => ({
@@ -231,9 +231,7 @@ export function hasEnhancedFeatures(
 export function useBasicConciergus(): ConciergusConfig {
   const { config, error } = useConciergus();
   
-  if (!error.hasProvider) {
-    throw new Error('useBasicConciergus must be used within a ConciergusProvider');
-  }
+
   
   return config;
 }

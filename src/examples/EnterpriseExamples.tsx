@@ -51,10 +51,15 @@ export const EnterpriseConciergusApp: React.FC = () => {
   const customMiddleware: MiddlewareFunction[] = [
     // Request logging middleware
     async (context, next) => {
-      console.log(`🚀 Starting request: ${context.request.method} ${context.request.url}`);
-      const result = await next();
-      console.log(`✅ Request completed in ${context.duration}ms`);
-      return result;
+      try {
+        console.log(`🚀 Starting request: ${context.request.method} ${context.request.url}`);
+        const result = await next();
+        console.log(`✅ Request completed in ${context.duration}ms`);
+        return result;
+      } catch (error) {
+        console.error(`❌ Request failed:`, error);
+        throw error;
+      }
     },
     
     // Performance monitoring middleware
@@ -158,6 +163,7 @@ const EnterpriseFeatureDemo: React.FC = () => {
       }
     } catch (error) {
       console.error('Enterprise chat error:', error);
+     setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     }
   };
 

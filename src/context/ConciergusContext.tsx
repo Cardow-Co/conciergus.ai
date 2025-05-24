@@ -25,13 +25,13 @@ export interface AIGatewayConfig {
 /**
  * Configuration for ChatStore (AI SDK 5)
  */
-export interface ChatStoreConfig {
-  /** Maximum number of steps in a conversation */
-  maxSteps?: number;
-  /** Initial chat configurations */
-  chats?: Record<string, any>;
-  /** Schema for message metadata */
-  messageMetadataSchema?: any;
+export interface ChatStoreConfig<TMetadataSchema = unknown> {
+   /** Maximum number of steps in a conversation */
+   maxSteps?: number;
+   /** Initial chat configurations */
+   chats?: Record<string, any>;
+   /** Schema for message metadata */
+  messageMetadataSchema?: TMetadataSchema;
   /** Enable persistent storage */
   enablePersistence?: boolean;
   /** Storage key prefix */
@@ -79,10 +79,10 @@ export interface RateLimitConfig {
 /**
  * Middleware function type for request/response processing
  */
-export type MiddlewareFunction = (
-  request: any,
-  next: () => Promise<any>
-) => Promise<any>;
+export type MiddlewareFunction<TRequest = unknown, TResponse = unknown> = (
+  request: TRequest,
+  next: () => Promise<TResponse>
+) => Promise<TResponse>;
 
 /**
  * Array of middleware functions
@@ -157,10 +157,10 @@ export interface ConciergusConfig {
   /** Enable debug mode for verbose logging */
   enableDebug?: boolean;
   /** Custom error boundary component */
-  errorBoundary?: React.ComponentType<any>;
-  /** Custom loading component */
-  loadingComponent?: React.ReactNode;
+  errorBoundary?: React.ComponentType<{ error: Error; errorInfo?: React.ErrorInfo }>;
 
+  /** Callback when telemetry event occurs */
+  onTelemetryEvent?: (event: TelemetryEvent) => void;
   // === Event Handlers ===
   /** Callback when model is changed */
   onModelChange?: (model: string) => void;

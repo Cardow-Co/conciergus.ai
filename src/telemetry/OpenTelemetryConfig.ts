@@ -1,13 +1,13 @@
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
-import type { Resource } from '@opentelemetry/resources';
+import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-// import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { 
   BatchSpanProcessor, 
   SimpleSpanProcessor,
-  ConsoleSpanExporter 
+  ConsoleSpanExporter,
+  TraceIdRatioBasedSampler
 } from '@opentelemetry/sdk-trace-web';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
@@ -17,7 +17,7 @@ import {
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
 } from '@opentelemetry/core';
-import { trace, metrics, context } from '@opentelemetry/api';
+import { trace, metrics, context, SpanStatusCode } from '@opentelemetry/api';
 
 export interface TelemetryConfig {
   serviceName: string;
@@ -63,8 +63,6 @@ export class ConciergusOpenTelemetry {
     this.config = config;
 
     // Create resource with service information
-    const resourceModule = await import('@opentelemetry/resources');
-    const Resource = resourceModule.Resource || resourceModule.default?.Resource;
     const resource = new Resource({
       [SemanticResourceAttributes.SERVICE_NAME]: config.serviceName,
       [SemanticResourceAttributes.SERVICE_VERSION]: config.serviceVersion,
@@ -74,10 +72,9 @@ export class ConciergusOpenTelemetry {
     });
 
     // Set up trace provider
-    const tracerProviderConfig: { resource: any; sampler?: any } = { resource };
+    const tracerProviderConfig: any = { resource };
     
     if (config.sampleRate) {
-      const { TraceIdRatioBasedSampler } = await import('@opentelemetry/sdk-trace-web');
       tracerProviderConfig.sampler = new TraceIdRatioBasedSampler(config.sampleRate);
     }
     
@@ -106,7 +103,6 @@ export class ConciergusOpenTelemetry {
       }));
     }
 
-    // Add processors to tracer provider
     processors.forEach(processor => (tracerProvider as any).addSpanProcessor(processor));
 
     // Configure context manager and propagators
@@ -237,7 +233,14 @@ export class ConciergusOpenTelemetry {
   ) {
     if (!this.instance) {
       console.warn('OpenTelemetry not initialized');
-      return fn(null);
+      // Create a no-op span to avoid null reference errors
+      const noOpSpan = {
+        setStatus: () => {},
+        recordException: () => {},
+        end: () => {},
+        setAttribute: () => {},
+      };
+      return fn(noOpSpan);
     }
 
     const tracer = this.instance.getTracer(tracerName);
@@ -251,12 +254,12 @@ export class ConciergusOpenTelemetry {
     return context.with(trace.setSpan(context.active(), span), async () => {
       try {
         const result = await fn(span);
-        span.setStatus({ code: 1 }); // OK
+        span.setStatus({ code: SpanStatusCode.OK });
         return result;
       } catch (error) {
         span.recordException(error as Error);
         span.setStatus({ 
-          code: 2, // ERROR
+          code: SpanStatusCode.ERROR,
           message: error instanceof Error ? error.message : 'Unknown error' 
         });
         throw error;

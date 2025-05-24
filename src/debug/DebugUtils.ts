@@ -422,19 +422,28 @@ export class ConciergusDebugUtils {
     }
   }
 
-  private persistLog(entry: DebugLogEntry): void {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const key = `conciergus_debug_logs_${new Date().toDateString()}`;
-        const existing = localStorage.getItem(key);
-        const logs = existing ? JSON.parse(existing) : [];
-        logs.push(entry);
-        localStorage.setItem(key, JSON.stringify(logs));
+private persistLog(entry: DebugLogEntry): void {
+   try {
+     if (typeof window !== 'undefined' && window.localStorage) {
+       const key = `conciergus_debug_logs_${new Date().toDateString()}`;
+       const existing = localStorage.getItem(key);
+       const logs = existing ? JSON.parse(existing) : [];
+       logs.push(entry);
+      
+      // Check and clean up old logs if approaching quota
+      if (logs.length > 100) {
+        logs.shift(); // Remove oldest entry
       }
-    } catch (error) {
-      // Silently fail if localStorage is not available
-    }
-  }
+      
+       localStorage.setItem(key, JSON.stringify(logs));
+      
+      // Clean up logs older than 7 days
+      this.cleanupOldLogs();
+     }
+   } catch (error) {
+    console.warn('Failed to persist debug log:', error);
+   }
+ }
 
   private trimLogs(): void {
     if (this.logs.length > this.config.maxLogEntries) {
@@ -457,10 +466,11 @@ export class ConciergusDebugUtils {
     return sanitized;
   }
 
-  private isValidApiKeyFormat(apiKey: string): boolean {
-    // Basic validation - adjust based on your API key format
-    return apiKey.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(apiKey);
-  }
+  private isValidApiKeyFormat(apiKey: string, minLength: number = 16): boolean {
+    // More flexible validation supporting various API key formats
+    // Allow base64 characters, dots, and longer keys
+    return apiKey.length >= minLength && /^[a-zA-Z0-9_\-+/=.]+$/.test(apiKey);
+   }
 
   private isValidModelName(model: string): boolean {
     // Basic validation for model names

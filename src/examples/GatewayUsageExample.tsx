@@ -84,7 +84,9 @@ export function SmartModelExample() {
             multiple 
             value={requirements.capabilities}
             onChange={(e) => {
-              const values = Array.from(e.target.selectedOptions, option => option.value) as ('text' | 'vision' | 'function_calling' | 'reasoning')[];
+              const validCapabilities = ['text', 'vision', 'function_calling', 'reasoning'] as const;
+              const values = Array.from(e.target.selectedOptions, option => option.value)
+                .filter(v => validCapabilities.includes(v as any)) as typeof validCapabilities[number][];
               setRequirements(prev => ({ 
                 ...prev, 
                 capabilities: values 

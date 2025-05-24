@@ -196,16 +196,17 @@ const devTools = {
   },
 
   // Measure build time
-  measureBuildTime() {
-    const start = Date.now();
-    try {
-      execSync('npm run build', { stdio: 'pipe' });
-      const duration = Date.now() - start;
-      return `${(duration / 1000).toFixed(2)}s`;
-    } catch (error) {
-      return 'Failed';
-    }
-  },
+measureBuildTime() {
+     const start = Date.now();
+     try {
+       execSync('npm run build', { stdio: 'pipe' });
+       const duration = Date.now() - start;
+       return `${(duration / 1000).toFixed(2)}s`;
+     } catch (error) {
+      log.error(`Build failed: ${error.message}`);
+      return `Failed (${error.message})`;
+     }
+   },
 
   // Measure test time
   measureTestTime() {
@@ -288,14 +289,20 @@ const devTools = {
       }
     }
     
-    for (const filePattern of filesToClean) {
-      try {
-        execSync(`rm -f ${filePattern}`, { stdio: 'pipe' });
-        log.success(`Cleaned ${filePattern}`);
-      } catch (error) {
-        // File doesn't exist, which is fine
-      }
-    }
+for (const filePattern of filesToClean) {
+       try {
+        const glob = require('glob');
+        const files = glob.sync(filePattern);
+        files.forEach(file => {
+          if (fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+        });
+         log.success(`Cleaned ${filePattern}`);
+       } catch (error) {
+         // File doesn't exist, which is fine
+       }
+     }
     
     log.success('Development artifacts cleaned');
   },

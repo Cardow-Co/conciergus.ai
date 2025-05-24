@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/27</span>
+                <span class='fraction'>0/39</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/28</span>
+                <span class='fraction'>0/29</span>
             </div>
         
             
@@ -223,7 +223,14 @@
 <a name='L158'></a><a href='#L158'>158</a>
 <a name='L159'></a><a href='#L159'>159</a>
 <a name='L160'></a><a href='#L160'>160</a>
-<a name='L161'></a><a href='#L161'>161</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -309,17 +316,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -327,9 +325,14 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -340,7 +343,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -465,23 +479,29 @@ const ConciergusMessageList: React.FC&lt;ConciergusMessageListProps&gt; = <span 
   }, [messages, groupMessages]);
 &nbsp;
   // Get message content for display (prefer parts over content)
-  const getMessagePreview = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage: UIMessage): string =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (message.parts &amp;&amp; message.parts.length &gt; 0) {</span>
+ const getMessagePreview = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage: UIMessage): string =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >   <span class="missing-if-branch" title="if path not taken" >I</span>if (Array.isArray(message.parts) &amp;&amp; message.parts.length &gt; 0) {</span>
       // Extract text from parts
       const textParts = <span class="cstat-no" title="statement not covered" >message.parts</span>
-        .filter(<span class="fstat-no" title="function not covered" >(p</span>art: any) =&gt; <span class="cstat-no" title="statement not covered" >part.type === 'text')</span>
-        .map(<span class="fstat-no" title="function not covered" >(p</span>art: any) =&gt; <span class="cstat-no" title="statement not covered" >part.text)</span>
+       .filter(<span class="fstat-no" title="function not covered" >(p</span>art): part is { type: 'text'; text: string } =&gt; 
+<span class="cstat-no" title="statement not covered" >         part &amp;&amp; typeof part === 'object' &amp;&amp; 'type' in part &amp;&amp; part.type === 'text'</span>
+       )
+       .map(<span class="fstat-no" title="function not covered" >(p</span>art) =&gt; <span class="cstat-no" title="statement not covered" >part.text)</span>
         .join(' ');
       
 <span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (textParts) <span class="cstat-no" title="statement not covered" >return textParts;</span></span>
       
       // If no text parts, show part types
-      const partTypes = <span class="cstat-no" title="statement not covered" >message.parts.map(<span class="fstat-no" title="function not covered" >(p</span>art: any) =&gt; <span class="cstat-no" title="statement not covered" >part.type)</span>.join(', ');</span>
+     const partTypes = <span class="cstat-no" title="statement not covered" >message.parts</span>
+       .map(<span class="fstat-no" title="function not covered" >(p</span>art) =&gt; <span class="cstat-no" title="statement not covered" >(part &amp;&amp; typeof part === 'object' &amp;&amp; 'type' in part) ? part.type : 'unknown')</span>
+       .join(', ');
 <span class="cstat-no" title="statement not covered" >      return `[${partTypes}]`;</span>
     }
     
     // Fallback to content property
-<span class="cstat-no" title="statement not covered" >    return (message as any).content || '[Empty message]';</span>
+<span class="cstat-no" title="statement not covered" >   return ('content' in message &amp;&amp; typeof message.content === 'string') </span>
+     ? message.content 
+     : '[Empty message]';
   };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
@@ -519,11 +539,12 @@ const ConciergusMessageList: React.FC&lt;ConciergusMessageListProps&gt; = <span 
                         &lt;div className="message-preview"&gt;
                           {getMessagePreview(message)}
                         &lt;/div&gt;
-                        {(message as any).createdAt &amp;&amp; (
-                          &lt;div className="message-timestamp"&gt;
-                            {(message as any).createdAt.toLocaleTimeString()}
-                          &lt;/div&gt;
-                        )}
+                        {('createdAt' in message &amp;&amp; 
+                          message.createdAt instanceof Date) &amp;&amp; (
+                           &lt;div className="message-timestamp"&gt;
+                            {message.createdAt.toLocaleTimeString()}
+                           &lt;/div&gt;
+                         )}
                       &lt;/div&gt;
                     )}
                   &lt;/div&gt;
@@ -550,7 +571,7 @@ export default ConciergusMessageList; </pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-24T02:06:45.259Z
+                at 2025-05-24T02:28:43.376Z
             </div>
         <script src="../prettify.js"></script>
         <script>

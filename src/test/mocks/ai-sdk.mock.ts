@@ -93,10 +93,17 @@ export const anthropic = jest.fn().mockImplementation((config: any) => createMoc
 export const openai = jest.fn().mockImplementation((config: any) => createMockModel());
 
 // Mock core AI SDK functions
-export const generateText = jest.fn().mockImplementation(async (options: any) => {
-  const model = createMockModel();
-  return model.generateText(options);
-});
+// Create a shared model instance or allow injection
+let sharedModel: MockLanguageModel | null = null;
+
+export const setMockModel = (model: MockLanguageModel) => {
+  sharedModel = model;
+};
+
+ export const generateText = jest.fn().mockImplementation(async (options: any) => {
+  const model = sharedModel || createMockModel();
+   return model.generateText(options);
+ });
 
 export const generateObject = jest.fn().mockImplementation(async (options: any) => {
   const model = createMockModel();
@@ -131,17 +138,22 @@ export const tool = jest.fn().mockImplementation((config: any) => ({
 }));
 
 // Mock embedding functions
-export const embed = jest.fn().mockResolvedValue({
-  embedding: new Array(1536).fill(0).map(() => Math.random()),
-  usage: { tokens: 10 },
-});
+const DEFAULT_EMBEDDING_DIM = 1536;
 
-export const embedMany = jest.fn().mockResolvedValue({
-  embeddings: [
-    new Array(1536).fill(0).map(() => Math.random()),
-    new Array(1536).fill(0).map(() => Math.random()),
-  ],
-  usage: { tokens: 20 },
+export const embed = jest.fn().mockImplementation((options: any) => ({
+  embedding: new Array(options?.dimensions ?? DEFAULT_EMBEDDING_DIM).fill(0).map(() => Math.random()),
+   usage: { tokens: 10 },
+}));
+
+export const embedMany = jest.fn().mockImplementation((options: any) => {
+  const count = options?.inputs?.length ?? 2;
+  const dimensions = options?.dimensions ?? DEFAULT_EMBEDDING_DIM;
+  return {
+    embeddings: Array(count).fill(null).map(() => 
+      new Array(dimensions).fill(0).map(() => Math.random())
+    ),
+    usage: { tokens: count * 10 },
+  };
 });
 
 // Mock schema validation

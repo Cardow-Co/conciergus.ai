@@ -55,7 +55,7 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     maxTokens: 128000,
   },
   
-  'anthropic/claude-3-7-sonnet-20250219': {
+  'anthropic/claude-3-7-sonnet-20250224': {
     id: 'anthropic/claude-3-7-sonnet-20250219',
     provider: 'anthropic',
     name: 'Claude 3.7 Sonnet',
@@ -195,7 +195,9 @@ export interface GatewayConfig {
  * @param config Optional configuration
  * @returns Configured gateway model
  */
-export function createGatewayModel(modelId: string, config?: GatewayConfig): any {
+import { GatewayModel } from '@vercel/ai-sdk-gateway'; // Adjust import based on actual type
+
+export function createGatewayModel(modelId: string, config?: GatewayConfig): GatewayModel {
   const modelConfig = GATEWAY_MODELS[modelId];
   
   if (!modelConfig) {

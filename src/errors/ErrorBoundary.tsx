@@ -153,11 +153,33 @@ export class ConciergusErrorBoundary extends Component<ErrorBoundaryProps, Error
     return enhanced;
   }
 
-  private static categorizeError(error: Error): ErrorCategory {
+private static categorizeError(error: Error): ErrorCategory {
+   // Check for specific error types first
+   if (error instanceof TypeError && error.name === 'NetworkError') {
+     return ErrorCategory.NETWORK;
+   }
+   
+   // Check for custom error properties
+   if ('category' in error && typeof error.category === 'string') {
+     return error.category as ErrorCategory;
+   }
+   
+   // Check error codes (more reliable than message strings)
+   if ('code' in error) {
+     const code = error.code;
+     if (code === 'NETWORK_ERROR' || code === 'FETCH_ERROR') {
+       return ErrorCategory.NETWORK;
+     }
+     if (code === 401 || code === 'UNAUTHORIZED') {
+       return ErrorCategory.AUTHENTICATION;
+     }
+   }
+   
     const message = error.message.toLowerCase();
     const name = error.name.toLowerCase();
     
-    if (message.includes('network') || message.includes('fetch') || name.includes('network')) {
+   // Fallback to string matching with more specific patterns
+   if (/network|fetch|connection|timeout/i.test(message + name)) {
       return ErrorCategory.NETWORK;
     }
     if (message.includes('401') || message.includes('unauthorized') || message.includes('auth')) {
@@ -221,37 +243,48 @@ export class ConciergusErrorBoundary extends Component<ErrorBoundaryProps, Error
     }
   }
 
-  private reportToTelemetry(error: ConciergusError, errorInfo: ErrorInfo) {
-    ConciergusOpenTelemetry.createSpan(
-      'conciergus-error-boundary',
-      'error-caught',
-      async (span) => {
-        span?.setAttributes({
-          'error.category': error.category,
-          'error.severity': error.severity,
-          'error.name': error.name,
-          'error.message': error.message,
-          'error.retryable': error.retryable,
-          'error.code': error.code || '',
-          'error.user_id': error.userId || '',
-          'error.session_id': error.sessionId || '',
-          'error.request_id': error.requestId || '',
-        });
+private reportToTelemetry(error: ConciergusError, errorInfo: ErrorInfo) {
+   try {
+     // Prevent infinite recursion by checking if this is already a telemetry error
+     if (error.context?.isTelemetryError) {
+       console.warn('Skipping telemetry for telemetry error to prevent recursion');
+       return;
+     }
 
-        span?.recordException(error);
-      }
-    );
+      ConciergusOpenTelemetry.createSpan(
+        'conciergus-error-boundary',
+        'error-caught',
+        async (span) => {
+          span?.setAttributes({
+            'error.category': error.category,
+            'error.severity': error.severity,
+            'error.name': error.name,
+            'error.message': error.message,
+            'error.retryable': error.retryable,
+            'error.code': error.code || '',
+            'error.user_id': error.userId || '',
+            'error.session_id': error.sessionId || '',
+            'error.request_id': error.requestId || '',
+          });
 
-    ConciergusOpenTelemetry.recordMetric(
-      'conciergus-error-boundary',
-      'errors.total',
-      1,
-      {
-        category: error.category,
-        severity: error.severity,
-        retryable: String(error.retryable),
-      }
-    );
+          span?.recordException(error);
+        }
+      );
+
+      ConciergusOpenTelemetry.recordMetric(
+        'conciergus-error-boundary',
+        'errors.total',
+        1,
+        {
+          category: error.category,
+          severity: error.severity,
+          retryable: String(error.retryable),
+        }
+      );
+   } catch (telemetryError) {
+     console.error('Telemetry reporting failed:', telemetryError);
+     // Don't rethrow to avoid infinite recursion
+   }
   }
 
   private async reportError(error: ConciergusError, errorInfo: ErrorInfo) {
@@ -281,12 +314,18 @@ export class ConciergusErrorBoundary extends Component<ErrorBoundaryProps, Error
     }
   }
 
-  private scheduleRetry = () => {
+private scheduleRetry = () => {
     this.setState({ isRetrying: true });
     
-    const delay = this.props.retryDelay || 1000 * Math.pow(2, this.state.retryCount);
+   const baseDelay = this.props.retryDelay || 1000;
+   const exponentialDelay = baseDelay * Math.pow(2, this.state.retryCount);
+   // Cap maximum delay at 30 seconds
+   const delay = Math.min(exponentialDelay, 30000);
     
     this.retryTimeout = setTimeout(() => {
+     // Check if component is still mounted
+     if (!this.retryTimeout) return;
+     
       this.setState(prevState => ({
         hasError: false,
         error: null,

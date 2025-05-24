@@ -63,25 +63,41 @@ export interface MiddlewareConfig {
  * Enterprise middleware pipeline for request/response processing
  */
 export class ConciergusMiddlewarePipeline {
-  private middlewares: Map<string, { fn: MiddlewareFunction; config: MiddlewareConfig }> = new Map();
-  private static instance: ConciergusMiddlewarePipeline | null = null;
+   private middlewares: Map<string, { fn: MiddlewareFunction; config: MiddlewareConfig }> = new Map();
+   private static instance: ConciergusMiddlewarePipeline | null = null;
+
+   /**
+    * Get singleton instance
+    */
+   static getInstance(): ConciergusMiddlewarePipeline {
+     if (!this.instance) {
+       this.instance = new ConciergusMiddlewarePipeline();
+     }
+     return this.instance;
+   }
 
   /**
-   * Get singleton instance
+   * Reset singleton instance (useful for testing)
    */
-  static getInstance(): ConciergusMiddlewarePipeline {
-    if (!this.instance) {
-      this.instance = new ConciergusMiddlewarePipeline();
-    }
-    return this.instance;
+  static resetInstance(): void {
+    this.instance = null;
   }
 
   /**
    * Register a middleware
    */
-  use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
-    this.middlewares.set(config.name, { fn: middleware, config });
-  }
+use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
+    if (!config.name) {
+      throw new Error('Middleware name is required');
+    }
+    if (typeof config.priority !== 'number') {
+      throw new Error('Middleware priority must be a number');
+    }
+    if (this.middlewares.has(config.name)) {
+      console.warn(`Middleware "${config.name}" is being overwritten`);
+    }
+     this.middlewares.set(config.name, { fn: middleware, config });
+   }
 
   /**
    * Remove a middleware
@@ -167,12 +183,19 @@ export class ConciergusMiddlewarePipeline {
     const { conditions } = config;
     if (!conditions) return true;
 
-    // Check path conditions
-    if (conditions.paths && !conditions.paths.some(path => 
-      context.request.url.includes(path) || new RegExp(path).test(context.request.url)
-    )) {
-      return false;
-    }
+// Check path conditions
+     if (conditions.paths && !conditions.paths.some(path => 
+      context.request.url.includes(path) || (() => {
+        try {
+          return new RegExp(path).test(context.request.url);
+        } catch {
+          // Treat invalid regex as literal string match
+          return false;
+        }
+      })()
+     )) {
+       return false;
+     }
 
     // Check method conditions
     if (conditions.methods && !conditions.methods.includes(context.request.method)) {
@@ -245,20 +268,21 @@ export const rateLimitingMiddleware = (options: {
 }): MiddlewareFunction => {
   const requests = new Map<string, { count: number; resetTime: number }>();
   
-  return async (context, next) => {
-    const key = options.keyGenerator ? 
-      options.keyGenerator(context) : 
-      context.user?.id || context.request.headers['x-forwarded-for'] || 'anonymous';
-    
-    const now = Date.now();
-    const windowStart = now - options.windowMs;
-    
-    // Clean up old entries
+  const cleanupInterval = setInterval(() => {
+    const windowStart = Date.now() - options.windowMs;
     for (const [k, v] of requests.entries()) {
       if (v.resetTime < windowStart) {
         requests.delete(k);
       }
     }
+  }, options.windowMs);
+
+   return async (context, next) => {
+     const key = options.keyGenerator ? 
+       options.keyGenerator(context) : 
+       context.user?.id || context.request.headers['x-forwarded-for'] || 'anonymous';
+     
+     const now = Date.now();
     
     const current = requests.get(key) || { count: 0, resetTime: now + options.windowMs };
     

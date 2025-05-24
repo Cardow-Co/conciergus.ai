@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/248</span>
+                <span class='fraction'>0/252</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/107</span>
+                <span class='fraction'>0/109</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/239</span>
+                <span class='fraction'>0/243</span>
             </div>
         
             
@@ -844,7 +844,17 @@
 <a name='L779'></a><a href='#L779'>779</a>
 <a name='L780'></a><a href='#L780'>780</a>
 <a name='L781'></a><a href='#L781'>781</a>
-<a name='L782'></a><a href='#L782'>782</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L782'></a><a href='#L782'>782</a>
+<a name='L783'></a><a href='#L783'>783</a>
+<a name='L784'></a><a href='#L784'>784</a>
+<a name='L785'></a><a href='#L785'>785</a>
+<a name='L786'></a><a href='#L786'>786</a>
+<a name='L787'></a><a href='#L787'>787</a>
+<a name='L788'></a><a href='#L788'>788</a>
+<a name='L789'></a><a href='#L789'>789</a>
+<a name='L790'></a><a href='#L790'>790</a>
+<a name='L791'></a><a href='#L791'>791</a>
+<a name='L792'></a><a href='#L792'>792</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1275,10 +1285,19 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1301,6 +1320,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2049,19 +2069,28 @@ export class ConciergusDebugUtils {
     }
   }
 &nbsp;
-  private <span class="fstat-no" title="function not covered" >persistLog(</span>entry: DebugLogEntry): void {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof window !== 'undefined' &amp;&amp; window.localStorage) {</span>
-        const key = <span class="cstat-no" title="statement not covered" >`conciergus_debug_logs_${new Date().toDateString()}`;</span>
-        const existing = <span class="cstat-no" title="statement not covered" >localStorage.getItem(key);</span>
-        const logs = <span class="cstat-no" title="statement not covered" >existing ? JSON.parse(existing) : [];</span>
-<span class="cstat-no" title="statement not covered" >        logs.push(entry);</span>
-<span class="cstat-no" title="statement not covered" >        localStorage.setItem(key, JSON.stringify(logs));</span>
+private <span class="fstat-no" title="function not covered" >persistLog(</span>entry: DebugLogEntry): void {
+<span class="cstat-no" title="statement not covered" >   try {</span>
+<span class="cstat-no" title="statement not covered" >     <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof window !== 'undefined' &amp;&amp; window.localStorage) {</span>
+       const key = <span class="cstat-no" title="statement not covered" >`conciergus_debug_logs_${new Date().toDateString()}`;</span>
+       const existing = <span class="cstat-no" title="statement not covered" >localStorage.getItem(key);</span>
+       const logs = <span class="cstat-no" title="statement not covered" >existing ? JSON.parse(existing) : [];</span>
+<span class="cstat-no" title="statement not covered" >       logs.push(entry);</span>
+      
+      // Check and clean up old logs if approaching quota
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (logs.length &gt; 100) {</span>
+<span class="cstat-no" title="statement not covered" >        logs.shift(); </span>// Remove oldest entry
       }
-    } catch (error) {
-      // Silently fail if localStorage is not available
-    }
-  }
+      
+<span class="cstat-no" title="statement not covered" >       localStorage.setItem(key, JSON.stringify(logs));</span>
+      
+      // Clean up logs older than 7 days
+<span class="cstat-no" title="statement not covered" >      this.cleanupOldLogs();</span>
+     }
+   } catch (error) {
+<span class="cstat-no" title="statement not covered" >    console.warn('Failed to persist debug log:', error);</span>
+   }
+ }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >trimLogs(</span>): void {
 <span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.logs.length &gt; this.config.maxLogEntries) {</span>
@@ -2084,10 +2113,11 @@ export class ConciergusDebugUtils {
 <span class="cstat-no" title="statement not covered" >    return sanitized;</span>
   }
 &nbsp;
-  private <span class="fstat-no" title="function not covered" >isValidApiKeyFormat(</span>apiKey: string): boolean {
-    // Basic validation - adjust based on your API key format
-<span class="cstat-no" title="statement not covered" >    return apiKey.length &gt;= 20 &amp;&amp; /^[a-zA-Z0-9_-]+$/.test(apiKey);</span>
-  }
+  private <span class="fstat-no" title="function not covered" >isValidApiKeyFormat(</span>apiKey: string, minLength: number = <span class="branch-0 cbranch-no" title="branch not covered" >16)</span>: boolean {
+    // More flexible validation supporting various API key formats
+    // Allow base64 characters, dots, and longer keys
+<span class="cstat-no" title="statement not covered" >    return apiKey.length &gt;= minLength &amp;&amp; /^[a-zA-Z0-9_\-+/=.]+$/.test(apiKey);</span>
+   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >isValidModelName(</span>model: string): boolean {
     // Basic validation for model names
@@ -2413,7 +2443,7 @@ export default ConciergusDebugUtils; </pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-24T02:06:45.280Z
+                at 2025-05-24T02:28:43.397Z
             </div>
         <script src="../prettify.js"></script>
         <script>

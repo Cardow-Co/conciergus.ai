@@ -90,9 +90,7 @@ export class AISDKDebugger {
     }
 
     // File output (would require Node.js fs module in real implementation)
-    if (this.config.logToFile) {
-      this.outputToFile(logEntry);
-    }
+// TODO: implement Node-only file logger or drop `logToFile` from DebugConfig
   }
 
   /**

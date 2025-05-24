@@ -118,9 +118,16 @@ export const useStreamableValue = jest.fn().mockReturnValue([
 ]);
 
 export const readStreamableValue = jest.fn().mockImplementation(async function* (streamable: any) {
-  yield 'stream chunk 1';
-  yield 'stream chunk 2';
-  yield 'stream chunk 3';
+  if (!streamable) {
+    throw new Error('Streamable value is required');
+  }
+  
+  const chunks = streamable.chunks || ['stream chunk 1', 'stream chunk 2', 'stream chunk 3'];
+  for (const chunk of chunks) {
+    yield chunk;
+    // Simulate async delay
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
 });
 
 // Mock ChatStore integration (AI SDK 5 specific)
@@ -256,21 +263,34 @@ export const testUtils = {
       handleInputChange: jest.fn(),
       handleSubmit: jest.fn(),
       setMessages: jest.fn(),
+resetMocks: () => {
+    useChat.mockReturnValue({
+     messages: [
+       {
+         id: 'msg-1',
+         role: 'user' as const,
+         content: 'Hello!',
+         createdAt: new Date(),
+       },
+       {
+         id: 'msg-2', 
+         role: 'assistant' as const,
+         content: 'Hi there! How can I help you today?',
+         createdAt: new Date(),
+       },
+     ],
+      isLoading: false,
+      error: undefined,
+      input: '',
+      data: undefined,
+      // ... rest remains the same
     });
 
     useCompletion.mockReturnValue({
-      completion: '',
-      complete: jest.fn().mockResolvedValue(undefined),
-      isLoading: false,
-      error: undefined,
-      stop: jest.fn(),
-      setCompletion: jest.fn(),
+     completion: 'Mock completion text',
+      // ... rest remains the same
     });
-
-    useAssistant.mockReturnValue({
-      status: 'idle' as const,
-      messages: [],
-      error: undefined,
+  },
       submitMessage: jest.fn().mockResolvedValue(undefined),
       append: jest.fn(),
       stop: jest.fn(),

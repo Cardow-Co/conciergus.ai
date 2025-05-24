@@ -42,13 +42,15 @@ export interface MockModelConfig {
 
 // Mock provider utilities
 export const createProvider = jest.fn().mockImplementation((config: MockProviderConfig) => ({
-  ...config,
-  id: 'mock-provider',
-  name: 'Mock Provider',
-  generateText: jest.fn().mockResolvedValue({
-    text: 'Mock provider response',
-    usage: { promptTokens: 20, completionTokens: 30 },
-  }),
+   ...config,
+   id: 'mock-provider',
+   name: 'Mock Provider',
+  // Allow configuring mock behavior for testing
+  _mockBehavior: { shouldFail: false, errorMessage: 'Mock error' },
+   generateText: jest.fn().mockResolvedValue({
+     text: 'Mock provider response',
+     usage: { promptTokens: 20, completionTokens: 30 },
+   }),
   generateObject: jest.fn().mockResolvedValue({
     object: { response: 'Mock object from provider' },
     usage: { promptTokens: 25, completionTokens: 35 },

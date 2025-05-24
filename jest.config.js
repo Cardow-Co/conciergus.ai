@@ -37,6 +37,12 @@ module.exports = {
     // Mock OpenTelemetry for testing
     '^@opentelemetry/(.*)$': '<rootDir>/src/test/mocks/opentelemetry.mock.ts',
     
+    // Mock dedent package
+    '^dedent$': '<rootDir>/src/test/mocks/dedent.mock.js',
+    
+    // Mock @testing-library/jest-dom to avoid ESM issues
+    '^@testing-library/jest-dom$': '<rootDir>/src/test/mocks/jest-dom.mock.js',
+    
     // Package entry point mapping
     '^@conciergus/chat$': '<rootDir>/src/index.ts',
     '^@conciergus/chat/gateway$': '<rootDir>/src/gateway.ts',
@@ -63,7 +69,7 @@ module.exports = {
   
   // Transform ignore patterns for node_modules
   transformIgnorePatterns: [
-    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize)/)',
+    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize|dedent|@adobe|@testing-library|dom-accessibility-api)/)',
   ],
   
   // Coverage configuration
@@ -110,7 +116,7 @@ module.exports = {
   
   // Test environment options
   testEnvironmentOptions: {
-    customExportConditions: [''],
+    customExportConditions: ['node', 'import'],
   },
   
   // Clear mocks between tests

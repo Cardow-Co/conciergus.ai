@@ -80,23 +80,29 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
   }, [messages, groupMessages]);
 
   // Get message content for display (prefer parts over content)
-  const getMessagePreview = (message: UIMessage): string => {
-    if (message.parts && message.parts.length > 0) {
+ const getMessagePreview = (message: UIMessage): string => {
+   if (Array.isArray(message.parts) && message.parts.length > 0) {
       // Extract text from parts
       const textParts = message.parts
-        .filter((part: any) => part.type === 'text')
-        .map((part: any) => part.text)
+       .filter((part): part is { type: 'text'; text: string } => 
+         part && typeof part === 'object' && 'type' in part && part.type === 'text'
+       )
+       .map((part) => part.text)
         .join(' ');
       
       if (textParts) return textParts;
       
       // If no text parts, show part types
-      const partTypes = message.parts.map((part: any) => part.type).join(', ');
+     const partTypes = message.parts
+       .map((part) => (part && typeof part === 'object' && 'type' in part) ? part.type : 'unknown')
+       .join(', ');
       return `[${partTypes}]`;
     }
     
     // Fallback to content property
-    return (message as any).content || '[Empty message]';
+   return ('content' in message && typeof message.content === 'string') 
+     ? message.content 
+     : '[Empty message]';
   };
 
   return (
@@ -134,11 +140,12 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
                         <div className="message-preview">
                           {getMessagePreview(message)}
                         </div>
-                        {(message as any).createdAt && (
-                          <div className="message-timestamp">
-                            {(message as any).createdAt.toLocaleTimeString()}
-                          </div>
-                        )}
+                        {('createdAt' in message && 
+                          message.createdAt instanceof Date) && (
+                           <div className="message-timestamp">
+                            {message.createdAt.toLocaleTimeString()}
+                           </div>
+                         )}
                       </div>
                     )}
                   </div>

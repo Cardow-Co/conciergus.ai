@@ -121,15 +121,21 @@ export function GatewayProvider({
   // Update config when telemetry preference changes
   useEffect(() => {
     updateConfig({ telemetryEnabled });
-  }, [telemetryEnabled]);
-  
-  // Update current model when default model config changes
-  useEffect(() => {
-    if (config.defaultModel && config.defaultModel !== currentModel) {
-      setCurrentModel(config.defaultModel);
-    }
-  }, [config.defaultModel]);
-  
+  }, [telemetryEnabled, updateConfig]);
+  const [userOverrideModel, setUserOverrideModel] = useState(false);
+  const [userOverrideChain, setUserOverrideChain] = useState(false);
+
+   // Update current model when default model config changes
+   useEffect(() => {
+    if (config.defaultModel && config.defaultModel !== currentModel && !userOverrideModel) {
+       setCurrentModel(config.defaultModel);
+     }
+  }, [config.defaultModel, currentModel, userOverrideModel]);
+
+  const handleSetCurrentModel = (modelId: string) => {
+    setUserOverrideModel(true);
+    setCurrentModel(modelId);
+  };
   // Update current chain when default chain config changes
   useEffect(() => {
     if (config.fallbackChain && config.fallbackChain !== currentChain) {

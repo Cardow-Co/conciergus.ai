@@ -98,7 +98,7 @@ function EnhancedHookComponent() {
     if (!hasFeature('modelManager') || !modelManager) return;
     
     try {
-      await modelManager.switchModel('anthropic/claude-3-7-sonnet-20250219');
+      await modelManager.switchModel('anthropic/claude-3-7-sonnet-20250224');
       setCurrentModel(modelManager.getCurrentModel());
     } catch (err) {
       console.error('Failed to switch model:', err);

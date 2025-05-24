@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ConciergusContext } from '../context/ConciergusContext';
 import type { ConciergusConfig } from '../context/ConciergusContext';
 
-// AI SDK 5 ChatStore type (will be imported from 'ai' package)
+// ChatStore interface for AI SDK 5 compatibility
 export interface ChatStore {
   api?: string;
   maxSteps?: number;
@@ -72,23 +72,24 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   // Enhanced configuration with ChatStore integration
   const enhancedConfig: ConciergusConfig = {
     ...config,
-    // ChatStore configuration
     chatStoreConfig: {
-      ...(chatStore?.maxSteps !== undefined && { maxSteps: chatStore.maxSteps }),
-      ...(chatStore?.chats !== undefined && { chats: chatStore.chats }),
-      ...(chatStore?.messageMetadataSchema !== undefined && { messageMetadataSchema: chatStore.messageMetadataSchema }),
       enablePersistence: true,
       storageKeyPrefix: 'conciergus-chat',
       ...config.chatStoreConfig,
+      // Override with chatStore properties if provided
+      ...(chatStore && {
+        ...(chatStore.maxSteps !== undefined && { maxSteps: chatStore.maxSteps }),
+        ...(chatStore.chats !== undefined && { chats: chatStore.chats }),
+        ...(chatStore.messageMetadataSchema !== undefined && { 
+          messageMetadataSchema: chatStore.messageMetadataSchema 
+        }),
+      }),
     },
-    // UI configuration
-    ...(showMessageMetadata !== undefined && { showMessageMetadata }),
-    ...(config.showMessageMetadata !== undefined && { showMessageMetadata: config.showMessageMetadata }),
-    ...(config.showReasoningTraces !== undefined && { showReasoningTraces: config.showReasoningTraces }),
-    ...(config.showSourceCitations !== undefined && { showSourceCitations: config.showSourceCitations }),
-    // Enable debug mode if telemetry is shown
-    ...(showTelemetry !== undefined && { enableDebug: showTelemetry }),
-    ...(config.enableDebug !== undefined && { enableDebug: config.enableDebug }),
+    // UI configuration - props override config values
+    showMessageMetadata: showMessageMetadata ?? config.showMessageMetadata,
+    showReasoningTraces: config.showReasoningTraces,
+    showSourceCitations: config.showSourceCitations,
+    enableDebug: showTelemetry || config.enableDebug,
   };
 
   // Styles for overlay and content based on device

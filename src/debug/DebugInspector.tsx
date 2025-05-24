@@ -88,11 +88,11 @@ export const ConciergusDebugInspector: React.FC<DebugInspectorProps> = ({
     }
   };
 
-  const exportData = () => {
-    const data = {
-      logs: debug.exportLogs('json'),
-      metrics: debug.exportLogs('json')
-    };
+const exportData = () => {
+   const data = {
+     logs: debug.exportLogs('json'),
+    metrics: debug.exportMetrics('json')
+   };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -355,20 +355,20 @@ export const ConciergusDebugInspector: React.FC<DebugInspectorProps> = ({
               gap: '8px',
               alignItems: 'center'
             }}>
-              <button
-                onClick={() => debug.clearLogs()}
-                style={{
-                  background: '#d32f2f',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '2px 6px',
-                  cursor: 'pointer',
-                  borderRadius: '2px',
-                  fontSize: '10px'
-                }}
-              >
-                Clear Metrics
-              </button>
+<button
+  onClick={() => debug.clearMetrics()}
+   style={{
+     background: '#d32f2f',
+     color: '#fff',
+     border: 'none',
+     padding: '2px 6px',
+     cursor: 'pointer',
+     borderRadius: '2px',
+     fontSize: '10px'
+   }}
+ >
+   Clear Metrics
+ </button>
             </div>
 
             <div style={{

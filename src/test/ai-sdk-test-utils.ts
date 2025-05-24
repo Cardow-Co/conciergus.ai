@@ -1,6 +1,6 @@
 // AI SDK 5 Alpha Testing Utilities
 import { jest } from '@jest/globals';
-import type { MockMessage } from './mocks/ai-sdk-react.mock';
+
 
 // AI SDK 5 Message Types
 export interface AIMessage {
@@ -136,9 +136,9 @@ export class AITestDataGenerator {
       'network': 0
     };
 
-    const error = new Error(errorMessages[type]);
-    (error as any).statusCode = statusCodes[type];
-    (error as any).type = type;
+    const error = new Error(errorMessages[type]) as AIError;
+    error.statusCode = statusCodes[type];
+    error.type = type;
     return error;
   }
 }

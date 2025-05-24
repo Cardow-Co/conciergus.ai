@@ -28,12 +28,15 @@ export interface MockMeter {
   createUpDownCounter: jest.MockedFunction<(name: string, options?: any) => any>;
 }
 
-// Create mock span
-export const createMockSpan = (): MockSpan => ({
-  spanContext: jest.fn().mockReturnValue({
-    traceId: 'mock-trace-id-1234567890abcdef',
-    spanId: 'mock-span-id-12345678',
-  }),
+let mockIdCounter = 0;
+const generateMockId = (prefix: string) => `${prefix}-${Date.now()}-${++mockIdCounter}`;
+
+ // Create mock span
+ export const createMockSpan = (): MockSpan => ({
+   spanContext: jest.fn().mockReturnValue({
+    traceId: generateMockId('mock-trace-id'),
+    spanId: generateMockId('mock-span-id'),
+   }),
   setAttribute: jest.fn(),
   setAttributes: jest.fn(),
   addEvent: jest.fn(),
@@ -155,12 +158,11 @@ export const OTLPMetricExporter = jest.fn().mockImplementation(() => ({
 }));
 
 export const ConsoleSpanExporter = jest.fn().mockImplementation(() => ({
-  export: jest.fn().mockImplementation((spans, callback) => {
-    console.log(`Mock: Exporting ${spans.length} spans`);
-    callback({ code: 0 }); // SUCCESS
-  }),
-  shutdown: jest.fn().mockResolvedValue(undefined),
-}));
+   export: jest.fn().mockImplementation((spans, callback) => {
+     callback({ code: 0 }); // SUCCESS
+   }),
+   shutdown: jest.fn().mockResolvedValue(undefined),
+ }));
 
 // Mock metric readers
 export const PeriodicExportingMetricReader = jest.fn().mockImplementation(() => ({

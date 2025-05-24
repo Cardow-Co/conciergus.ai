@@ -7,5 +7,6 @@ export { default as ConciergusMessageList } from './components/ConciergusMessage
 export { default as ConciergusChatWidget } from './components/ConciergusChatWidget';
 
 // Re-export component prop types for TypeScript usage
-export type { ConciergusMessageItemProps, ConciergusMessageListProps } from './components/ConciergusMessageList';
+export type { ConciergusMessageListProps } from './components/ConciergusMessageList';
+export type { ConciergusMessageItemProps } from './components/ConciergusMessageItem';
 export type { ConciergusChatWidgetProps } from './components/ConciergusChatWidget'; 
