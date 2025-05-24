@@ -107,9 +107,9 @@ export function GatewayProvider({
   const [authGuidance, setAuthGuidance] = useState<string>('');
   
   // Update configuration
-  const updateConfig = (updates: Partial<GatewayConfig>) => {
+  const updateConfig = React.useCallback((updates: Partial<GatewayConfig>) => {
     setConfig(prev => ({ ...prev, ...updates }));
-  };
+  }, []);
   
   // Validate authentication on mount and config changes
   useEffect(() => {
@@ -132,16 +132,21 @@ export function GatewayProvider({
      }
   }, [config.defaultModel, currentModel, userOverrideModel]);
 
-  const handleSetCurrentModel = (modelId: string) => {
+  const handleSetCurrentModel = React.useCallback((modelId: string) => {
     setUserOverrideModel(true);
     setCurrentModel(modelId);
-  };
+  }, []);
   // Update current chain when default chain config changes
   useEffect(() => {
-    if (config.fallbackChain && config.fallbackChain !== currentChain) {
+    if (config.fallbackChain && config.fallbackChain !== currentChain && !userOverrideChain) {
       setCurrentChain(config.fallbackChain);
     }
-  }, [config.fallbackChain]);
+  }, [config.fallbackChain, currentChain, userOverrideChain]);
+
+  const handleSetCurrentChain = React.useCallback((chainName: string) => {
+    setUserOverrideChain(true);
+    setCurrentChain(chainName);
+  }, []);
   
   // Create gateway model with current config
   const createModel = (modelId: string) => {
@@ -177,12 +182,12 @@ export function GatewayProvider({
     
     // Model management
     currentModel,
-    setCurrentModel,
+    setCurrentModel: handleSetCurrentModel,
     availableModels: GATEWAY_MODELS,
     
     // Chain management
     currentChain,
-    setCurrentChain,
+    setCurrentChain: handleSetCurrentChain,
     availableChains: FALLBACK_CHAINS,
     
     // Smart selection

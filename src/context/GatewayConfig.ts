@@ -55,7 +55,7 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     maxTokens: 128000,
   },
   
-  'anthropic/claude-3-7-sonnet-20250224': {
+  'anthropic/claude-3-7-sonnet-20250219': {
     id: 'anthropic/claude-3-7-sonnet-20250219',
     provider: 'anthropic',
     name: 'Claude 3.7 Sonnet',

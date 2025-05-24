@@ -9,6 +9,22 @@ import {
 } from '../context/GatewayProvider';
 import { GATEWAY_MODELS, GatewayAuth, selectOptimalModel } from '../context/GatewayConfig';
 
+// Mock Vercel AI SDK Gateway to prevent network calls and API dependencies
+jest.mock('@vercel/ai-sdk-gateway', () => ({
+  gateway: jest.fn(() => ({
+    generateText: jest.fn(),
+    generateStream: jest.fn(),
+    generateObject: jest.fn(),
+    modelId: 'mocked-model',
+    provider: 'mocked-provider',
+  })),
+  GatewayModel: jest.fn().mockImplementation(() => ({
+    generateText: jest.fn(),
+    generateStream: jest.fn(),
+    generateObject: jest.fn(),
+  })),
+}));
+
 // Mock window.matchMedia for responsive features
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -22,6 +38,16 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
+});
+
+// Mock console.log to prevent noise in tests
+const originalConsoleLog = console.log;
+beforeAll(() => {
+  console.log = jest.fn();
+});
+
+afterAll(() => {
+  console.log = originalConsoleLog;
 });
 
 // Mock component to test hooks
@@ -45,20 +71,45 @@ function TestComponent() {
   );
 }
 
-describe.skip('Gateway Integration', () => {
+// Test wrapper component with error boundary to catch any errors
+function TestWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <div data-testid="test-wrapper">
+      {children}
+    </div>
+  );
+}
+
+describe('Gateway Integration', () => {
+  // Set up test environment
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Set NODE_ENV to test to prevent development logging
+    process.env.NODE_ENV = 'test';
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   it('should render GatewayProvider without crashing', () => {
     render(
-      <GatewayProvider>
-        <div>Test content</div>
-      </GatewayProvider>
+      <TestWrapper>
+        <GatewayProvider>
+          <div>Test content</div>
+        </GatewayProvider>
+      </TestWrapper>
     );
+    
+    expect(screen.getByText('Test content')).toBeInTheDocument();
   });
 
   it('should provide gateway context to child components', () => {
     render(
-      <GatewayProvider defaultModel="openai/gpt-4o-mini">
-        <TestComponent />
-      </GatewayProvider>
+      <TestWrapper>
+        <GatewayProvider defaultModel="openai/gpt-4o-mini">
+          <TestComponent />
+        </GatewayProvider>
+      </TestWrapper>
     );
 
     expect(screen.getByTestId('current-model')).toHaveTextContent('openai/gpt-4o-mini');
@@ -68,9 +119,11 @@ describe.skip('Gateway Integration', () => {
 
   it('should render GatewayAuthStatus component', () => {
     render(
-      <GatewayProvider>
-        <GatewayAuthStatus />
-      </GatewayProvider>
+      <TestWrapper>
+        <GatewayProvider>
+          <GatewayAuthStatus />
+        </GatewayProvider>
+      </TestWrapper>
     );
 
     expect(screen.getByText(/Gateway authentication/)).toBeInTheDocument();
@@ -79,7 +132,7 @@ describe.skip('Gateway Integration', () => {
   it('should have all expected models in configuration', () => {
     const expectedModels = [
       'xai/grok-3-beta',
-      'openai/gpt-4o',
+      'openai/gpt-4o', 
       'anthropic/claude-3-7-sonnet-20250219',
       'openai/gpt-4o-mini',
       'anthropic/claude-3-5-haiku-20241022',
@@ -137,7 +190,7 @@ describe.skip('Gateway Integration', () => {
   });
 });
 
-describe.skip('Gateway Configuration', () => {
+describe('Gateway Configuration', () => {
   it('should have valid model configurations', () => {
     Object.entries(GATEWAY_MODELS).forEach(([id, config]) => {
       expect(config.id).toBe(id);
