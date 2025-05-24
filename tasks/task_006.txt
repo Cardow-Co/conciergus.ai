@@ -1,63 +1,59 @@
 # Task ID: 6
-# Title: Implement ConciergusChatInput Component
+# Title: Implement AI Gateway Integration Component
 # Status: pending
 # Dependencies: 1, 2
 # Priority: high
-# Description: Create the chat input component with textarea auto-sizing and integration with Vercel AI SDK's useChat hook.
+# Description: Create dedicated component for AI Gateway setup, model management, and unified provider access.
 # Details:
-1. Create a `ConciergusChatInput` component using `react-textarea-autosize`
-2. Wire props directly to Vercel AI SDK's `useChat` return values
-3. Implement TypeScript interface:
+1. Create `ConciergusAIGateway` component for AI Gateway integration
+2. Implement model switching and fallback chain management
+3. Add cost optimization and performance monitoring
+4. Create TypeScript interfaces:
 ```typescript
-interface ConciergusChatInputProps {
-  input: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement> | string) => void;
-  handleSubmit: (e?: React.FormEvent, chatRequestOptions?: any) => void;
-  isLoading: boolean;
-  placeholder?: string;
-  disabled?: boolean;
+interface ConciergusAIGatewayProps {
+  models?: string[];
+  fallbackChain?: string[];
+  costOptimization?: boolean;
+  onModelChange?: (model: string) => void;
+  onCostUpdate?: (cost: number) => void;
   className?: string;
-  showMicButton?: boolean;
-  [key: string]: any; // For ...rest props
 }
 ```
-4. Add microphone button that integrates with voice input hook
-5. Implement send button with loading state
-6. Add keyboard shortcuts (Enter to send, Shift+Enter for new line)
-7. Implement character limit and validation
-8. Add proper accessibility attributes
+5. Integration with Vercel OIDC authentication
+6. Support for real-time model performance comparison
+7. Add debugging and monitoring tools for model usage
 
 # Test Strategy:
-Test input changes are correctly handled. Verify form submission works as expected. Test keyboard shortcuts. Verify loading states display correctly. Test with mock voice input hook. Verify accessibility attributes are correctly applied.
+Test model switching across different providers. Verify fallback chains work correctly. Test cost tracking and optimization. Verify authentication with Vercel OIDC tokens.
 
 # Subtasks:
-## 1. Create ConciergusChatInput component with auto-sizing textarea [pending]
+## 1. Create AI Gateway Provider Component [pending]
 ### Dependencies: None
-### Description: Implement the core component using react-textarea-autosize for auto-resizing functionality.
+### Description: Implement the core AI Gateway integration component with authentication and basic model access.
 ### Details:
-Use react-textarea-autosize to create a textarea that automatically adjusts its height as content changes[1][4][5].
+Set up AI Gateway provider with Vercel OIDC authentication and basic model selection functionality.
 
-## 2. Integrate Vercel AI SDK useChat hook [pending]
+## 2. Implement Model Management and Fallback Chains [pending]
 ### Dependencies: 6.1
-### Description: Wire up component props to Vercel AI SDK's useChat hook return values.
+### Description: Add comprehensive model management with automatic fallback chains and performance monitoring.
 ### Details:
-Pass input, handleInputChange, handleSubmit, and isLoading props from useChat to the component.
+Create model fallback logic, performance tracking, and automatic model selection based on query complexity.
 
-## 3. Implement TypeScript interface and props [pending]
-### Dependencies: 6.1
-### Description: Define and apply the TypeScript interface for component props.
+## 3. Add Cost Optimization and Monitoring [pending]
+### Dependencies: 6.2
+### Description: Implement cost tracking, optimization algorithms, and real-time usage monitoring.
 ### Details:
-Use the provided interface to type props and handle rest props.
+Create cost tracking system, implement optimization algorithms, and add real-time monitoring dashboard.
 
-## 4. Add microphone and send buttons with loading state [pending]
-### Dependencies: 6.1, 6.2
-### Description: Implement microphone button for voice input and send button with loading state.
+## 4. Create Model Performance Comparison Tools [pending]
+### Dependencies: 6.3
+### Description: Build tools for comparing model performance, latency, and quality across different providers.
 ### Details:
-Add microphone button that integrates with a voice input hook and a send button that reflects isLoading state.
+Implement A/B testing framework, performance benchmarking, and quality assessment tools.
 
-## 5. Implement keyboard shortcuts, character limit, and accessibility [pending]
-### Dependencies: 6.1, 6.3
-### Description: Add keyboard shortcuts, character limit validation, and accessibility attributes.
+## 5. Add Debugging and Administrative Interface [pending]
+### Dependencies: 6.4
+### Description: Create debugging tools and administrative interface for model management and monitoring.
 ### Details:
-Enable Enter to send, Shift+Enter for new line, character limit validation, and proper ARIA attributes.
+Build debugging dashboard, administrative controls, and detailed logging for model usage.
 

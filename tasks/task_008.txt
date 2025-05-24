@@ -1,59 +1,50 @@
 # Task ID: 8
-# Title: Implement ConciergusToolUIRenderer Component
+# Title: Implement AI SDK 5 Enhanced Components
 # Status: pending
-# Dependencies: 1, 2
+# Dependencies: 1, 2, 7
 # Priority: medium
-# Description: Create a component that renders UI for function calls and tool invocations from the Vercel AI SDK.
+# Description: Create new components that leverage AI SDK 5 Alpha's advanced capabilities for enterprise use.
 # Details:
-1. Create a `ConciergusToolUIRenderer` component that renders UI based on function calls
-2. Implement support for Vercel AI SDK's tool_calls format
-3. Add patterns for rendering buttons, forms, and carousels
-4. Create TypeScript interface:
-```typescript
-interface ConciergusToolUIRendererProps {
-  toolCalls: ToolCall[]; // From Vercel AI SDK
-  onToolCallSubmit: (toolCallId: string, result: any) => void;
-  className?: string;
-  customRenderers?: Record<string, React.ComponentType<any>>;
-  [key: string]: any; // For ...rest props
-}
-```
-5. Implement default renderers for common tool types
-6. Add support for custom renderers via props
-7. Handle loading and error states
-8. Implement proper accessibility for interactive elements
+1. Create `ConciergusObjectStream` - real-time structured object rendering
+2. Implement `ConciergusAgentControls` - UI for agent step management
+3. Add `ConciergusMetadataDisplay` - telemetry and performance metrics
+4. Create `ConciergusDataParts` - custom data part streaming renderer
+5. Implement `ConciergusReasoningDisplay` - reasoning trace visualization
+6. Add `ConciergusSourcesDisplay` - RAG source citations
+7. Create enterprise-grade error boundaries and fallback components
+8. Integration with AI SDK 5's telemetry and observability features
 
 # Test Strategy:
-Test rendering of various tool call types. Verify custom renderers work correctly. Test submission of tool call results. Verify accessibility of rendered UI elements. Test error handling with malformed tool calls.
+Test all new components with AI SDK 5 features. Verify real-time updates work correctly. Test error boundaries handle failures gracefully. Verify telemetry integration.
 
 # Subtasks:
-## 1. Create Component Structure and TypeScript Interface [pending]
+## 1. Create ConciergusObjectStream Component [pending]
 ### Dependencies: None
-### Description: Set up the basic component structure and implement the TypeScript interface for ConciergusToolUIRenderer
+### Description: Implement real-time structured object streaming component using AI SDK 5's useObject hook.
 ### Details:
-Create the component file with proper TypeScript interface as specified in the requirements. Implement the component skeleton that accepts toolCalls, onToolCallSubmit, className, customRenderers, and other props. Follow the Single Responsibility Principle to ensure the component focuses only on rendering UI based on tool calls.
+Create component that renders structured objects as they stream from AI, with type-safe incremental parsing.
 
-## 2. Implement Parent-Child Component Architecture [pending]
+## 2. Implement ConciergusAgentControls Component [pending]
 ### Dependencies: 8.1
-### Description: Design the component hierarchy with proper parent-child relationships for different tool call renderers
+### Description: Create UI component for controlling AI SDK 5's advanced agent features and step management.
 ### Details:
-Create a container/presentational pattern where ConciergusToolUIRenderer acts as the parent container managing the overall structure and data flow, while child components handle specific UI elements for different tool types. Establish clear communication patterns between parent and child components following React's unidirectional data flow.
+Build controls for prepareStep, continueUntil, and step-by-step agent execution with progress tracking.
 
-## 3. Develop Default Renderers for Common Tool Types [pending]
-### Dependencies: 8.2
-### Description: Create default renderer components for buttons, forms, carousels, and other common UI patterns
+## 3. Create ConciergusMetadataDisplay Component [pending]
+### Dependencies: 8.1
+### Description: Implement component for displaying message metadata, telemetry, and performance metrics.
 ### Details:
-Implement reusable child components that render specific UI elements based on tool call types. Each renderer should follow the Single Responsibility Principle, focusing on one specific functionality. Create components for buttons, forms, carousels, and other UI patterns mentioned in the requirements.
+Create component that displays response times, token usage, model information, and cost tracking.
 
-## 4. Implement Custom Renderer Support [pending]
+## 4. Implement Advanced Data and Reasoning Components [pending]
 ### Dependencies: 8.3
-### Description: Add functionality to allow custom renderers to be passed via props and override default renderers
+### Description: Create components for data parts rendering, reasoning traces, and source citations.
 ### Details:
-Create a mechanism to register and use custom renderers passed via the customRenderers prop. Implement logic to check for custom renderers before falling back to default ones. Ensure the component can handle any type of custom renderer that follows the expected interface.
+Build components for custom data parts, reasoning visualization, and RAG source display.
 
-## 5. Add State Management and Accessibility Features [pending]
+## 5. Add Enterprise Error Boundaries and Fallbacks [pending]
 ### Dependencies: 8.4
-### Description: Implement loading and error states, and ensure proper accessibility for all interactive elements
+### Description: Implement enterprise-grade error handling, boundaries, and fallback components.
 ### Details:
-Add state management for loading and error conditions when processing tool calls. Implement proper ARIA attributes, keyboard navigation, focus management, and other accessibility features for all interactive elements. Ensure the component follows WAI-ARIA guidelines and is fully accessible to users with disabilities.
+Create comprehensive error boundaries, fallback UI components, and enterprise error reporting.
 

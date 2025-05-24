@@ -1,58 +1,50 @@
 # Task ID: 7
-# Title: Implement Voice Input and TTS Hooks
+# Title: Implement Advanced AI SDK 5 Hooks
 # Status: pending
-# Dependencies: 2
-# Priority: medium
-# Description: Create hooks for speech-to-text input and text-to-speech output with browser API fallbacks.
+# Dependencies: 1, 2
+# Priority: high
+# Description: Create enhanced hooks that leverage AI SDK 5 Alpha's advanced features for chat, agents, and streaming.
 # Details:
-1. Create `useConciergusVoiceInput` hook:
-   - Use `window.SpeechRecognition` for real-time transcription
-   - Implement fallback UI for unsupported browsers
-   - Add support for `MediaRecorder` when `onProcessRecordedAudio` is provided
-   - Handle permission requests and errors
-
-2. Create `useConciergusTTS` hook:
-   - Fetch audio from configured `ttsApiEndpoint`
-   - Implement streaming playback with controls
-   - Add fallback to `window.speechSynthesis` when needed
-   - Support custom TTS via `onTextToAudio` function
-   - Handle errors and loading states
-
-3. Implement TypeScript interfaces for both hooks
-4. Add browser compatibility detection
-5. Implement proper error handling and user feedback
+1. Create `useConciergusChat` - wrapper around AI SDK 5's ChatStore
+2. Implement `useConciergusAgent` - advanced agent control with step management
+3. Add `useConciergusModels` - dynamic model switching and fallback management
+4. Create `useConciergusMetrics` - usage analytics and performance monitoring
+5. Implement `useConciergusRAG` - integration with AI SDK's embeddings API
+6. Add `useConciergusObjectStream` - structured data streaming
+7. Create TypeScript interfaces for all hooks
+8. Integration with AI SDK 5's `prepareStep` and `continueUntil` features
 
 # Test Strategy:
-Test voice input with mock SpeechRecognition API. Verify fallback behavior works in unsupported browsers. Test TTS with mock audio endpoints. Verify error handling for permission denials and API failures. Test integration with ConciergusProvider context.
+Test all hooks with AI SDK 5 Alpha features. Verify agent control works correctly. Test streaming hooks with real-time data. Verify metrics collection and RAG integration.
 
 # Subtasks:
-## 1. Implement SpeechRecognition API Integration [pending]
+## 1. Create Enhanced Chat Hook with ChatStore Integration [pending]
 ### Dependencies: None
-### Description: Create the core functionality for the useConciergusVoiceInput hook using the Web Speech API's SpeechRecognition interface
+### Description: Implement useConciergusChat hook that wraps AI SDK 5's ChatStore with additional Conciergus features.
 ### Details:
-Implement the useConciergusVoiceInput hook with SpeechRecognition API integration including: setting up continuous recognition, handling interim and final results, configuring language settings, and implementing maxAlternatives. Set up event listeners for results, errors, and state changes. Ensure proper initialization and cleanup of the SpeechRecognition object.
+Create hook that manages ChatStore instances, provides enhanced chat functionality, and integrates with Conciergus context.
 
-## 2. Develop Browser Compatibility Detection and Fallbacks [pending]
+## 2. Implement Advanced Agent Control Hook [pending]
 ### Dependencies: 7.1
-### Description: Implement detection for browser support of SpeechRecognition and create fallback mechanisms
+### Description: Create useConciergusAgent hook for AI SDK 5's advanced agent features including step management and model switching.
 ### Details:
-Create a utility function to detect browser support for SpeechRecognition API. Implement fallback UI components for browsers that don't support the API. For the TTS hook, implement fallback to window.speechSynthesis when the primary TTS API endpoint is unavailable. Document browser compatibility limitations, noting that Chrome/Chromium browsers have the best support.
+Implement agent control with prepareStep, continueUntil, and dynamic model/tool selection capabilities.
 
-## 3. Create MediaRecorder Integration for Audio Processing [pending]
+## 3. Create Model Management and Metrics Hooks [pending]
 ### Dependencies: 7.1
-### Description: Implement MediaRecorder support as an alternative input method when onProcessRecordedAudio is provided
+### Description: Implement hooks for dynamic model switching, performance monitoring, and usage analytics.
 ### Details:
-Add MediaRecorder functionality to the useConciergusVoiceInput hook that activates when onProcessRecordedAudio prop is provided. Implement audio capture, processing, and transmission. Handle permission requests for microphone access and manage recording states. Implement error handling for permission denials and device unavailability.
+Create hooks for model management, telemetry collection, and real-time performance monitoring.
 
-## 4. Develop Text-to-Speech Hook Implementation [pending]
-### Dependencies: None
-### Description: Create the useConciergusTTS hook with streaming audio playback and controls
+## 4. Implement RAG and Knowledge Hooks [pending]
+### Dependencies: 7.1
+### Description: Create hooks for RAG integration, vector search, and knowledge management using AI SDK features.
 ### Details:
-Implement the useConciergusTTS hook to fetch audio from the configured ttsApiEndpoint. Create streaming playback functionality with play, pause, and stop controls. Implement audio buffering for smooth playback. Add support for custom TTS via the onTextToAudio function. Manage loading states during audio fetching and processing.
+Implement RAG hooks that integrate with AI SDK's embeddings API and provide vector search capabilities.
 
-## 5. Create TypeScript Interfaces and Error Handling [pending]
-### Dependencies: 7.1, 7.2, 7.3, 7.4
-### Description: Define comprehensive TypeScript interfaces and implement robust error handling for both hooks
+## 5. Create Streaming and Real-time Hooks [pending]
+### Dependencies: 7.1
+### Description: Implement hooks for structured object streaming, data parts, and real-time UI generation.
 ### Details:
-Create TypeScript interfaces for both hooks including props, return values, and internal state types. Implement comprehensive error handling for all potential failure points: API unavailability, permission denials, network failures, and unexpected errors. Add user feedback mechanisms for error states including meaningful error messages and recovery suggestions. Implement proper state management to handle loading, error, and success states.
+Create hooks for AI SDK 5's streaming features including object streaming, data parts, and generative UI.
 

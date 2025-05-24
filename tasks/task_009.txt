@@ -1,83 +1,50 @@
 # Task ID: 9
-# Title: Implement ConciergusFormRenderer Component
+# Title: Implement Enhanced Voice and Speech Integration
 # Status: pending
-# Dependencies: 1, 2, 8
+# Dependencies: 2, 6
 # Priority: medium
-# Description: Create a component that renders dynamic forms based on LLM-defined schemas with validation.
+# Description: Create advanced voice integration using AI SDK 5's speech capabilities with enhanced features.
 # Details:
-1. Create a `ConciergusFormRenderer` component that renders forms based on JSON schema
-2. Implement support for common field types: text, number, select, checkbox, etc.
-3. Add client-side validation based on schema rules
-4. Create TypeScript interface:
-```typescript
-interface ConciergusFormRendererProps {
-  schema: FormSchema;
-  onSubmit: (data: any) => void;
-  initialValues?: Record<string, any>;
-  className?: string;
-  submitButtonText?: string;
-  cancelButtonText?: string;
-  onCancel?: () => void;
-  [key: string]: any; // For ...rest props
-}
-
-interface FormSchema {
-  title?: string;
-  description?: string;
-  fields: FormField[];
-}
-
-interface FormField {
-  name: string;
-  type: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'date';
-  label: string;
-  required?: boolean;
-  placeholder?: string;
-  options?: { label: string; value: string | number | boolean }[];
-  validation?: {
-    pattern?: string;
-    min?: number;
-    max?: number;
-    minLength?: number;
-    maxLength?: number;
-  };
-}
-```
-5. Implement form state management
-6. Add proper error messaging for validation failures
-7. Implement accessibility features for form fields
+1. Update `useConciergusVoiceInput` to use AI SDK 5's `transcribeSpeech`
+2. Enhance `useConciergusTTS` with AI SDK's `generateSpeech`
+3. Add real-time voice streaming and processing
+4. Implement voice activity detection and noise cancellation
+5. Create voice command recognition and shortcuts
+6. Add multi-language voice support
+7. Integration with AI Gateway for voice model selection
+8. Enhanced TypeScript interfaces for voice features
 
 # Test Strategy:
-Test rendering of various form schemas. Verify validation works correctly. Test form submission with valid and invalid data. Verify accessibility of form elements. Test with complex nested schemas.
+Test voice input with AI SDK speech APIs. Verify TTS integration works correctly. Test voice commands and multi-language support. Verify noise cancellation and activity detection.
 
 # Subtasks:
-## 1. Define TypeScript Interfaces for Form Schema and Props [pending]
+## 1. Integrate AI SDK 5 Speech APIs [pending]
 ### Dependencies: None
-### Description: Create TypeScript interfaces for the form schema, form fields, and component props to ensure type safety and clear contract for the ConciergusFormRenderer component.
+### Description: Update voice hooks to use AI SDK 5's transcribeSpeech and generateSpeech APIs.
 ### Details:
-Implement the provided interfaces: ConciergusFormRendererProps, FormSchema, and FormField with all specified fields and types.
+Replace custom speech implementation with AI SDK 5's speech APIs for better reliability and features.
 
-## 2. Implement Form Rendering Logic for Supported Field Types [pending]
+## 2. Implement Advanced Voice Features [pending]
 ### Dependencies: 9.1
-### Description: Develop the ConciergusFormRenderer component to dynamically render form fields based on the JSON schema, supporting text, number, select, checkbox, textarea, and date input types.
+### Description: Add voice activity detection, noise cancellation, and real-time streaming capabilities.
 ### Details:
-Use the schema.fields array to render corresponding input elements with labels, placeholders, and options where applicable.
+Create advanced voice processing features for enterprise-grade voice interaction.
 
-## 3. Implement Form State Management and Client-Side Validation [pending]
+## 3. Add Voice Commands and Shortcuts [pending]
 ### Dependencies: 9.2
-### Description: Add state management to handle form data and implement validation rules defined in the schema, including required fields, patterns, min/max values, and length constraints.
+### Description: Implement voice command recognition and customizable voice shortcuts for power users.
 ### Details:
-Manage form state internally or with a library; validate inputs on change and on submit, preventing submission if validation fails.
+Create voice command system that allows users to control chat interface and trigger actions via voice.
 
-## 4. Add Error Messaging and Accessibility Features [pending]
+## 4. Implement Multi-language Voice Support [pending]
 ### Dependencies: 9.3
-### Description: Display user-friendly error messages for validation failures and ensure all form fields meet accessibility standards, including proper labeling and keyboard navigation.
+### Description: Add support for multiple languages in both speech recognition and synthesis.
 ### Details:
-Show inline error messages near fields; use ARIA attributes and semantic HTML to enhance accessibility.
+Integrate AI SDK's language detection and multi-language voice capabilities.
 
-## 5. Implement Form Submission and Cancellation Handling [pending]
+## 5. Create Voice Model Management [pending]
 ### Dependencies: 9.4
-### Description: Add functionality to handle form submission via onSubmit callback and optional cancellation via onCancel callback, including customizable button texts and class names.
+### Description: Implement voice model selection and optimization using AI Gateway.
 ### Details:
-Trigger onSubmit with form data when validation passes; trigger onCancel when cancel action is invoked; support passing additional props and styling.
+Add voice model management that integrates with AI Gateway for optimal voice quality and cost.
 

@@ -1,5 +1,7 @@
-import React, { PropsWithChildren } from 'react';
-import { ConciergusContext, ConciergusConfig } from './ConciergusContext';
+import React from 'react';
+import type { PropsWithChildren } from 'react';
+import { ConciergusContext } from './ConciergusContext';
+import type { ConciergusConfig } from './ConciergusContext';
 
 /**
  * Props for the ConciergusProvider component
@@ -23,13 +25,13 @@ export const ConciergusProvider = ({
   enableDebug,
 }: PropsWithChildren<ConciergusProviderProps>) => {
   const config: ConciergusConfig = {
-    defaultTTSVoice,
-    isTTSEnabledByDefault,
-    ttsApiEndpoint,
-    onTextToAudio,
-    onProcessRecordedAudio,
-    proactiveRules,
-    enableDebug,
+    ...(defaultTTSVoice !== undefined && { defaultTTSVoice }),
+    ...(isTTSEnabledByDefault !== undefined && { isTTSEnabledByDefault }),
+    ...(ttsApiEndpoint !== undefined && { ttsApiEndpoint }),
+    ...(onTextToAudio !== undefined && { onTextToAudio }),
+    ...(onProcessRecordedAudio !== undefined && { onProcessRecordedAudio }),
+    ...(proactiveRules !== undefined && { proactiveRules }),
+    ...(enableDebug !== undefined && { enableDebug }),
   };
 
   if (config.enableDebug) {

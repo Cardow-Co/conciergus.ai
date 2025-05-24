@@ -18,15 +18,15 @@ describe('ConciergusChatWidget', () => {
   });
 
   it('applies className and extra props to root element', () => {
-    const { container } = render(
+    render(
       <ConciergusChatWidget
         {...defaultProps}
         className="test-class"
         data-test-id="chat-widget"
       />
     );
-    const root = container.querySelector(
-      '.test-class[data-test-id="chat-widget"]'
+    const root = document.querySelector(
+      '[data-chat-widget-root].test-class[data-test-id="chat-widget"]'
     );
     expect(root).toBeInTheDocument();
   });

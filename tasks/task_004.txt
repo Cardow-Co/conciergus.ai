@@ -1,199 +1,292 @@
 # Task ID: 4
-# Title: Implement ConciergusMessageList Component
-# Status: done
+# Title: Implement ConciergusMessageList with UIMessage Support
+# Status: in-progress
 # Dependencies: 1, 2
 # Priority: high
-# Description: Create the message list component that displays the chat conversation history with proper scrolling behavior.
+# Description: Create message list component optimized for AI SDK 5's UIMessage format with metadata display and enhanced features.
 # Details:
-1. Create a `ConciergusMessageList` component using Radix UI's ScrollArea
-2. Accept messages from Vercel AI SDK's `useChat` hook
-3. Implement auto-scrolling to the latest message
-4. Add support for message grouping by sender
-5. Implement basic list rendering with fallback to ScrollArea for v1.0
-6. Prepare component structure for future virtualization support
-7. Add proper TypeScript interfaces for all props:
+1. Update `ConciergusMessageList` for AI SDK 5's UIMessage architecture
+2. Support for message metadata display (duration, tokens, model used)
+3. Implement reasoning trace and sources display
+4. Add support for structured data parts rendering
+5. Enhanced TypeScript interfaces:
 ```typescript
 interface ConciergusMessageListProps {
-  messages: Message[]; // From Vercel AI SDK
+  messages: UIMessage[];
   className?: string;
   messageComponent?: React.ComponentType<ConciergusMessageItemProps>;
   loadingComponent?: React.ReactNode;
   emptyComponent?: React.ReactNode;
-  [key: string]: any; // For ...rest props
+  showMetadata?: boolean;
+  showReasoningTraces?: boolean;
+  virtualizationComponent?: React.ComponentType<VirtualizationProps>;
+  [key: string]: any;
 }
 ```
-8. Implement proper handling of loading states and empty states
+6. Integration with AI SDK 5's Server-Sent Events (SSE)
+7. Support for real-time message updates and streaming
+8. Enhanced performance with optimized rendering
 
 # Test Strategy:
-Test rendering with various message arrays. Verify auto-scrolling behavior works correctly. Test custom message component rendering. Verify loading and empty states display correctly. Test with large message arrays to ensure performance is acceptable.
+Test UIMessage rendering with metadata. Verify reasoning traces display correctly. Test streaming updates and real-time message handling. Verify performance with large message lists.
 
 # Subtasks:
-## 1. Set Up ConciergusMessageList Component Structure [done]
+## 1. Update Component for UIMessage Architecture [done]
 ### Dependencies: None
-### Description: Create the initial component structure using Radix UI's ScrollArea as the scrollable container and define the basic layout for rendering messages.
+### Description: Modify the message list component to work with AI SDK 5's new UIMessage format and metadata structure.
 ### Details:
-Import and configure Radix UI's ScrollArea as the main wrapper. Set up the component skeleton to accept props as specified in the TypeScript interface, including messages, className, and optional components.
+Update component to handle UIMessage format, display message metadata, and support new AI SDK 5 message structure.
 <info added on 2025-05-23T15:34:07.058Z>
-I'll create a new file at `src/components/ConciergusMessageList.tsx` and set up the component skeleton. First, I'll define the TypeScript interface for the component props, ensuring it accepts messages array, optional className, and customizable components for messages, loading state, and empty state. I'll also allow additional props through rest parameters.
+## UIMessage Integration
 
-For dependencies, I'll use Radix UI's ScrollArea primitives from `@radix-ui/react-scroll-area` package, which needs to be confirmed as installed or added as a peer dependency.
+1. Update message interface to use UIMessage type
+2. Add support for message metadata rendering
+3. Implement reasoning trace display
+4. Add structured data parts support
+5. Support for Server-Sent Events (SSE) streaming
 
-The component will use ScrollArea.Root as the main container with ScrollArea.Viewport wrapping the message list. It will map over the messages array to render either the default message component or a custom one provided via props. The component will also handle loading and empty states through the respective prop components.
-
-I'll ensure the file exports the component as both a default and named export for flexibility when importing in the ChatWidget component.
+```typescript
+interface UIMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  parts?: MessagePart[];
+  metadata?: {
+    duration?: number;
+    model?: string;
+    totalTokens?: number;
+    reasoning?: string[];
+    sources?: Source[];
+  };
+}
+```
 </info added on 2025-05-23T15:34:07.058Z>
+<info added on 2025-05-24T00:26:42.824Z>
+## AI SDK 5 UIMessage Structure Research
 
-## 2. Implement Message Rendering and Grouping Logic [done]
+### Updated UIMessage Definition
+```typescript
+export type UIMessage = Message & {
+  /**
+   * The parts of the message. Use this for rendering the message in the UI.
+   * Assistant messages can have text, reasoning and tool invocation parts.
+   * User messages can have text parts.
+   */
+  parts: Array<
+    | TextUIPart
+    | ReasoningUIPart
+    | ToolInvocationUIPart
+    | SourceUIPart
+    | FileUIPart
+    | StepStartUIPart
+  >;
+};
+```
+
+### Message Base Interface
+```typescript
+export interface Message {
+  id: string;
+  createdAt?: Date;
+  content: string; // Still exists but use parts when possible
+  role: 'system' | 'user' | 'assistant' | 'data';
+  parts?: Array<...>; // Optional on Message, required on UIMessage
+}
+```
+
+### Part Types
+- `TextUIPart`: `{ type: 'text'; text: string; }`
+- `ReasoningUIPart`: `{ type: 'reasoning'; reasoning: string; details: Array<...> }`
+- `ToolInvocationUIPart`: `{ type: 'tool-invocation'; toolInvocation: ToolInvocation; }`
+- `SourceUIPart`: `{ type: 'source'; source: LanguageModelV1Source; }`
+- `FileUIPart`: `{ type: 'file'; mimeType: string; data: string; }`
+- `StepStartUIPart`: `{ type: 'step-start'; }`
+
+### Implementation Notes
+1. UIMessage extends Message but requires `parts` array
+2. `content` property still exists for backward compatibility
+3. Parts-based rendering is the preferred approach
+4. Role is strictly typed: 'system' | 'user' | 'assistant' | 'data'
+
+### Implementation Plan
+1. Update ConciergusMessageItem to handle UIMessage.parts
+2. Add part-specific rendering logic
+3. Maintain backward compatibility with content property
+4. Add metadata display capabilities
+</info added on 2025-05-24T00:26:42.824Z>
+<info added on 2025-05-24T00:29:04.889Z>
+## Implementation Complete: UIMessage Architecture Integration
+
+### ✅ Successfully Implemented:
+
+**1. ConciergusMessageItem UIMessage Support:**
+- Updated to use UIMessage type from @ai-sdk/react
+- Implemented comprehensive parts-based rendering system
+- Added support for all AI SDK 5 part types:
+  - TextUIPart: Markdown rendering with security
+  - ReasoningUIPart: Collapsible reasoning traces with details
+  - ToolInvocationUIPart: Tool call/result display
+  - SourceUIPart: Citation display with links
+  - FileUIPart: File attachment preview (images + binary data)
+  - StepStartUIPart: Step boundary markers
+  - Custom data parts: Extensible for future part types
+
+**2. Enhanced Metadata Display:**
+- Added showMetadata prop for performance metrics
+- Display model, duration, tokens, finish reason
+- Configurable metadata visibility
+
+**3. Advanced UI Features:**
+- showReasoningTraces prop for AI reasoning display
+- showSourceCitations prop for RAG source display
+- Backward compatibility with content property fallback
+- Proper TypeScript compatibility with UIMessage structure
+
+**4. ConciergusMessageList UIMessage Support:**
+- Updated to handle UIMessage arrays
+- Smart message preview generation from parts
+- Fallback to content property for compatibility
+- Enhanced grouping and auto-scroll functionality
+
+**5. Security & Performance:**
+- Sanitized Markdown rendering with rehype-sanitize
+- Secure link handling with target="_blank" and rel="noopener noreferrer"
+- Efficient parts-based rendering
+- Proper TypeScript type safety
+
+### 🎯 Architecture Benefits:
+- Full AI SDK 5 Alpha compatibility
+- Rich metadata and reasoning display
+- Extensible part system for future AI SDK features
+- Maintains backward compatibility
+- Enterprise-ready observability features
+
+The UIMessage architecture integration is now complete and ready for AI SDK 5 Alpha's advanced message structure and metadata capabilities.
+</info added on 2025-05-24T00:29:04.889Z>
+
+## 2. Implement Message Metadata and Reasoning Display [pending]
 ### Dependencies: 4.1
-### Description: Render the list of messages, grouping them by sender, and support custom message, loading, and empty components.
+### Description: Add UI components for displaying message metadata, reasoning traces, and performance metrics.
 ### Details:
-Map over the messages prop, group consecutive messages from the same sender, and render each group using the provided messageComponent or a default. Display loadingComponent or emptyComponent as appropriate.
+Create components for metadata display, reasoning traces, sources, and other AI SDK 5 message enhancements.
 <info added on 2025-05-23T15:35:46.378Z>
-Implement message grouping logic using the `reduce` method to combine consecutive messages from the same sender into groups. Create a `MessageGroup` interface with `sender` and `messages` properties. The grouping algorithm should:
+## Metadata and Reasoning Display
 
-1. Iterate through the `messages` array
-2. Compare each message's sender (via `message.role` or `message.author`) with the previous one
-3. Either add the message to the current group or create a new group when sender changes
+1. Create `<MessageMetadata />` component:
+   - Response time display
+   - Token usage information
+   - Model identification
+   - Cost estimation
 
-Render grouped messages by mapping over the resulting `MessageGroup[]` array:
-- Wrap each group in a container with appropriate data attributes (e.g., `<div data-message-group={sender}>`)
-- Within each group, map over individual messages using either:
-  - The provided `messageComponent` prop (if available)
-  - The default message rendering from subtask 4.1
+2. Implement `<ReasoningTrace />` component:
+   - Step-by-step reasoning display
+   - Collapsible reasoning sections
+   - Syntax highlighting for code reasoning
 
-Add testing hooks via data attributes:
-- `data-sender-group` for message group containers
-- `data-message-index` for individual messages
+3. Add `<SourcesDisplay />` component:
+   - RAG source citations
+   - Clickable source links
+   - Source relevance scores
 
-Prepare test cases with mock message sequences from multiple senders to verify correct grouping behavior and rendering.
+4. Support for custom metadata renderers
 </info added on 2025-05-23T15:35:46.378Z>
 
-## 3. Add Auto-Scrolling to Latest Message [done]
+## 3. Add Server-Sent Events (SSE) Integration [pending]
 ### Dependencies: 4.2
-### Description: Ensure the message list automatically scrolls to the latest message when new messages arrive.
+### Description: Implement real-time message updates using AI SDK 5's Server-Sent Events streaming protocol.
 ### Details:
-Use a ref to the ScrollArea viewport and implement an effect that scrolls to the bottom whenever the messages prop changes.
+Integrate SSE for real-time message streaming, handle partial updates, and ensure smooth user experience.
 <info added on 2025-05-23T15:38:13.689Z>
-To implement auto-scrolling to the latest message:
+## SSE Integration for Real-time Updates
 
-1. Create a ref to access the ScrollArea viewport:
-```tsx
-const viewportRef = useRef<HTMLDivElement>(null);
-```
+1. Implement SSE message streaming:
+   - Handle partial message updates
+   - Support for incremental content rendering
+   - Real-time metadata updates
 
-2. Attach the ref to the ScrollArea.Viewport component:
-```tsx
-<ScrollArea.Viewport ref={viewportRef}>
-  {/* message content */}
-</ScrollArea.Viewport>
-```
+2. Add streaming indicators:
+   - Typing indicators for AI responses
+   - Progress bars for long operations
+   - Real-time token counting
 
-3. Implement useEffect to scroll to the bottom when messages change:
-```tsx
-useEffect(() => {
-  if (viewportRef.current) {
-    viewportRef.current.scrollTo({ 
-      top: viewportRef.current.scrollHeight, 
-      behavior: 'smooth' 
-    });
-  }
-}, [messages]);
-```
+3. Optimize for performance:
+   - Efficient DOM updates
+   - Minimal re-renders during streaming
+   - Smooth scrolling during updates
 
-4. Add a fallback approach using ScrollArea.Root API if the direct DOM ref doesn't work.
-
-5. Include testing hooks:
-- Add `data-message-list` attribute to the container
-- Create tests that verify scroll behavior by:
-  - Simulating new messages being added
-  - Spying on the scrollTo method
-  - Asserting scrollTo is called with correct parameters
+4. Error handling for SSE:
+   - Connection retry logic
+   - Fallback to polling if SSE fails
+   - User feedback for connection issues
 </info added on 2025-05-23T15:38:13.689Z>
 
-## 4. Define and Apply TypeScript Interfaces [done]
+## 4. Enhanced TypeScript Interfaces for AI SDK 5 [pending]
 ### Dependencies: 4.1
-### Description: Implement and enforce TypeScript interfaces for all component props, ensuring type safety and extensibility.
+### Description: Update all TypeScript interfaces to support AI SDK 5 features, metadata, and enterprise capabilities.
 ### Details:
-Define ConciergusMessageListProps and related interfaces for messages and message items. Apply these interfaces to the component and its props.
+Create comprehensive TypeScript interfaces that cover all AI SDK 5 features and provide excellent developer experience.
 <info added on 2025-05-23T15:40:31.088Z>
-Define TypeScript interfaces for the ConciergusMessageList component:
+## Enhanced TypeScript Interfaces
 
-1. Create a `MessageGroup` interface:
 ```typescript
-interface MessageGroup {
-  sender: string;
-  items: { message: Message; index: number }[];
-}
-```
-
-2. Annotate the `groupedMessages` useMemo with proper typing:
-```typescript
-const groupedMessages = useMemo<MessageGroup[]>(() => {
-  // existing grouping logic
-}, [messages]);
-```
-
-3. Replace inline type assertions in the reduce function with the MessageGroup interface:
-```typescript
-return messages.reduce((groups: MessageGroup[], message, index) => {
-  // existing reduce logic
-}, []);
-```
-
-4. Define and export comprehensive props interfaces:
-```typescript
-export interface ConciergusMessageListProps {
-  messages: Message[];
-  isLoading?: boolean;
-  // other required props
+// Core message interfaces
+interface ConciergusMessageListProps {
+  messages: UIMessage[];
+  showMetadata?: boolean;
+  showReasoningTraces?: boolean;
+  showSources?: boolean;
+  metadataRenderer?: React.ComponentType<MessageMetadataProps>;
+  reasoningRenderer?: React.ComponentType<ReasoningTraceProps>;
+  sourcesRenderer?: React.ComponentType<SourcesDisplayProps>;
+  // ... other props
 }
 
-export interface ConciergusMessageItemProps {
-  message: Message;
-  isLastInGroup?: boolean;
-  // other required props
+// Metadata interfaces
+interface MessageMetadata {
+  duration?: number;
+  model?: string;
+  totalTokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  cost?: number;
+  reasoning?: ReasoningStep[];
+  sources?: Source[];
+}
+
+// Reasoning interfaces
+interface ReasoningStep {
+  step: number;
+  content: string;
+  type: 'thinking' | 'analysis' | 'conclusion';
 }
 ```
-
-5. Replace `as any` casts with proper type guards:
-```typescript
-const isUserMessage = (message: Message): boolean => {
-  return message.role === 'user' || message.author === 'user';
-}
-```
-
-6. Update imports to include any necessary type definitions.
 </info added on 2025-05-23T15:40:31.088Z>
 
-## 5. Prepare for Future Virtualization Support [done]
+## 5. Performance Optimization and Virtualization Support [pending]
 ### Dependencies: 4.2, 4.4
-### Description: Structure the component to allow easy integration of list virtualization libraries in future versions.
+### Description: Optimize component performance for large message lists and prepare for advanced virtualization features.
 ### Details:
-Abstract the message rendering logic and ScrollArea usage so that virtualization (e.g., react-virtual, react-window) can be added with minimal refactoring.
+Implement performance optimizations, memory management, and prepare architecture for virtualization of large message lists.
 <info added on 2025-05-23T15:41:45.234Z>
-To prepare for future virtualization support:
+## Performance Optimization
 
-1. Abstract ScrollArea.Viewport and message rendering logic into separate components:
-   - Create a MessageGroup renderer component
-   - Extract ScrollArea.Viewport usage to allow replacement
+1. Implement React.memo for message components
+2. Add virtualization support for large lists
+3. Optimize re-renders during streaming
+4. Memory management for long conversations
+5. Lazy loading for message attachments
 
-2. Implement component API changes:
-   - Add `virtualizationComponent` prop to ConciergusMessageListProps
-   - Design using Render Props pattern with interface:
-     ```tsx
-     interface VirtualizationProps {
-       items: MessageGroup[];
-       renderItem: (group: MessageGroup, index: number) => React.ReactNode;
-     }
-     ```
-   - Default to Radix ScrollArea when no virtualization component is provided
+## Virtualization Architecture
+- Abstract rendering for future virtualization
+- Support for variable height messages
+- Efficient scrolling for thousands of messages
+- Memory cleanup for offscreen messages
+- Integration with AI SDK 5 streaming
 
-3. Refactor rendering logic:
-   - Create helper function `renderGroups(groups: MessageGroup[])` to replace direct mapping
-   - Ensure message rendering is decoupled from scrolling container
-
-4. Testing strategy:
-   - Add tests with mock virtualization component
-   - Verify messages render correctly with different scrolling implementations
+## Performance Monitoring
+- Bundle size optimization
+- Render performance tracking
+- Memory usage monitoring
+- Streaming performance metrics
 </info added on 2025-05-23T15:41:45.234Z>
 

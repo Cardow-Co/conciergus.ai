@@ -1,126 +1,160 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
-import { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 
 export interface ConciergusMessageItemProps {
-  message: Message;
+  message: UIMessage;
+  className?: string;
+  avatarComponent?: React.ReactNode;
+  isLastMessage?: boolean;
+  onAudioPlay?: () => void;
+  onAudioPause?: () => void;
+  showMetadata?: boolean;
+  showReasoningTraces?: boolean;
+  showSourceCitations?: boolean;
+  [key: string]: any;
 }
 
 export interface MessageGroup {
   sender: string;
-  items: { message: Message; index: number }[];
-}
-
-// Interface for overriding scroll/virtualization behavior
-export interface VirtualizationProps {
-  items: MessageGroup[];
-  renderItem: (group: MessageGroup, index: number) => React.ReactNode;
+  items: { message: UIMessage; index: number }[];
 }
 
 export interface ConciergusMessageListProps {
-  messages: Message[];
+  messages: UIMessage[];
   className?: string;
-  messageComponent?: React.ComponentType<ConciergusMessageItemProps>;
-  loadingComponent?: React.ReactNode;
-  emptyComponent?: React.ReactNode;
-  virtualizationComponent?: React.ComponentType<VirtualizationProps>;
+  children?: React.ReactNode;
+  messageItemComponent?: React.ComponentType<ConciergusMessageItemProps>;
+  groupMessages?: boolean;
+  autoScroll?: boolean;
+  showMetadata?: boolean;
+  showReasoningTraces?: boolean;
+  showSourceCitations?: boolean;
   [key: string]: any;
 }
 
-export const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
+const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
   messages,
   className,
-  messageComponent: MessageComponent,
-  loadingComponent,
-  emptyComponent,
-  virtualizationComponent: VirtualizationComponent,
+  children,
+  messageItemComponent: MessageItemComponent,
+  groupMessages = true,
+  autoScroll = true,
+  showMetadata = false,
+  showReasoningTraces = false,
+  showSourceCitations = false,
   ...rest
 }) => {
-  // Loading state when messages prop is undefined
-  if (messages === undefined) {
-    return <>{loadingComponent || null}</>;
-  }
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
-  // Empty state when no messages
-  if (messages.length === 0) {
-    return <>{emptyComponent || null}</>;
-  }
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (autoScroll && viewportRef.current) {
+      const viewport = viewportRef.current;
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [messages, autoScroll]);
 
-  // Group messages by sender
-  const groupedMessages: MessageGroup[] = useMemo<MessageGroup[]>(() => {
-    return messages.map((message, index) => ({ message, index })).reduce(
-      (groups: MessageGroup[], { message, index }) => {
-        const sender = (message as any).role || (message as any).author || '';
-        if (!groups.length || groups[groups.length - 1].sender !== sender) {
+  // Group consecutive messages from the same sender
+  const messageGroups = useMemo(() => {
+    if (!groupMessages) {
+      return messages.map((message, index) => ({
+        sender: message.role,
+        items: [{ message, index }],
+      }));
+    }
+
+    return messages.reduce<MessageGroup[]>(
+      (groups: MessageGroup[], message, index) => {
+        const sender = message.role;
+        if (!groups.length || groups[groups.length - 1]?.sender !== sender) {
           groups.push({ sender, items: [{ message, index }] });
         } else {
-          groups[groups.length - 1].items.push({ message, index });
+          groups[groups.length - 1]?.items.push({ message, index });
         }
         return groups;
       },
       []
     );
-  }, [messages]);
+  }, [messages, groupMessages]);
 
-  // Auto-scroll to latest message
-  const viewportRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (viewportRef.current) {
-      viewportRef.current.scrollTo({
-        top: viewportRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+  // Get message content for display (prefer parts over content)
+  const getMessagePreview = (message: UIMessage): string => {
+    if (message.parts && message.parts.length > 0) {
+      // Extract text from parts
+      const textParts = message.parts
+        .filter((part: any) => part.type === 'text')
+        .map((part: any) => part.text)
+        .join(' ');
+      
+      if (textParts) return textParts;
+      
+      // If no text parts, show part types
+      const partTypes = message.parts.map((part: any) => part.type).join(', ');
+      return `[${partTypes}]`;
     }
-  }, [messages]);
+    
+    // Fallback to content property
+    return (message as any).content || '[Empty message]';
+  };
 
-  // Helper to render grouped messages
-  const renderGroups = (groups: MessageGroup[]) =>
-    groups.map((group, groupIndex) => (
-      <div key={groupIndex} data-sender-group={group.sender}>
-        {group.items.map(({ message, index }) =>
-          MessageComponent ? (
-            <MessageComponent key={index} message={message} />
-          ) : (
-            <div key={index} data-message-index={index}>
-              {message.content}
-            </div>
-          )
-        )}
-      </div>
-    ));
-
-  // Use virtualization component if provided
-  if (VirtualizationComponent) {
-    return (
-      <VirtualizationComponent
-        items={groupedMessages}
-        renderItem={(group, groupIndex) => (
-          <div key={groupIndex} data-sender-group={group.sender}>
-            {group.items.map(({ message, index }) =>
-              MessageComponent ? (
-                <MessageComponent key={index} message={message} />
-              ) : (
-                <div key={index} data-message-index={index}>
-                  {message.content}
-                </div>
-              )
-            )}
-          </div>
-        )}
-      />
-    );
-  }
-
-  // Default rendering with Radix ScrollArea
   return (
-    <ScrollArea.Root className={className} {...rest} data-message-list>
-      <ScrollArea.Viewport ref={viewportRef}>
-        {renderGroups(groupedMessages)}
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation="vertical">
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-    </ScrollArea.Root>
+    <div
+      className={`conciergus-message-list ${className || ''}`}
+      data-message-list
+      {...rest}
+    >
+      <ScrollArea.Root className="scroll-area-root" ref={scrollAreaRef}>
+        <ScrollArea.Viewport className="scroll-area-viewport" ref={viewportRef}>
+          <div className="message-list-content">
+            {messageGroups.map((group, groupIndex) => (
+              <div
+                key={groupIndex}
+                className={`message-group message-group-${group.sender}`}
+                data-sender={group.sender}
+              >
+                {group.items.map(({ message, index }) => (
+                  <div
+                    key={message.id || index}
+                    className="message-item-wrapper"
+                    data-message-index={index}
+                    data-message-id={message.id}
+                  >
+                    {MessageItemComponent ? (
+                      <MessageItemComponent 
+                        message={message}
+                        showMetadata={showMetadata}
+                        showReasoningTraces={showReasoningTraces}
+                        showSourceCitations={showSourceCitations}
+                      />
+                    ) : (
+                      <div className="default-message-item">
+                        <div className="message-role">{message.role}:</div>
+                        <div className="message-preview">
+                          {getMessagePreview(message)}
+                        </div>
+                        {(message as any).createdAt && (
+                          <div className="message-timestamp">
+                            {(message as any).createdAt.toLocaleTimeString()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+            
+            {/* Custom children (e.g., typing indicators) */}
+            {children}
+          </div>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
+          <ScrollArea.Thumb className="scroll-area-thumb" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>
+    </div>
   );
 };
 

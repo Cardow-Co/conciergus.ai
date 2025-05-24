@@ -1,6 +1,6 @@
 # Task ID: 5
 # Title: Implement ConciergusMessageItem Component
-# Status: pending
+# Status: in-progress
 # Dependencies: 1, 2
 # Priority: high
 # Description: Create the message item component that renders individual chat messages with Markdown support and rich UI elements.
@@ -48,24 +48,119 @@ Implement a functional component that accepts these props and renders a basic me
 
 Verify the component compiles correctly with TypeScript and accepts all required props. Optionally, create a basic test to ensure the component renders with a dummy Message object.
 </info added on 2025-05-23T23:16:18.423Z>
+<info added on 2025-05-24T00:10:02.397Z>
+Update the component to use AI SDK 5 Alpha by changing the imports and type definitions:
 
-## 2. Implement Markdown Rendering with Security [done]
+1. Update the import statement to use the new `UIMessage` type:
+```typescript
+import { UIMessage } from '@ai-sdk/react';
+```
+
+2. Modify the `ConciergusMessageItemProps` interface:
+```typescript
+interface ConciergusMessageItemProps {
+  message: UIMessage; // Changed from Message
+  className?: string;
+  avatarComponent?: ReactNode;
+  isLastMessage?: boolean;
+  onAudioPlay?: () => void;
+  onAudioPause?: () => void;
+  showMetadata?: boolean; // New prop for metadata display
+  showReasoningTraces?: boolean; // New prop for reasoning
+  showSources?: boolean; // New prop for RAG sources
+  [key: string]: any;
+}
+```
+
+3. Update the component implementation to handle the new UIMessage structure:
+- Access role directly from message.role instead of type casting
+- Use message.parts array for structured content
+- Utilize message.metadata for duration, model, tokens information
+- Add conditional rendering for metadata, reasoning traces, and sources based on the new props
+
+4. Remove any existing type casting or ExtendedMessage interfaces that were previously used to augment the Message type.
+
+5. Ensure all package imports reference the AI SDK 5 Alpha versions.
+</info added on 2025-05-24T00:10:02.397Z>
+<info added on 2025-05-24T00:31:21.252Z>
+The ConciergusMessageItem component has been successfully implemented at src/components/ConciergusMessageItem.tsx with full AI SDK 5 Alpha integration. The implementation includes:
+
+- Complete UIMessage type integration from @ai-sdk/react
+- Full ConciergusMessageItemProps interface with all required and optional props
+- Comprehensive part rendering system that handles various content types:
+  - Text parts with markdown rendering
+  - Reasoning parts
+  - Tool-invocation parts
+  - Source parts for RAG
+  - File parts
+  - Step-start parts
+  - Custom data parts
+
+Security features have been implemented for markdown rendering using ReactMarkdown with remarkGfm plugin and rehypeSanitize for content sanitization. The component includes:
+
+- Audio playback support with blob URL handling for text-to-speech
+- Role-based styling with appropriate CSS classes and data attributes
+- Metadata display showing model information, duration, token counts, and finish reason
+- Timestamp formatting and display
+- Error handling with graceful fallbacks for unknown content types
+- Backward compatibility support for legacy content property
+
+The code maintains high quality standards with proper TypeScript typing throughout, clean separation of concerns via dedicated rendering functions, secure external link handling, proper memory management for audio resources, and an extensible design to accommodate future part types.
+</info added on 2025-05-24T00:31:21.252Z>
+
+## 2. Implement Markdown Rendering with Security [pending]
 ### Dependencies: 5.1
 ### Description: Integrate react-markdown with remark-gfm and rehype-sanitize to render message content safely with Markdown support.
 ### Details:
 Install and configure react-markdown, remark-gfm, and rehype-sanitize. Ensure that Markdown is rendered correctly and securely, preventing XSS vulnerabilities.
+<info added on 2025-05-24T00:10:18.666Z>
+Update the component to support AI SDK 5 Alpha by implementing dual rendering paths for both legacy content and new structured parts. Modify the rendering logic to handle UIMessage with parts array containing different content types (text, image, file). Implement a renderContent function that maps through message parts and renders each according to its type, with text parts using ReactMarkdown. For backward compatibility, maintain the existing content string rendering path. Ensure rehype-sanitize configuration works with the new content structure to prevent XSS vulnerabilities. Test rendering with mixed content types to verify proper display of markdown, images, and other media within the same message.
+</info added on 2025-05-24T00:10:18.666Z>
 
-## 3. Add Rich UI and Audio Playback Support [done]
+## 3. Add Rich UI and Audio Playback Support [pending]
 ### Dependencies: 5.2
 ### Description: Render additional UI elements from message.ui or message.tool_calls and implement audio playback UI for TTS messages.
 ### Details:
 Detect and render any rich UI elements specified in the message object. Integrate audio playback controls for TTS messages, wiring up onAudioPlay and onAudioPause callbacks.
+<info added on 2025-05-24T00:10:34.231Z>
+Implement support for AI SDK 5 Alpha rich UI elements and metadata:
 
-## 4. Style Messages and Add Timestamps [done]
+1. Update component to handle UIMessage metadata display including duration, model, totalTokens, reasoning, and sources when available.
+
+2. Implement rendering for toolInvocations (replacing tool_calls) with support for:
+   - Structured data with results
+   - Streaming tool call states
+
+3. Add ReasoningTrace component integration to display reasoning steps when showReasoningTraces is enabled and message.metadata.reasoning exists.
+
+4. Create SourcesDisplay component for RAG integration when showSources is enabled and message.metadata.sources is available.
+
+5. Refactor audio handling to use message.parts array instead of extended properties:
+   - Remove legacy audio handling code
+   - Update audio playback controls to check message.parts for audio content
+   - Maintain onAudioPlay and onAudioPause callback functionality
+</info added on 2025-05-24T00:10:34.231Z>
+
+## 4. Style Messages and Add Timestamps [pending]
 ### Dependencies: 5.3
 ### Description: Apply conditional styling based on message role (user/assistant) and display message timestamps.
 ### Details:
 Implement CSS or styling logic to visually distinguish user and assistant messages. Add a timestamp display, formatted appropriately, for each message.
+<info added on 2025-05-24T00:10:51.143Z>
+Update the styling implementation to leverage the AI SDK 5 Alpha UIMessage structure:
+
+- Use direct role access from message objects without type casting: `const role = message.role`
+- Utilize native timestamp support with the built-in createdAt property: `const timestamp = message.createdAt ? new Date(message.createdAt) : null`
+- Implement CSS classes for enhanced metadata display:
+  * `.message-metadata` for general metadata
+  * `.message-reasoning` for reasoning traces
+  * `.message-sources` for citation sources
+  * Add appropriate loading states for streaming content
+- Apply role-based styling using template literals: `const roleClass = `message-${message.role}``
+- Add conditional class for metadata presence: `const metadataClass = message.metadata ? 'has-metadata' : ''`
+- Remove any ExtendedMessage interface implementations as UIMessage now provides native properties
+- Update data attributes to use UIMessage properties directly for improved debugging and testing
+</info added on 2025-05-24T00:10:51.143Z>
 
 ## 5. Implement Error Handling for Malformed Messages [done]
 ### Dependencies: 5.4

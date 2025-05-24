@@ -1,62 +1,86 @@
 <context>
 # Overview
-Conciergus is a feature-rich, headless, unstyled React library for building AI-powered website assistants and advanced live chat experiences. It streamlines the development of intelligent chat widgets by providing extensible, unopinionated components built on top of the Vercel AI SDK and Radix UI primitives.
+Conciergus is a feature-rich, headless, unstyled React library for building AI-powered website assistants and advanced live chat experiences. It streamlines the development of intelligent chat widgets by providing extensible, unopinionated components built on top of the Vercel AI SDK 5 Alpha and Radix UI primitives, with full support for AI Gateway unified model management.
 
 # Core Features
 - **Headless UI**: Unstyled components using Radix UI primitives (Dialog, ScrollArea, etc.) with `className` and `...rest` props for full styling flexibility.
-- **AI Chat Logic**: Leveraging `useChat` from the Vercel AI SDK for real-time streaming chat, tool integration, and system prompts.
-- **Modular Components**: Chat widget container, message list with virtualization, message rendering, chat input, tool UI renderer, form renderer.
-- **Advanced Interactions**: Voice chat (STT/TTS), proactive engagement triggers, human handover events, multi-language support.
-- **Extensible Tooling**: Built-in support for function calling, RAG retrieval patterns, lead capture forms, simple carousels.
-- **Developer Experience**: First-class TypeScript definitions, clear console errors for misconfigurations, optional context provider, plugin hooks.
+- **AI SDK 5 Alpha Integration**: Full support for UIMessage/ModelMessage architecture, ChatStore, Server-Sent Events (SSE), and advanced agent control.
+- **AI Gateway Support**: Unified access to 100+ models across all major providers through Vercel's AI Gateway.
+- **Advanced Chat Logic**: Leveraging AI SDK's `useChat`, `ChatStore`, and streaming utilities for real-time messaging, tool integration, and dynamic model switching.
+- **Modular Components**: Chat widget container, message list with virtualization, message rendering, chat input, tool UI renderer, form renderer, RSC generative UI components.
+- **Advanced Interactions**: Voice chat (STT/TTS), proactive engagement triggers, human handover events, multi-language support, structured object streaming.
+- **Extensible Tooling**: Built-in support for function calling, RAG retrieval patterns, lead capture forms, carousels, computer use, and agentic workflows.
+- **Enterprise Features**: Telemetry integration, middleware support, model fallback chains, and advanced error handling.
+- **Developer Experience**: First-class TypeScript definitions, clear console errors for misconfigurations, optional context provider, plugin hooks, AI SDK testing utilities.
 
 # User Experience
-**Target Personas**: React/Next.js developers building AI-assisted website chat experiences.
+**Target Personas**: React/Next.js developers building AI-assisted website chat experiences with enterprise-grade requirements.
 **Key User Flows**:
 1. Install `@conciergus/chat` → Wrap app with `ConciergusProvider` (optional) → Import and embed `<ConciergusChatWidget />`.
-2. Configure backend API endpoint for Vercel AI SDK and RAG sources.
-3. Customize component styling via Tailwind CSS or CSS-in-JS by passing `className` and props.
-4. Use advanced features: voice chat, tool calls, proactive triggers, human handover.
-5. Monitor and debug via clear console warnings and optional exposed state.
+2. Configure AI Gateway or direct model providers for unified model access.
+3. Set up backend API endpoint compatible with AI SDK 5 Alpha's UIMessage stream format.
+4. Customize component styling via Tailwind CSS or CSS-in-JS by passing `className` and props.
+5. Use advanced features: voice chat, tool calls, proactive triggers, human handover, structured object streaming, generative UI.
+6. Monitor and debug via telemetry integration and optional exposed state.
 **DX Considerations**:
 - Robust TSDoc and type hints for all components and hooks.
-- Example-driven documentation with code snippets.
+- Example-driven documentation with AI SDK 5 Alpha patterns.
 - Console feedback during development for missing props or incorrect configurations.
 - Support for tree-shaking and minimal bundle size.
-</context>
-<PRD>
+- Built-in testing utilities for AI interactions.
+
+# User Experience
+**Target Personas**: React/Next.js developers building AI-assisted website chat experiences with enterprise-grade requirements.
+**Key User Flows**:
+1. Install `@conciergus/chat` → Wrap app with `ConciergusProvider` (optional) → Import and embed `<ConciergusChatWidget />`.
+2. Configure AI Gateway or direct model providers for unified model access.
+3. Set up backend API endpoint compatible with AI SDK 5 Alpha's UIMessage stream format.
+4. Customize component styling via Tailwind CSS or CSS-in-JS by passing `className` and props.
+5. Use advanced features: voice chat, tool calls, proactive triggers, human handover, structured object streaming, generative UI.
+6. Monitor and debug via telemetry integration and optional exposed state.
+**DX Considerations**:
+- Robust TSDoc and type hints for all components and hooks.
+- Example-driven documentation with AI SDK 5 Alpha patterns.
+- Console feedback during development for missing props or incorrect configurations.
+- Support for tree-shaking and minimal bundle size.
+- Built-in testing utilities for AI interactions.
+
 ## 1. Introduction & Vision
 ### 1.1 Project Name
 Conciergus
 
 ### 1.2 Elevator Pitch
-Conciergus is an open-source React library that lets developers embed intelligent, AI-powered website assistants and advanced live-chat experiences. Rather than being a SaaS chat application, Conciergus supplies the **building blocks** that transform the familiar live-chat widget into a highly capable business assistant.
+Conciergus is an open-source React library that lets developers embed intelligent, AI-powered website assistants and advanced live-chat experiences. Rather than being a SaaS chat application, Conciergus supplies the **building blocks** that transform the familiar live-chat widget into a highly capable business assistant, fully leveraging the Vercel AI SDK 5 Alpha and AI Gateway ecosystem.
 
 ### 1.3 Core Problem Addressed
-Traditional live-chat widgets are static, operator-centric, and costly to staff. Building next-generation, AI-driven alternatives from scratch requires wiring up LLM streaming, function calling, voice support, rich-media rendering, accessibility, and design flexibility—an expensive and repetitive effort for every team.
+Traditional live-chat widgets are static, operator-centric, and costly to staff. Building next-generation, AI-driven alternatives from scratch requires wiring up LLM streaming, function calling, voice support, rich-media rendering, accessibility, and design flexibility—an expensive and repetitive effort for every team. The new AI SDK 5 Alpha introduces powerful capabilities that should be leveraged rather than reimplemented.
 
 ### 1.4 Proposed Solution & Core Value Proposition
-Conciergus provides a headless set of React components, hooks, and patterns—built **on top of the Vercel AI SDK** and **composed with Radix UI primitives**—that give developers:
-• Knowledgeable assistants backed by Retrieval-Augmented Generation (RAG)
-• Action-oriented experiences through Vercel AI SDK function calls
-• Engaging multimodal UIs (voice, rich media, forms)
-• Personalised, brand-aligned personalities via configurable system prompts
-• Collaboration hooks such as human-handover events
+Conciergus provides a headless set of React components, hooks, and patterns—built **on top of the Vercel AI SDK 5 Alpha** and **composed with Radix UI primitives**—that give developers:
+• Knowledgeable assistants backed by Retrieval-Augmented Generation (RAG) with AI SDK's embeddings API
+• Action-oriented experiences through AI SDK's advanced function calling and agent control
+• Engaging multimodal UIs (voice, rich media, forms, generative components)
+• Unified model access via AI Gateway (100+ models across all providers)
+• Enterprise-grade features: telemetry, middleware, model fallbacks, structured data streaming
+• Personalised, brand-aligned personalities via AI SDK's prompt engineering utilities
+• Collaboration hooks such as human-handover events and real-time state synchronization
 
 ### 1.5 Target Users/Audience
-Front-end engineers working with React or Next.js who need to add sophisticated AI assistants to marketing sites, SaaS dashboards, documentation portals, or support centres.
+Front-end engineers working with React or Next.js who need to add sophisticated AI assistants to marketing sites, SaaS dashboards, documentation portals, or support centres, with enterprise requirements for reliability, observability, and model flexibility.
 
 ### 1.6 Guiding Principles
-1. **Vercel AI SDK First** – reuse its `useChat` hook and streaming utilities directly.
-2. **Radix UI Foundation** – accessibility and composability out-of-the-box.
-3. **Headless & Unstyled** – never impose design; always accept `className` & `...rest` props.
-4. **Client-Side Only** – leave back-end logic to the implementer; provide clear examples.
-5. **Developer Experience** – strong TypeScript, rich console warnings, optional debug context.
+1. **AI SDK 5 Alpha First** – leverage its UIMessage/ModelMessage architecture, ChatStore, SSE streaming, and agent control
+2. **AI Gateway Integration** – provide unified model access across all major providers
+3. **Radix UI Foundation** – accessibility and composability out-of-the-box
+4. **Headless & Unstyled** – never impose design; always accept `className` & `...rest` props
+5. **Enterprise Ready** – telemetry, middleware, fallbacks, and observability built-in
+6. **Client-Side Only** – leave back-end logic to the implementer; provide clear AI SDK 5 examples
+7. **Developer Experience** – strong TypeScript, rich console warnings, testing utilities, debug context
 
 ### 1.7 Licensing & Governance
 - Conciergus is released under the **Apache License 2.0** and governed by the [Contributor Covenant](https://www.contributor-covenant.org/) Code of Conduct with an initial BDFL model until a broader maintainer group forms.
 
-## 2. Core Architecture & Vercel AI SDK Integration
+## 2. Core Architecture & AI SDK 5 Alpha Integration
 **2.1 Key Dependencies**
 
 • **Peer Dependencies**  
@@ -64,7 +88,8 @@ Front-end engineers working with React or Next.js who need to add sophisticated 
   - `react-dom` ^19.1.0  
 
 • **Direct Dependencies**  
-  - `@ai-sdk/react` and `ai` – Vercel AI SDK core for streaming/chat/function-calling  
+  - `ai@alpha` and `@ai-sdk/react@alpha` – AI SDK 5 Alpha core for streaming/chat/function-calling  
+  - `@vercel/ai-sdk-gateway@alpha` – AI Gateway for unified model access
   - Radix UI primitives: `@radix-ui/react-dialog`, `@radix-ui/react-scroll-area`, `@radix-ui/react-portal`, etc.  
   - `react-textarea-autosize` – direct dependency for autosizing chat input textarea  
   - `@babel/runtime` – runtime helpers for the ESM build  
@@ -74,117 +99,176 @@ Front-end engineers working with React or Next.js who need to add sophisticated 
 • **Dev / Build Tooling**  
   - TypeScript, pnpm, Rollup
 
-**2.2 Primary Hook Usage**  
-Developers will primarily use the `useChat` hook directly from `@ai-sdk/react`. Conciergus UI components seamlessly consume its returned values (`messages`, `input`, `handleInputChange`, `handleSubmit`, `isLoading`, `error`, `append`, `reload`, `stop`, `setInput`, `data`, `toolInvocations`). A thin wrapper `useConciergusChat` will **only** be introduced if essential for adapting `useChat` for Conciergus-specific UI state (e.g., advanced voice-control flags).
+**2.2 AI SDK 5 Alpha Integration**  
+Developers will primarily use AI SDK 5's new architecture:
+- **ChatStore** for state management across multiple chat instances
+- **UIMessage/ModelMessage** separation for optimal rendering and model communication
+- **useChat** with new ChatStore architecture for reactive UI bindings
+- **Server-Sent Events (SSE)** for reliable streaming
+- **AI Gateway** for unified model access
+- **Advanced agent control** with `prepareStep` and `continueUntil`
 
-**2.3 ConciergusProvider (Optional Context)**  
-Provides global Conciergus configuration when needed:  
-- `defaultTTSVoice?: string`  
-- `isTTSEnabledByDefault?: boolean`  
-- `ttsApiEndpoint?: string` – custom backend TTS endpoint  
-- `onTextToAudio?: (text: string) => Promise<string | Blob>` – custom backend TTS override  
-- `onProcessRecordedAudio?: (blob: Blob) => Promise<string>` – custom backend STT handler  
-- `proactiveRules?: ProactiveRule[]`  
-- `enableDebug?: boolean`
-
-These values are exposed via React Context for hooks/components. **Note:** The `api` endpoint for chat remains a direct prop to Vercel AI SDK's `useChat`.
+**2.3 ConciergusProvider (Enhanced Context)**  
+Provides global Conciergus configuration integrated with AI SDK features:  
+- **Model Management**: `defaultModel?: string`, `fallbackModels?: string[]`, `aiGatewayConfig?: AIGatewayConfig`
+- **TTS/STT**: `defaultTTSVoice?: string`, `isTTSEnabledByDefault?: boolean`, `ttsApiEndpoint?: string`, `onTextToAudio?: (text: string) => Promise<string | Blob>`, `onProcessRecordedAudio?: (blob: Blob) => Promise<string>`
+- **Advanced Features**: `proactiveRules?: ProactiveRule[]`, `telemetryConfig?: TelemetryConfig`, `middleware?: MiddlewareArray`
+- **Enterprise**: `enableDebug?: boolean`, `errorBoundary?: React.ComponentType`, `rateLimitConfig?: RateLimitConfig`
 
 **2.4 Backend Endpoint Expectation**  
-The `api` prop supplied to Vercel AI SDK's `useChat` must point to a developer-implemented, Vercel AI SDK-compatible endpoint that handles streaming chat, function calls, and any RAG logic.
+The `api` prop supplied to AI SDK's `useChat` must point to a developer-implemented, AI SDK 5 Alpha-compatible endpoint that handles:
+- UIMessage to ModelMessage conversion
+- Streaming with Server-Sent Events (SSE)
+- Function calls and tool integrations
+- Structured object generation
+- Message metadata handling
 
-## 3. UI Components (Headless, Radix UI-based, v1.0 Features Included)
-**General**: Components are structurally minimal and unstyled by default; styling is the developer's responsibility using `className`, `data-*`, and Radix UI `data-state` attributes. All components accept these props plus `aria-*` and `...rest`, have strictly typed callback props, and consume data from Vercel AI SDK's `useChat`. Documentation will provide styling examples with Tailwind CSS, plain CSS, and CSS-in-JS.
+## 3. UI Components (Headless, AI SDK 5 Alpha-based, v1.0 Features)
+**General**: Components leverage AI SDK 5's new architecture and are structurally minimal and unstyled by default. All components accept `className`, `data-*`, and `...rest` props, have strictly typed callback props, and consume data from AI SDK 5's enhanced hooks.
 
 **3.1 `<ConciergusChatWidget />`**  
-- Dialog-based container using Radix `Dialog`.  
-- Props: `isOpen: boolean`, `onOpenChange: (open: boolean) => void`, `className?: string`  
-- Slots: Header, Footer, Custom trigger.
+- Dialog-based container using Radix `Dialog` with AI SDK 5 ChatStore integration
+- Props: `chatStore?: ChatStore`, `isOpen: boolean`, `onOpenChange: (open: boolean) => void`, `className?: string`  
+- Slots: Header, Footer, Custom trigger, Telemetry display
 
 **3.2 `<ConciergusMessageList />`**  
-For v1.0 this component relies on `@radix-ui/react-scroll-area` for accessible, styleable scrollbars. Full list virtualization (e.g., with `react-window`) for dynamically heighted items is a stretch goal for v1.0; if not fully achievable, the library will document strategies for handling very long histories or defer full virtualization to v1.1+.
+- Uses AI SDK 5's UIMessage format with proper message metadata display
+- Supports message grouping, timestamps, and response metadata (duration, tokens, model used)
+- Optional virtualization with `@radix-ui/react-scroll-area` fallback
 
 **3.3 `<ConciergusMessageItem />`**  
-Renders `message.content` (Markdown) and any rich UI from `message.ui`. **Audio Playback UI:** If the Message object includes audio data (e.g., a streamed blob or URL in `message.experimental_customRenderData.audioUrl`) provided by the developer's TTS backend, this component renders controls to play, pause, or replay that audio.
+- Renders UIMessage content with full metadata support
+- Displays reasoning traces, sources, and structured data parts
+- **Audio Playback UI**: Integrated with AI SDK's speech generation capabilities
 
 **3.4 `<ConciergusChatInput />`**  
-Props are wired directly to Vercel AI SDK's `useChat` return values:  
-- `input: string` → `useChat().input`  
-- `handleInputChange: (e | string) => void` → `useChat().handleInputChange`  
-- `handleSubmit: (e?, chatRequestOptions?) => void` → `useChat().handleSubmit`  
-- `isLoading: boolean` → `useChat().isLoading`  
-Textarea autosizing is provided by **`react-textarea-autosize`**. A microphone button triggers `useConciergusVoiceInput`, which uses `window.SpeechRecognition`; transcribed text is pushed into `useChat().setInput()`.
+- Full integration with AI SDK 5's enhanced `useChat` and ChatStore
+- Support for structured object input and streaming
+- Voice input with AI SDK's transcription utilities
 
 **3.5 `<ConciergusToolUIRenderer />`**  
-- Renders function-calling UI defined in `message.ui` or `message.tool_calls`.  
-- Patterns for buttons, forms, carousels.
+- Renders AI SDK 5's function calls and tool invocations
+- Support for streaming tool results and parallel execution
+- Patterns for buttons, forms, carousels, computer use interfaces
 
 **3.6 `<ConciergusFormRenderer />`**  
-- Renders basic forms (inputs, selects) based on LLM-defined form schema.  
-- Submits form data back via `useChat` function call.
+- Uses AI SDK 5's `generateObject` for dynamic form schemas
+- Real-time form streaming with `useObject` hook
+- Client-side validation with AI-generated rules
 
-## 4. Backend Interaction & Retrieval-Augmented Generation (RAG)
-- Documentation for Next.js API route integrating Vercel AI SDK for streaming chat.  
-- Example: Query vector store (Supabase pgvector) for relevant context.  
-- Show function calling examples: web search (Exa), calendar booking (Cal.com), lead submission.  
-- Emphasize secure handling of API keys and data sources.
+**3.7 `<ConciergusObjectStream />` (New)**  
+- Real-time rendering of AI SDK 5's structured object streaming
+- Type-safe incremental parsing and display
+- Custom renderers for different object types
 
-## 5. Advanced Features (Integrated into FOSS v1.0)
-**5.1 Voice Chat (STT & TTS)**  
-• **STT (User Input)** – `useConciergusVoiceInput` employs `window.SpeechRecognition` for real-time transcription, updating `useChat().setInput()`. If unsupported, a graceful fallback UI appears. If `onProcessRecordedAudio` is supplied, the hook records via `MediaRecorder`, posts the blob to the developer's STT service, and pipes the returned text into chat.
+**3.8 `<ConciergusAgentControls />` (New)**  
+- UI for AI SDK 5's agent control features (`prepareStep`, `continueUntil`)
+- Step-by-step agent execution display
+- Model switching and tool selection controls
 
-• **TTS (Assistant Output)** – When a new assistant message arrives and TTS is enabled, `useConciergusTTS` fetches audio from `ttsApiEndpoint` (configured via `ConciergusProvider`). The hook streams playback with controls (pause, replay, stop). If the fetch fails or no endpoint is set, an optional low-fidelity `window.speechSynthesis` fallback can be used. Developers may fully override via `onTextToAudio?: (text) => Promise<string | Blob>`.
+**3.9 `<ConciergusMetadataDisplay />` (New)**  
+- Renders message metadata (response time, token usage, model info)
+- Integration with AI SDK 5's telemetry features
+- Customizable metric displays
 
-**5.2 AI Personality Customization**  
-- Support `initialMessages` (system prompt) for persona.  
-- Documentation on crafting prompts for brand voice and context.
+## 4. Advanced Hooks & State Management
+**4.1 Enhanced Chat Hooks**
+- `useConciergusChat()` – wrapper around AI SDK 5's ChatStore with Conciergus-specific features
+- `useConciergusAgent()` – advanced agent control with step management
+- `useConciergusModels()` – dynamic model switching and fallback management
+- `useConciergusMetrics()` – usage analytics and performance monitoring
 
-**5.3 Rich Media Responses**  
-- Support images, carousels, attachments in `ConciergusMessageItem`.  
-- Download links/previews for generative content.
+**4.2 RAG & Knowledge Hooks**
+- `useConciergusRAG()` – integration with AI SDK's embeddings API
+- `useConciergusVectorSearch()` – vector database connectivity patterns
+- `useConciergusKnowledge()` – document ingestion and retrieval
 
-**5.4 Lead Capture Forms/Surveys**  
-- `<ConciergusFormRenderer />` for LLM-defined forms and field validation.
+**4.3 Streaming & Real-time Hooks**
+- `useConciergusObjectStream()` – structured data streaming with AI SDK 5
+- `useConciergusDataParts()` – custom data part streaming and rendering
+- `useConciergusUIStream()` – generative UI component streaming
 
-**5.5 Proactive Engagement**  
-- `useProactiveEngagement({ rules })` hook for triggers (scroll, time, focus).  
-- Example rule configurations in docs.
+## 5. Backend Integration & AI SDK 5 Alpha Patterns
+- Documentation for Next.js API routes using AI SDK 5 Alpha's new streaming format
+- AI Gateway integration examples for model switching and fallbacks
+- Advanced RAG patterns with AI SDK's embeddings and vector search
+- Function calling examples: web search, calendar booking, lead submission, computer use
+- Structured object generation for forms, surveys, and data collection
+- Message metadata handling for enterprise telemetry
 
-**5.6 Enhanced Multi-Language Support**  
-- All internal labels configurable via props or i18n context.  
-- RTL layout examples.
+## 6. Advanced Features (AI SDK 5 Alpha Powered)
+**6.1 Voice Chat (Enhanced STT & TTS)**  
+• **STT (User Input)** – Integration with AI SDK's `transcribeSpeech` API plus fallback to `window.SpeechRecognition`
+• **TTS (Assistant Output)** – AI SDK's `generateSpeech` with streaming playback controls
 
-**5.7 Human Handover**  
-Conciergus emits `onHandoverRequired(chatData: { messages: Message[]; lastUserMessage?: Message; toolInvocation?: ToolInvocation })` when a Vercel AI SDK tool call signals that a human agent should take over.
+**6.2 Unified Model Management (AI Gateway)**  
+- Single authentication for 100+ models across all providers
+- Dynamic model switching based on query complexity or user preferences
+- Automatic fallback chains for reliability
+- Cost and latency optimization
 
-**5.8 Generative Content Attachments**  
-- Render download links, previews for attachments or generated files.
+**6.3 Advanced Agent Control**  
+- Integration with AI SDK 5's `prepareStep` for dynamic model/tool selection
+- Custom stopping conditions with `continueUntil`
+- Multi-step agent workflows with progress tracking
+- Computer use capabilities for system interactions
 
-## 6. Styling & Customization
-- Unstyled by default.  
-- Example styles in Tailwind CSS, plain CSS, CSS-in-JS.  
-- Optional default theme CSS variables file for quick start.
+**6.4 Enterprise Telemetry & Observability**  
+- Built-in OpenTelemetry integration
+- Usage analytics and cost tracking
+- Performance monitoring and alerting
+- A/B testing for different models and prompts
 
-## 7. Documentation & Developer Experience
-- **README.md** (v1.0): Robust quick-start guide leveraging Vercel AI SDK `useChat`, core Conciergus components, styling hooks, and a clear Vercel AI SDK-compatible backend endpoint example.  
-- **Post-v1.0 Docs**: Storybook for component playground; Docusaurus/Nextra for interactive guides and API reference.  
-- **Contribution Guide**: Code of Conduct, governance, how to contribute.  
-- Clear TSDoc comments on all public APIs.
+**6.5 Structured Data Streaming**  
+- Real-time form generation with AI SDK's `useObject`
+- Dynamic UI component streaming
+- Type-safe data part rendering
+- Collaborative editing interfaces
 
-## 8. Build, Packaging, Versioning, CI/CD, Testing
-- **Bundler**: Rollup with CommonJS & ESM builds, tree-shaking.  
-- **Package Management**: pnpm.  
-- **Peer Dependencies**: `react`, `react-dom`.  
-- **Direct Dependencies**: `@ai-sdk/react`, `ai`, requisite Radix UI packages, `@babel/runtime`, `react-markdown`, etc.  
+**6.6 Enhanced Multi-Language Support**  
+- AI SDK's language detection and translation
+- Smooth streaming for CJK languages
+- Locale-aware voice synthesis
 
-## 9. Non-Functional Requirements
-- **Performance**: Minimal Conciergus core bundle size (target < 15 KB gzipped, excluding direct dependencies); leverages Vercel AI SDK streaming optimisations and lazy-loads optional features.  
-- **Accessibility**: WCAG AA via Radix UI ARIA roles; screen reader support.  
-- **Security**: All Markdown is sanitized via `rehype-sanitize` to prevent XSS. Documentation emphasises that securing data sources and backend endpoints is the developer's responsibility.  
-- **Error Handling**: Conciergus surfaces categorised errors (e.g., `ttsApiFailure`, `sttPermissionDenied`) through the `error` object from `useChat` or via a library-specific error context. All error types and codes will be documented so developers can build tailored UI reactions.
+**6.7 React Server Components (RSC) Integration**  
+- Server-side AI generation with `streamUI`
+- Generative UI state management
+- Multi-step interfaces and wizard flows
+- Loading state optimization
 
-## 10. Future Considerations (Post v1.0)
-- Visual flow builder for proactive rules.  
-- Plugin marketplace for third-party integrations.  
-- Built-in RAG adapters & connectors (e.g., Elasticsearch).  
-- Web component packaging for non-React frameworks.
+## 7. Testing & Development Experience
+**7.1 AI SDK Testing Integration**
+- Mock providers for unit testing AI interactions
+- Structured test data generation
+- Performance benchmarking utilities
+
+**7.2 Development Tools**
+- Enhanced debug mode with AI SDK telemetry
+- Model performance comparison tools
+- Cost estimation and optimization suggestions
+
+## 8. Migration & Compatibility
+**8.1 AI SDK Version Support**
+- Primary support for AI SDK 5 Alpha
+- Migration guides from AI SDK 4.x
+- Compatibility layer for existing implementations
+
+**8.2 Model Provider Flexibility**
+- AI Gateway as primary recommendation
+- Direct provider support for custom needs
+- Hybrid approaches for different use cases
+
+## 9. Performance & Optimization
+- **Bundle Size**: Target < 25 KB gzipped for core (including AI SDK dependencies)
+- **Streaming Performance**: Leverages AI SDK 5's SSE improvements
+- **Model Optimization**: Dynamic model selection based on query complexity
+- **Caching**: Integration with AI SDK's middleware for response caching
+
+## 10. Future Roadmap (Post v1.0)
+- Visual agent flow builder
+- Plugin marketplace for AI SDK extensions
+- Advanced RAG connectors (Elasticsearch, Pinecone, etc.)
+- Web component packaging for non-React frameworks
+- Integration with AI SDK's computer use capabilities
+- Advanced enterprise features (audit logs, compliance tools)
 </PRD> 
