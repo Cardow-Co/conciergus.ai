@@ -10,8 +10,16 @@ export { default as CostAnalyticsDashboard } from './components/CostAnalyticsDas
 export { default as PerformanceComparisonDashboard } from './components/PerformanceComparisonDashboard';
 export { default as AdminDashboard } from './components/AdminDashboard';
 
-// Telemetry and Model Management Components
+// AI SDK 5 Enhanced Components
+export { default as ConciergusObjectStream } from './components/ConciergusObjectStream';
+export { default as ConciergusAgentControls } from './components/ConciergusAgentControls';
 export { default as ConciergusMetadataDisplay } from './components/ConciergusMetadataDisplay';
+export { default as ConciergusDataPartsRenderer } from './components/ConciergusDataPartsRenderer';
+export { default as ConciergusReasoningDisplay } from './components/ConciergusReasoningDisplay';
+export { default as ConciergusErrorBoundary } from './components/ConciergusErrorBoundary';
+export { default as ConciergusSourcesDisplay } from './components/ConciergusSourcesDisplay';
+
+// Telemetry and Model Management Components
 export { default as ConciergusModelSwitcher } from './components/ConciergusModelSwitcher';
 
 // Re-export component prop types for TypeScript usage
@@ -21,6 +29,65 @@ export type { ConciergusAIGatewayProps } from './components/ConciergusAIGateway'
 export type { CostAnalyticsDashboardProps } from './components/CostAnalyticsDashboard';
 export type { PerformanceComparisonDashboardProps } from './components/PerformanceComparisonDashboard';
 export type { AdminDashboardProps } from './components/AdminDashboard';
+export type { ConciergusObjectStreamProps, ObjectRendererProps } from './components/ConciergusObjectStream';
+export type { 
+  ConciergusAgentControlsProps, 
+  StepRendererProps, 
+  ControlRendererProps,
+  AgentStep,
+  AgentCondition,
+  AgentStepStatus,
+  AgentExecutionMode
+} from './components/ConciergusAgentControls';
+export type {
+  ConciergusMetadataDisplayProps,
+  MetricRendererProps,
+  CostRendererProps,
+  PerformanceRendererProps,
+  TelemetryRendererProps,
+  MetadataDisplayMode,
+  MetricCategory
+} from './components/ConciergusMetadataDisplay';
+export type {
+  ConciergusDataPartsRendererProps,
+  DataRendererProps,
+  FileRendererProps,
+  ObjectRendererProps,
+  HeaderRendererProps,
+  DataPart,
+  DataPartDisplayMode,
+  DataPartCategory
+} from './components/ConciergusDataPartsRenderer';
+export type {
+  ConciergusReasoningDisplayProps,
+  EnhancedReasoningStep,
+  ReasoningDisplayMode,
+  ReasoningVisualization,
+  StepRendererProps,
+  ReasoningGraphProps,
+  HeaderRendererProps as ReasoningHeaderRendererProps
+} from './components/ConciergusReasoningDisplay';
+export type {
+  ConciergusErrorBoundaryProps,
+  ErrorBoundaryConfig,
+  ErrorBoundaryState,
+  EnhancedError,
+  ErrorRecoveryAction,
+  FallbackComponentProps,
+  FallbackMode
+} from './components/ConciergusErrorBoundary';
+export type {
+  ConciergusSourcesDisplayProps,
+  EnhancedSource,
+  SourceCluster,
+  SourceFilter,
+  SourcesDisplayMode,
+  SourceSortBy,
+  SourceSortOrder,
+  CitationFormat,
+  SourceRendererProps as SourcesRendererProps,
+  ClusterRendererProps
+} from './components/ConciergusSourcesDisplay';
 export type { 
   ConciergusChatWidgetProps, 
   ChatStore, 
