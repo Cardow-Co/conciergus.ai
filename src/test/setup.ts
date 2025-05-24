@@ -29,6 +29,31 @@ if (!global.ReadableStream) {
   global.TransformStream = TransformStream;
 }
 
+// Response API polyfill for Node.js test environment
+if (!global.Response) {
+  global.Response = class Response {
+    constructor(body?: any, init?: ResponseInit) {
+      this.body = body;
+      this.status = init?.status || 200;
+      this.statusText = init?.statusText || 'OK';
+      this.headers = new Headers(init?.headers);
+      this.ok = this.status >= 200 && this.status < 300;
+    }
+    
+    body: any;
+    status: number;
+    statusText: string;
+    headers: Headers;
+    ok: boolean;
+    
+    async json() { return JSON.parse(this.body); }
+    async text() { return String(this.body); }
+    async blob() { return new Blob([this.body]); }
+    async arrayBuffer() { return new ArrayBuffer(0); }
+    clone() { return new Response(this.body, { status: this.status, statusText: this.statusText, headers: this.headers }); }
+  } as any;
+}
+
 // Mock fetch for AI SDK HTTP requests
 global.fetch = jest.fn(() =>
   Promise.resolve({

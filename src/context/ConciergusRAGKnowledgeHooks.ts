@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useGateway } from './GatewayProvider';
-import { embed, embedMany, cosineSimilarity } from 'ai';
+import { embed, embedMany } from 'ai';
 import type { DebugManager } from './DebugManager';
 import type { ConciergusConfig } from './ConciergusContext';
 
@@ -198,11 +198,11 @@ export function useConciergusRAG(
     totalSearches: 0,
     totalResponseTime: 0,
     cacheHits: 0,
-    queryHistory: [] as Array<{ query: string; timestamp: Date }>
+    queryHistory: [] as Array<{ query: string; timestamp: Date; responseTime: number }>
   });
   
   const embeddingCache = useRef<Map<string, number[]>>(new Map());
-  const searchCache = useRef<Map<string, { results: SearchResult[]; timestamp: Date }>>(new Map());
+  const searchCache = useRef<Map<string, SearchResult[]>>(new Map());
 
   // Get embedding model from gateway or use default
   const getEmbeddingModel = useCallback(() => {
@@ -213,6 +213,33 @@ export function useConciergusRAG(
     // Fallback to OpenAI model (assuming it's configured in gateway)
     return gateway.createEmbeddingModel?.(config.embeddingModel) || null;
   }, [gateway, config.embeddingModel]);
+
+  // Rerank results using a reranking model - MOVED BEFORE search function
+  const rerankResults = useCallback(async (
+    query: string, 
+    results: SearchResult[]
+  ): Promise<SearchResult[]> => {
+    // This is a placeholder for actual reranking implementation
+    // In a real implementation, you would use a cross-encoder model
+    // or another reranking algorithm
+    
+    // For now, we'll use a simple approach based on query term overlap
+    const queryTerms = query.toLowerCase().split(/\s+/);
+    
+    return results.map(result => {
+      const contentTerms = result.chunk.content.toLowerCase().split(/\s+/);
+      const overlap = queryTerms.filter(term => 
+        contentTerms.some(contentTerm => contentTerm.includes(term))
+      ).length;
+      
+      const rerankScore = (overlap / queryTerms.length) * 0.3 + result.similarity * 0.7;
+      
+      return {
+        ...result,
+        relevanceScore: rerankScore
+      };
+    }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+  }, []);
 
   // Generate single embedding
   const generateEmbedding = useCallback(async (text: string): Promise<number[]> => {
@@ -344,9 +371,9 @@ export function useConciergusRAG(
     }
   }, [config, getEmbeddingModel, gateway.debugManager]);
 
-  // Search functionality
+  // Main search function
   const search = useCallback(async (
-    query: string, 
+    query: string,
     knowledgeBaseId?: string
   ): Promise<SearchResult[]> => {
     const startTime = Date.now();
@@ -354,12 +381,20 @@ export function useConciergusRAG(
     
     try {
       // Check search cache
-      const cacheKey = `${query}_${knowledgeBaseId || 'all'}`;
+      const cacheKey = `${query}-${knowledgeBaseId || 'default'}`;
       if (config.enableCaching) {
         const cached = searchCache.current.get(cacheKey);
-        if (cached && Date.now() - cached.timestamp.getTime() < 300000) { // 5 minutes
+        if (cached) {
           setIsSearching(false);
-          return cached.results;
+          
+          // Update analytics for cache hit
+          setSearchAnalytics(prev => ({
+            ...prev,
+            cacheHits: prev.cacheHits + 1,
+            totalSearches: prev.totalSearches + 1
+          }));
+          
+          return cached;
         }
       }
       
@@ -418,18 +453,16 @@ export function useConciergusRAG(
       
       // Cache results
       if (config.enableCaching) {
-        searchCache.current.set(cacheKey, {
-          results: finalResults,
-          timestamp: new Date()
-        });
+        searchCache.current.set(cacheKey, finalResults);
       }
       
       // Update analytics
+      const responseTime = Date.now() - startTime;
       setSearchAnalytics(prev => ({
         ...prev,
         totalSearches: prev.totalSearches + 1,
-        totalResponseTime: prev.totalResponseTime + (Date.now() - startTime),
-        queryHistory: [...prev.queryHistory.slice(-99), { query, timestamp: new Date() }]
+        totalResponseTime: prev.totalResponseTime + responseTime,
+        queryHistory: [...prev.queryHistory, { query, timestamp: new Date(), responseTime }]
       }));
       
       setLastSearch({
@@ -443,7 +476,7 @@ export function useConciergusRAG(
           query,
           resultsCount: finalResults.length,
           averageSimilarity: finalResults.reduce((sum, r) => sum + r.similarity, 0) / finalResults.length,
-          responseTime: Date.now() - startTime
+          responseTime: responseTime
         }, 'RAG', 'search');
       }
       
@@ -457,6 +490,50 @@ export function useConciergusRAG(
       setIsSearching(false);
     }
   }, [config, generateEmbedding, gateway, rerankResults]);
+
+  // Build context from search results
+  const buildContext = useCallback((results: SearchResult[]): string => {
+    if (results.length === 0) return '';
+    
+    const contextParts = results.map((result, index) => {
+      let context = result.chunk.content;
+      
+      // Add surrounding context if available
+      if (result.context.previousChunk) {
+        context = result.context.previousChunk.content + ' ' + context;
+      }
+      if (result.context.nextChunk) {
+        context = context + ' ' + result.context.nextChunk.content;
+      }
+      
+      return `[${index + 1}] ${result.document.title}: ${context}`;
+    });
+    
+    return contextParts.join('\n\n');
+  }, []);
+
+  // Expand context by including adjacent chunks
+  const expandContext = useCallback(async (results: SearchResult[]): Promise<SearchResult[]> => {
+    return results.map(result => {
+      let expandedContent = result.chunk.content;
+      
+      // Add previous and next chunks for better context
+      if (result.context.previousChunk) {
+        expandedContent = result.context.previousChunk.content + ' ' + expandedContent;
+      }
+      if (result.context.nextChunk) {
+        expandedContent = expandedContent + ' ' + result.context.nextChunk.content;
+      }
+      
+      return {
+        ...result,
+        chunk: {
+          ...result.chunk,
+          content: expandedContent
+        }
+      };
+    });
+  }, []);
 
   // Semantic search with full context
   const semanticSearch = useCallback(async (
@@ -515,27 +592,6 @@ export function useConciergusRAG(
     }
   }, [config, search, expandContext, buildContext]);
 
-  // Build context from search results
-  const buildContext = useCallback((results: SearchResult[]): string => {
-    if (results.length === 0) return '';
-    
-    const contextParts = results.map((result, index) => {
-      let context = result.chunk.content;
-      
-      // Add surrounding context if available
-      if (result.context.previousChunk) {
-        context = result.context.previousChunk.content + ' ' + context;
-      }
-      if (result.context.nextChunk) {
-        context = context + ' ' + result.context.nextChunk.content;
-      }
-      
-      return `[${index + 1}] ${result.document.title}: ${context}`;
-    });
-    
-    return contextParts.join('\n\n');
-  }, []);
-
   // Format context with template
   const formatContext = useCallback((
     context: RAGContext, 
@@ -549,56 +605,6 @@ export function useConciergusRAG(
       .replace('{query}', context.query)
       .replace('{confidence}', context.confidence.toFixed(2))
       .replace('{sources}', context.sources.map(s => s.title).join(', '));
-  }, []);
-
-  // Expand context by including adjacent chunks
-  const expandContext = useCallback(async (results: SearchResult[]): Promise<SearchResult[]> => {
-    return results.map(result => {
-      let expandedContent = result.chunk.content;
-      
-      // Add previous and next chunks for better context
-      if (result.context.previousChunk) {
-        expandedContent = result.context.previousChunk.content + ' ' + expandedContent;
-      }
-      if (result.context.nextChunk) {
-        expandedContent = expandedContent + ' ' + result.context.nextChunk.content;
-      }
-      
-      return {
-        ...result,
-        chunk: {
-          ...result.chunk,
-          content: expandedContent
-        }
-      };
-    });
-  }, []);
-
-  // Rerank results using a reranking model
-  const rerankResults = useCallback(async (
-    query: string, 
-    results: SearchResult[]
-  ): Promise<SearchResult[]> => {
-    // This is a placeholder for actual reranking implementation
-    // In a real implementation, you would use a cross-encoder model
-    // or another reranking algorithm
-    
-    // For now, we'll use a simple approach based on query term overlap
-    const queryTerms = query.toLowerCase().split(/\s+/);
-    
-    return results.map(result => {
-      const contentTerms = result.chunk.content.toLowerCase().split(/\s+/);
-      const overlap = queryTerms.filter(term => 
-        contentTerms.some(contentTerm => contentTerm.includes(term))
-      ).length;
-      
-      const rerankScore = (overlap / queryTerms.length) * 0.3 + result.similarity * 0.7;
-      
-      return {
-        ...result,
-        relevanceScore: rerankScore
-      };
-    }).sort((a, b) => b.relevanceScore - a.relevanceScore);
   }, []);
 
   // Cache management
@@ -862,6 +868,143 @@ export function useConciergusKnowledge(
     });
   }, [gateway]);
 
+  // Chunk document
+  const chunkDocument = useCallback((
+    content: string, 
+    options: { chunkSize?: number; overlap?: number } = {}
+  ): string[] => {
+    const chunkSize = options.chunkSize || ragHook.config.chunkSize;
+    const overlap = options.overlap || ragHook.config.chunkOverlap;
+    
+    if (!content || content.length === 0) return [];
+    if (chunkSize <= 0) return [content];
+    if (overlap >= chunkSize) return [content]; // Prevent infinite loop
+    
+    const chunks: string[] = [];
+    let start = 0;
+    
+    while (start < content.length) {
+      const end = Math.min(start + chunkSize, content.length);
+      const chunk = content.slice(start, end).trim();
+      
+      if (chunk.length > 0) {
+        chunks.push(chunk);
+      }
+      
+      // Move to next position
+      if (end === content.length) {
+        // We've reached the end
+        break;
+      }
+      
+      start = end - Math.min(overlap, end - 1);
+      
+      // Ensure we're making progress
+      if (start <= 0) {
+        start = 1;
+      }
+    }
+    
+    return chunks;
+  }, [ragHook.config]);
+
+  // Process document into chunks
+  const processDocument = useCallback(async (
+    document: KnowledgeDocument
+  ): Promise<DocumentChunk[]> => {
+    const chunks = chunkDocument(document.content);
+    const embeddings = await ragHook.generateEmbeddings(chunks);
+    
+    return chunks.map((content, index) => ({
+      id: `chunk_${document.id}_${index}`,
+      content,
+      embedding: embeddings[index],
+      metadata: {
+        documentId: document.id,
+        chunkIndex: index,
+        source: document.source,
+        title: document.title,
+        tags: document.metadata.tags,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    }));
+  }, [chunkDocument, ragHook.generateEmbeddings]);
+
+  // Index document
+  const indexDocument = useCallback(async (
+    knowledgeBaseId: string, 
+    documentId: string
+  ): Promise<void> => {
+    setIsIndexing(true);
+    setIndexingProgress(0);
+    
+    try {
+      const knowledgeBase = knowledgeBases.find(kb => kb.id === knowledgeBaseId);
+      const document = knowledgeBase?.documents.find(doc => doc.id === documentId);
+      
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      setLastOperation({
+        type: 'indexDocument',
+        status: 'pending',
+        message: `Indexing document "${document.title}"...`,
+        timestamp: new Date()
+      });
+      
+      // Process document into chunks
+      const chunks = await processDocument(document);
+      setIndexingProgress(50);
+      
+      // Update document with chunks and mark as indexed
+      setKnowledgeBases(prev => prev.map(kb => 
+        kb.id === knowledgeBaseId 
+          ? {
+              ...kb,
+              documents: kb.documents.map(doc => 
+                doc.id === documentId 
+                  ? {
+                      ...doc,
+                      chunks,
+                      embeddings: chunks.map(c => c.embedding),
+                      isIndexed: true,
+                      lastIndexed: new Date()
+                    }
+                  : doc
+              ),
+              statistics: {
+                ...kb.statistics,
+                totalChunks: kb.statistics.totalChunks + chunks.length,
+                totalTokens: kb.statistics.totalTokens + chunks.reduce((sum, c) => sum + c.content.length, 0),
+                lastUpdated: new Date()
+              }
+            }
+          : kb
+      ));
+      
+      setIndexingProgress(100);
+      
+      setLastOperation({
+        type: 'indexDocument',
+        status: 'success',
+        message: `Document "${document.title}" indexed successfully`,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      setLastOperation({
+        type: 'indexDocument',
+        status: 'error',
+        message: `Failed to index document: ${error}`,
+        timestamp: new Date()
+      });
+    } finally {
+      setIsIndexing(false);
+      setIndexingProgress(0);
+    }
+  }, [knowledgeBases, processDocument]);
+
   // Add document
   const addDocument = useCallback(async (
     knowledgeBaseId: string,
@@ -1009,127 +1152,6 @@ export function useConciergusKnowledge(
     
     return document || null;
   }, [knowledgeBases]);
-
-  // Chunk document
-  const chunkDocument = useCallback((
-    content: string, 
-    options: { chunkSize?: number; overlap?: number } = {}
-  ): string[] => {
-    const chunkSize = options.chunkSize || ragHook.config.chunkSize;
-    const overlap = options.overlap || ragHook.config.chunkOverlap;
-    
-    const chunks: string[] = [];
-    let start = 0;
-    
-    while (start < content.length) {
-      const end = Math.min(start + chunkSize, content.length);
-      const chunk = content.slice(start, end);
-      
-      chunks.push(chunk.trim());
-      start = end - overlap;
-      
-      if (start >= content.length) break;
-    }
-    
-    return chunks.filter(chunk => chunk.length > 0);
-  }, [ragHook.config]);
-
-  // Process document into chunks
-  const processDocument = useCallback(async (
-    document: KnowledgeDocument
-  ): Promise<DocumentChunk[]> => {
-    const chunks = chunkDocument(document.content);
-    const embeddings = await ragHook.generateEmbeddings(chunks);
-    
-    return chunks.map((content, index) => ({
-      id: `chunk_${document.id}_${index}`,
-      content,
-      embedding: embeddings[index],
-      metadata: {
-        documentId: document.id,
-        chunkIndex: index,
-        source: document.source,
-        title: document.title,
-        tags: document.metadata.tags,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    }));
-  }, [chunkDocument, ragHook.generateEmbeddings]);
-
-  // Index document
-  const indexDocument = useCallback(async (
-    knowledgeBaseId: string, 
-    documentId: string
-  ): Promise<void> => {
-    setIsIndexing(true);
-    setIndexingProgress(0);
-    
-    try {
-      const knowledgeBase = knowledgeBases.find(kb => kb.id === knowledgeBaseId);
-      const document = knowledgeBase?.documents.find(doc => doc.id === documentId);
-      
-      if (!document) {
-        throw new Error('Document not found');
-      }
-      
-      setLastOperation({
-        type: 'indexDocument',
-        status: 'pending',
-        message: `Indexing document "${document.title}"...`,
-        timestamp: new Date()
-      });
-      
-      // Process document into chunks
-      const chunks = await processDocument(document);
-      setIndexingProgress(50);
-      
-      // Update document with chunks and mark as indexed
-      setKnowledgeBases(prev => prev.map(kb => 
-        kb.id === knowledgeBaseId 
-          ? {
-              ...kb,
-              documents: kb.documents.map(doc => 
-                doc.id === documentId 
-                  ? {
-                      ...doc,
-                      chunks,
-                      embeddings: chunks.map(c => c.embedding),
-                      isIndexed: true,
-                      lastIndexed: new Date()
-                    }
-                  : doc
-              ),
-              statistics: {
-                ...kb.statistics,
-                totalChunks: kb.statistics.totalChunks + chunks.length,
-                totalTokens: kb.statistics.totalTokens + chunks.reduce((sum, c) => sum + c.content.length, 0),
-                lastUpdated: new Date()
-              }
-            }
-          : kb
-      ));
-      
-      setIndexingProgress(100);
-      
-      setLastOperation({
-        type: 'indexDocument',
-        status: 'success',
-        message: `Document "${document.title}" indexed successfully`,
-        timestamp: new Date()
-      });
-    } catch (error) {
-      setLastOperation({
-        type: 'indexDocument',
-        status: 'error',
-        message: `Failed to index document: ${error}`,
-        timestamp: new Date()
-      });
-    } finally {
-      setIsIndexing(false);
-      setIndexingProgress(0);
-    }
-  }, [knowledgeBases, processDocument]);
 
   // Index entire knowledge base
   const indexKnowledgeBase = useCallback(async (id: string): Promise<void> => {
@@ -1414,3 +1436,20 @@ export function useConciergusKnowledge(
 }
 
 export default { useConciergusRAG, useConciergusKnowledge }; 
+
+// Utility function for cosine similarity
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length) return 0;
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
