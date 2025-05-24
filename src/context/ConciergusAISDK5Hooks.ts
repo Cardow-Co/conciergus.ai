@@ -522,9 +522,83 @@ export function useConciergusChat(
   }, [gateway]);
   
   const generateObject = useCallback(async <T = any>(schema: any, prompt?: string): Promise<T> => {
-    // Placeholder for AI SDK 5 generateObject implementation
-    return {} as T;
-  }, []);
+    if (!prompt) {
+      throw new Error('Prompt is required for generateObject');
+    }
+
+    const startTime = Date.now();
+    
+    try {
+      // Import generateObject from AI SDK
+      const { generateObject: aiGenerateObject } = await import('ai');
+      const { AISDKTelemetryIntegration } = await import('../telemetry/AISDKTelemetryIntegration');
+      
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
+        'generateObject',
+        {
+          prompt,
+          model: currentModel,
+          operationType: 'conciergus-chat-object-generation',
+          schemaType: typeof schema,
+          promptLength: prompt.length
+        }
+      );
+
+      const result = await aiGenerateObject({
+        model: gateway.getCurrentModel(),
+        schema,
+        prompt,
+        experimental_telemetry: telemetrySettings,
+      });
+
+      const responseTime = Date.now() - startTime;
+
+      // Update performance metrics
+      setModelPerformance(prev => ({
+        ...prev,
+        [currentModel]: {
+          ...prev[currentModel],
+          successRate: prev[currentModel] ? 
+            ((prev[currentModel].successRate * prev[currentModel].totalRequests) + 1) / (prev[currentModel].totalRequests + 1) : 1,
+          averageResponseTime: prev[currentModel] ? 
+            ((prev[currentModel].averageResponseTime * prev[currentModel].totalRequests) + responseTime) / (prev[currentModel].totalRequests + 1) : responseTime,
+          totalRequests: (prev[currentModel]?.totalRequests || 0) + 1,
+          totalErrors: prev[currentModel]?.totalErrors || 0
+        }
+      }));
+
+      return result.object;
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      
+      // Update error metrics
+      setModelPerformance(prev => ({
+        ...prev,
+        [currentModel]: {
+          ...prev[currentModel],
+          totalErrors: (prev[currentModel]?.totalErrors || 0) + 1,
+          successRate: prev[currentModel] ? 
+            (prev[currentModel].successRate * prev[currentModel].totalRequests) / (prev[currentModel].totalRequests + 1) : 0,
+          totalRequests: (prev[currentModel]?.totalRequests || 0) + 1,
+          averageResponseTime: prev[currentModel] ? 
+            ((prev[currentModel].averageResponseTime * prev[currentModel].totalRequests) + responseTime) / (prev[currentModel].totalRequests + 1) : responseTime
+        }
+      }));
+
+      // Log error
+      if (config.enableDebugLogging) {
+        gateway.debugManager?.error('generateObject request failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          model: currentModel,
+          prompt: prompt.substring(0, 100) + '...'
+        }, 'ConciergusChat', 'generateObject');
+      }
+
+      config.onError?.(error instanceof Error ? error : new Error('Unknown error'));
+      throw error;
+    }
+  }, [currentModel, gateway, config, setModelPerformance]);
   
   const invokeTools = useCallback(async (tools: any[], context?: any): Promise<any[]> => {
     // Placeholder for tool invocation implementation

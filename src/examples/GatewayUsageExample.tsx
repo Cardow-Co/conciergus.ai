@@ -8,6 +8,7 @@ import {
   useCostOptimizedModel,
   GatewayAuthStatus
 } from '../context/GatewayProvider';
+import { AISDKTelemetryIntegration } from '../telemetry/AISDKTelemetryIntegration';
 
 /**
  * Basic AI Gateway Usage Example
@@ -21,9 +22,20 @@ export function BasicGatewayExample() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
+        'generateText',
+        {
+          prompt: 'Explain quantum computing in simple terms.',
+          model: model.modelId || 'unknown',
+          operationType: 'basic-example'
+        }
+      );
+
       const { text } = await generateText({
         model,
         prompt: 'Explain quantum computing in simple terms.',
+        experimental_telemetry: telemetrySettings,
       });
       setResponse(text);
     } catch (error) {
@@ -66,9 +78,22 @@ export function SmartModelExample() {
   const [response, setResponse] = React.useState<string>('');
 
   const handleGenerate = async () => {
+    const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+    const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
+      'generateText',
+      {
+        prompt: 'What model are you and what are your capabilities?',
+        model: model.modelId || 'unknown',
+        operationType: 'smart-model-example',
+        capabilities: requirements.capabilities,
+        costTier: requirements.costTier
+      }
+    );
+
     const { text } = await generateText({
       model,
       prompt: 'What model are you and what are your capabilities?',
+      experimental_telemetry: telemetrySettings,
     });
     setResponse(text);
   };
@@ -142,9 +167,22 @@ export function CostOptimizationExample() {
   const [response, setResponse] = React.useState<string>('');
 
   const handleGenerate = async () => {
+    const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+    const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
+      'generateText',
+      {
+        prompt,
+        model: model.modelId || 'unknown',
+        operationType: 'cost-optimization-example',
+        estimatedCost,
+        maxTokens: 4000
+      }
+    );
+
     const { text } = await generateText({
       model,
       prompt,
+      experimental_telemetry: telemetrySettings,
     });
     setResponse(text);
   };
@@ -280,9 +318,20 @@ export function StreamingExample() {
     setStreamedText('');
 
     try {
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
+        'streamText',
+        {
+          prompt: 'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
+          model: model.modelId || 'unknown',
+          operationType: 'streaming-example'
+        }
+      );
+
       const result = await streamText({
         model,
         prompt: 'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
+        experimental_telemetry: telemetrySettings,
       });
 
       for await (const chunk of result.textStream) {

@@ -3,6 +3,7 @@ import { useGateway } from './GatewayProvider';
 import { streamText as aiStreamText, streamObject as aiStreamObject, createDataStreamResponse, generateId } from 'ai';
 import type { DebugManager } from './DebugManager';
 import type { ConciergusConfig } from './ConciergusContext';
+import { AISDKTelemetryIntegration } from '../telemetry/AISDKTelemetryIntegration';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -198,6 +199,19 @@ export function useConciergusTextStream(
       // Call event callbacks
       eventCallbacks.current.onStart.forEach(callback => callback());
       
+      // Get telemetry integration
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration?.generateTelemetrySettings('streamText', {
+        model: options.model || gateway.getCurrentModel?.() || 'unknown',
+        customMetadata: {
+          prompt_length: prompt.length,
+          system_message: !!options.system,
+          has_tools: !!options.tools,
+          temperature: options.temperature,
+          max_tokens: options.maxTokens,
+        }
+      });
+
       const result = await aiStreamText({
         model,
         system: options.system,
@@ -206,10 +220,26 @@ export function useConciergusTextStream(
         maxTokens: options.maxTokens,
         tools: options.tools,
         abortSignal: abortController.current.signal,
+        experimental_telemetry: telemetrySettings,
         experimental_transform: config.enableSmoothing ? [
           // Smoothing transform implementation would go here
         ] : undefined,
         onFinish: ({ text, usage }) => {
+          // Record telemetry completion
+          if (telemetryIntegration && telemetrySettings?.functionId) {
+            const operationId = telemetryIntegration['extractOperationId'](telemetrySettings.functionId);
+            telemetryIntegration.recordOperationCompletion(operationId, {
+              success: true,
+              response: text.slice(0, 500), // Truncate for privacy
+              tokenUsage: usage ? {
+                input: usage.promptTokens || 0,
+                output: usage.completionTokens || 0,
+                total: usage.totalTokens || 0,
+              } : undefined,
+              duration: Date.now() - streamStartTime.current,
+            });
+          }
+
           if (config.debugMode && gateway.debugManager) {
             gateway.debugManager.info('Text stream completed', {
               textLength: text.length,
@@ -276,6 +306,21 @@ export function useConciergusTextStream(
     } catch (error) {
       setIsStreaming(false);
       setMetrics(prev => ({ ...prev, errorCount: prev.errorCount + 1 }));
+      
+      // Record telemetry error
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration?.generateTelemetrySettings('streamText', {
+        model: options.model || gateway.getCurrentModel?.() || 'unknown',
+      });
+      
+      if (telemetryIntegration && telemetrySettings?.functionId) {
+        const operationId = telemetryIntegration['extractOperationId'](telemetrySettings.functionId);
+        telemetryIntegration.recordOperationCompletion(operationId, {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown streaming error',
+          duration: Date.now() - streamStartTime.current,
+        });
+      }
       
       if (gateway.debugManager) {
         gateway.debugManager.error('Text streaming failed', { error }, 'Streaming', 'text');
@@ -502,6 +547,19 @@ export function useConciergusObjectStream(
       // Call start callbacks
       eventCallbacks.current.onStart.forEach(callback => callback());
       
+      // Get telemetry integration
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration?.generateTelemetrySettings('streamObject', {
+        model: options.model || gateway.getCurrentModel?.() || 'unknown',
+        customMetadata: {
+          prompt_length: prompt.length,
+          output_type: options.output || 'object',
+          has_schema: options.output !== 'no-schema' && !!schema,
+          system_message: !!options.system,
+          temperature: options.temperature,
+        }
+      });
+      
       const result = await aiStreamObject({
         model,
         schema: options.output === 'no-schema' ? undefined : schema,
@@ -510,7 +568,23 @@ export function useConciergusObjectStream(
         prompt,
         temperature: options.temperature,
         abortSignal: abortController.current.signal,
+        experimental_telemetry: telemetrySettings,
         onFinish: ({ object, usage }) => {
+          // Record telemetry completion
+          if (telemetryIntegration && telemetrySettings?.functionId) {
+            const operationId = telemetryIntegration['extractOperationId'](telemetrySettings.functionId);
+            telemetryIntegration.recordOperationCompletion(operationId, {
+              success: true,
+              response: JSON.stringify(object).slice(0, 500), // Truncate for privacy
+              tokenUsage: usage ? {
+                input: usage.promptTokens || 0,
+                output: usage.completionTokens || 0,
+                total: usage.totalTokens || 0,
+              } : undefined,
+              duration: Date.now() - streamStartTime.current,
+            });
+          }
+
           if (config.debugMode && gateway.debugManager) {
             gateway.debugManager.info('Object stream completed', {
               objectSize: JSON.stringify(object).length,
@@ -589,6 +663,21 @@ export function useConciergusObjectStream(
     } catch (error) {
       setIsStreaming(false);
       setMetrics(prev => ({ ...prev, errorCount: prev.errorCount + 1 }));
+      
+      // Record telemetry error
+      const telemetryIntegration = AISDKTelemetryIntegration.getInstance();
+      const telemetrySettings = telemetryIntegration?.generateTelemetrySettings('streamObject', {
+        model: options.model || gateway.getCurrentModel?.() || 'unknown',
+      });
+      
+      if (telemetryIntegration && telemetrySettings?.functionId) {
+        const operationId = telemetryIntegration['extractOperationId'](telemetrySettings.functionId);
+        telemetryIntegration.recordOperationCompletion(operationId, {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown object streaming error',
+          duration: Date.now() - streamStartTime.current,
+        });
+      }
       
       if (gateway.debugManager) {
         gateway.debugManager.error('Object streaming failed', { error }, 'Streaming', 'object');

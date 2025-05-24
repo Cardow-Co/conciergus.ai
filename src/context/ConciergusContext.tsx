@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 import type { ProactiveRule } from './useProactiveEngagement';
 import type { TelemetryEvent } from '../components/ConciergusMetadataDisplay';
+import type { ConciergusAISDKTelemetryConfig } from '../telemetry/AISDKTelemetryIntegration';
 
 /**
  * Configuration for AI Gateway integration
@@ -109,6 +110,77 @@ export interface ConciergusConfig {
   // === Enterprise Features ===
   /** Telemetry and observability configuration */
   telemetryConfig?: TelemetryConfig;
+  /** AI SDK 5 telemetry configuration for experimental_telemetry */
+  aiSDKTelemetryConfig?: ConciergusAISDKTelemetryConfig;
+  /** Analytics configuration for usage tracking and cost monitoring */
+  analyticsConfig?: {
+    enabled: boolean;
+    realTimeUpdates?: boolean;
+    retentionPeriod?: number; // days
+    alerting?: {
+      enabled: boolean;
+      emailNotifications?: boolean;
+      webhookUrl?: string;
+    };
+  };
+  /** Performance monitoring configuration for real-time alerting */
+  performanceMonitorConfig?: {
+    enabled: boolean;
+    samplingRate?: number; // 0-1
+    aggregationInterval?: number; // milliseconds
+    retentionPeriod?: number; // hours
+    alerting?: {
+      enabled: boolean;
+      webhookUrl?: string;
+      quietHours?: {
+        start: string; // HH:MM
+        end: string; // HH:MM
+        timezone: string;
+      };
+    };
+    autoRecovery?: {
+      enabled: boolean;
+      circuitBreakerThreshold: number;
+      autoScalingEnabled?: boolean;
+    };
+  };
+  /** A/B testing configuration for experimentation */
+  abTestingConfig?: {
+    enabled: boolean;
+    defaultSignificanceLevel?: number; // 0.05 for 95% confidence
+    defaultPower?: number; // 0.8 for 80% power
+    defaultMinimumSampleSize?: number;
+    maxConcurrentTests?: number;
+    autoAnalysisInterval?: number; // milliseconds
+    compliance?: {
+      trackUserConsent: boolean;
+      anonymizeData: boolean;
+      auditLogging: boolean;
+    };
+  };
+  /** Compliance logging configuration for regulatory requirements */
+  complianceConfig?: {
+    enabled: boolean;
+    frameworks?: ('GDPR' | 'CCPA' | 'HIPAA' | 'SOX' | 'EU_AI_ACT')[];
+    anonymization?: {
+      enabled: boolean;
+      delay?: number; // days
+    };
+    retention?: {
+      defaultPeriod?: number; // days
+      deleteAfterExpiry?: boolean;
+      archiveAfterExpiry?: boolean;
+    };
+    monitoring?: {
+      realTimeAlerts: boolean;
+      webhookUrl?: string;
+    };
+    automation?: {
+      autoRespond: boolean;
+      autoDelete: boolean;
+      autoAnonymize: boolean;
+    };
+  };
   /** Middleware for request/response processing */
   middleware?: MiddlewareArray;
   /** Rate limiting configuration */
