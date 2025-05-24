@@ -1,0 +1,87 @@
+{
+  "name": "@conciergus/rsc",
+  "version": "0.1.0",
+  "description": "React Server Components integration for Conciergus AI with streamUI support",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./actions": {
+      "import": "./dist/actions.esm.js",
+      "require": "./dist/actions.cjs.js",
+      "types": "./dist/actions.d.ts"
+    },
+    "./components": {
+      "import": "./dist/components.esm.js",
+      "require": "./dist/components.cjs.js",
+      "types": "./dist/components.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/hooks.esm.js",
+      "require": "./dist/hooks.cjs.js",
+      "types": "./dist/hooks.d.ts"
+    }
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS='--max-old-space-size=8192' jest --passWithNoTests",
+    "test:watch": "NODE_OPTIONS='--max-old-space-size=8192' jest --watch",
+    "test:coverage": "NODE_OPTIONS='--max-old-space-size=8192' jest --coverage",
+    "clean": "rm -rf dist",
+    "build": "rollup -c",
+    "dev": "rollup -c --watch",
+    "prepare": "pnpm run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "next": "^15.0.0"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "2.0.0-canary.20",
+    "@ai-sdk/provider-utils": "canary",
+    "@ai-sdk/react": "canary",
+    "@babel/runtime": "^7.0.0",
+    "ai": "canary",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "rollup": "^4.41.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "ai",
+    "react",
+    "server-components",
+    "rsc",
+    "streamui",
+    "generative-ui",
+    "ai-sdk",
+    "conciergus"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cardow & Co/conciergus.ai",
+    "directory": "packages/rsc"
+  },
+  "license": "MIT"
+} 

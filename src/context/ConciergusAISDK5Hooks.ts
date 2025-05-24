@@ -545,8 +545,11 @@ export function useConciergusChat(
         }
       );
 
+      // Use createModel instead of getCurrentModel since gateway context doesn't have getCurrentModel method
+      const model = gateway.createModel(currentModel);
+
       const result = await aiGenerateObject({
-        model: gateway.getCurrentModel(),
+        model,
         schema,
         prompt,
         experimental_telemetry: telemetrySettings,
