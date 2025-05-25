@@ -3,7 +3,7 @@ import {
   context,
   SpanStatusCode,
   SpanKind,
-  Span,
+  type Span,
 } from '@opentelemetry/api';
 import { ConciergusOpenTelemetry } from './OpenTelemetryConfig';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';

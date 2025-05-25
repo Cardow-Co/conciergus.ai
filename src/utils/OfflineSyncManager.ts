@@ -6,10 +6,9 @@
  * application. It ensures seamless operation even when network connectivity is poor.
  */
 
+import { useState, useEffect, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import type {
-  ConversationMessage,
-  Conversation,
   QueuedMessage,
   ConnectionState,
 } from '../store/chatStore';
@@ -17,7 +16,7 @@ import type {
 /**
  * Sync operation types
  */
-export type SyncOperation =
+export type SyncOperationType =
   | 'create_conversation'
   | 'update_conversation'
   | 'create_message'
@@ -40,7 +39,7 @@ export type ConflictResolution =
  */
 export interface SyncOperation {
   id: string;
-  type: SyncOperation;
+  type: SyncOperationType;
   payload: any;
   timestamp: Date;
   retryCount: number;
@@ -190,7 +189,7 @@ export class OfflineSyncManager {
    * Queue an operation for synchronization
    */
   async queueOperation(
-    type: SyncOperation,
+    type: SyncOperationType,
     payload: any,
     priority: number = 1,
     dependencies: string[] = []

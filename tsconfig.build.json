@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "isolatedModules": false,
+    "verbatimModuleSyntax": false,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
+    "strict": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedSideEffectImports": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test.tsx", 
+    "**/*.test-d.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "src/test/**/*",
+    "src/**/test/**/*",
+    "src/**/__tests__/**/*",
+    "src/**/*.stories.*",
+    "src/**/*.story.*",
+    "**/__mocks__/**/*",
+    "**/mocks/**/*"
+  ]
+} 

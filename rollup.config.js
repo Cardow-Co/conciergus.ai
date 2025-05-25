@@ -52,8 +52,7 @@ const getPlugins = (minify = true) => [
     transformMixedEsModules: true
   }),
   typescript({ 
-    tsconfig: './tsconfig.json',
-    exclude: ['node_modules/**', '**/*.test.tsx', '**/*.test.ts']
+    tsconfig: './tsconfig.build.json'
   }),
   ...(minify ? [terser()] : [])
 ];
@@ -72,8 +71,7 @@ const getBrowserPlugins = (minify = true) => [
     transformMixedEsModules: true
   }),
   typescript({ 
-    tsconfig: './tsconfig.json',
-    exclude: ['node_modules/**', '**/*.test.tsx', '**/*.test.ts']
+    tsconfig: './tsconfig.build.json'
   }),
   ...(minify ? [terser()] : [])
 ];

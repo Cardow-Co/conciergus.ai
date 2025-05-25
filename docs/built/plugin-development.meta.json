@@ -1,0 +1,16 @@
+{
+  "title": "Plugin Development Guide",
+  "description": "Complete guide to developing plugins for Conciergus Chat with examples, best practices, and API reference",
+  "category": "Developer Experience",
+  "tags": [
+    "plugins",
+    "development",
+    "extension",
+    "customization"
+  ],
+  "fileName": "plugin-development",
+  "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/plugin-development.mdx",
+  "compiledAt": "2025-05-25T16:03:11.902Z",
+  "wordCount": 1903,
+  "readingTime": 10
+}

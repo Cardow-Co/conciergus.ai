@@ -28,5 +28,44 @@
       "ai"
     ],
     "category": "Guide"
+  },
+  {
+    "id": "guide-contribution-workflow",
+    "type": "guide",
+    "title": "Enhanced Contribution Workflow",
+    "description": "Complete guide to contributing to Conciergus Chat with automated tools and validation",
+    "content": "Complete guide to contributing to Conciergus Chat with automated tools and validation",
+    "path": "/guides/contribution-workflow",
+    "tags": []
+  },
+  {
+    "id": "guide-plugin-development",
+    "type": "guide",
+    "title": "Plugin Development Guide",
+    "description": "Complete guide to developing plugins for Conciergus Chat with examples, best practices, and API reference",
+    "content": "Complete guide to developing plugins for Conciergus Chat with examples, best practices, and API reference",
+    "path": "/guides/plugin-development",
+    "tags": [
+      "plugins",
+      "development",
+      "extension",
+      "customization"
+    ],
+    "category": "Developer Experience"
+  },
+  {
+    "id": "guide-typescript-types",
+    "type": "guide",
+    "title": "TypeScript Types & Utilities",
+    "description": "Comprehensive guide to TypeScript types, utilities, and advanced patterns in Conciergus Chat",
+    "content": "Comprehensive guide to TypeScript types, utilities, and advanced patterns in Conciergus Chat",
+    "path": "/guides/typescript-types",
+    "tags": [
+      "typescript",
+      "types",
+      "utilities",
+      "developer-experience"
+    ],
+    "category": "Developer Experience"
   }
 ]
