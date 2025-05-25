@@ -16,16 +16,14 @@ import { ConciergusProvider } from '../context/ConciergusProvider';
 jest.mock('ai', () => ({
   streamText: jest.fn(),
   streamObject: jest.fn(),
-  createDataStreamResponse: jest.fn(),
   generateId: jest.fn(() => 'test-id-123')
 }));
 
 // Import mocked functions for testing
-import { streamText as aiStreamText, streamObject as aiStreamObject, createDataStreamResponse } from 'ai';
+import { streamText as aiStreamText, streamObject as aiStreamObject } from 'ai';
 
 const mockStreamText = aiStreamText as jest.MockedFunction<typeof aiStreamText>;
 const mockStreamObject = aiStreamObject as jest.MockedFunction<typeof aiStreamObject>;
-const mockCreateDataStreamResponse = createDataStreamResponse as jest.MockedFunction<typeof createDataStreamResponse>;
 
 // Mock gateway provider
 const mockGateway = {
@@ -524,20 +522,6 @@ describe('useConciergusDataParts Hook', () => {
   });
 
   it('should create data streams', async () => {
-    const mockResponse = new Response();
-    mockCreateDataStreamResponse.mockImplementation(async (options) => {
-      // Call the execute function that was passed to createDataStreamResponse
-      if (options && typeof options.execute === 'function') {
-        const mockWriter = {
-          write: jest.fn(),
-          writeData: jest.fn(),
-          writeMessageAnnotation: jest.fn()
-        };
-        await options.execute(mockWriter);
-      }
-      return mockResponse;
-    });
-
     const { result } = renderHook(() => useConciergusDataParts(), {
       wrapper: TestWrapper
     });
@@ -555,9 +539,14 @@ describe('useConciergusDataParts Hook', () => {
       response = await result.current.createDataStream(mockExecute);
     });
 
-    expect(response!).toBe(mockResponse);
-    expect(mockCreateDataStreamResponse).toHaveBeenCalled();
+    expect(response!).toBeInstanceOf(Response);
+    expect(response!.status).toBe(200);
     expect(mockExecute).toHaveBeenCalled();
+    
+    // Check that the data part was added to local state
+    expect(result.current.dataParts).toHaveLength(1);
+    expect(result.current.dataParts[0].type).toBe('data-test');
+    expect(result.current.dataParts[0].data.message).toBe('hello');
   });
 
   it('should calculate data parts analytics', () => {

@@ -1,4 +1,16 @@
 import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
+import { SecureErrorHandler } from '../security/SecureErrorHandler';
+import { SecurityUtils } from '../security/SecurityUtils';
+import { getSecurityCore } from '../security/SecurityCore';
+import { 
+  createEnhancedRateLimitingMiddleware,
+  createEndpointRateLimitMiddleware,
+  createAdaptiveRateLimitMiddleware,
+  standardApiRateLimit,
+  strictRateLimit,
+  lenientRateLimit,
+  type EnhancedRateLimitOptions
+} from './EnhancedRateLimitingMiddleware';
 
 /**
  * Middleware context containing request/response data and utilities
@@ -11,6 +23,7 @@ export interface MiddlewareContext {
     body?: any;
     timestamp: Date;
     id: string;
+    ip?: string;
   };
   response?: {
     status?: number;
@@ -65,6 +78,12 @@ export interface MiddlewareConfig {
 export class ConciergusMiddlewarePipeline {
    private middlewares: Map<string, { fn: MiddlewareFunction; config: MiddlewareConfig }> = new Map();
    private static instance: ConciergusMiddlewarePipeline | null = null;
+   private securityEnabled: boolean;
+
+   constructor() {
+     const securityCore = getSecurityCore();
+     this.securityEnabled = securityCore.getConfig().level !== 'relaxed';
+   }
 
    /**
     * Get singleton instance
@@ -118,6 +137,8 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
           'middleware.request.url': context.request.url,
           'middleware.request.method': context.request.method,
           'middleware.request.id': context.request.id,
+          'middleware.count': this.middlewares.size,
+          'security.enabled': this.securityEnabled
         });
 
         // Sort middlewares by priority
@@ -163,6 +184,7 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
             'middleware.response.status': context.response?.status || 0,
             'middleware.response.duration': context.response?.duration || 0,
             'middleware.aborted': context.aborted,
+            'middleware.completed': !context.aborted,
           });
 
           return context;
@@ -227,6 +249,81 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
    */
   clear(): void {
     this.middlewares.clear();
+  }
+
+  /**
+   * Add security-aware rate limiting middleware
+   */
+  useRateLimit(options?: EnhancedRateLimitOptions): void {
+    if (this.securityEnabled) {
+      const config: MiddlewareConfig = {
+        name: 'enhanced-rate-limiting',
+        enabled: true,
+        priority: 100,
+        conditions: {
+          paths: ['/api/*'],
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          userRoles: ['admin']
+        }
+      };
+      
+      if (options) {
+        config.options = options;
+      }
+
+      this.use(config, createEnhancedRateLimitingMiddleware(options));
+    }
+  }
+
+  /**
+   * Add endpoint-specific rate limiting
+   */
+  useEndpointRateLimit(
+    endpointConfigs: Record<string, Partial<import('../security/RateLimitingEngine').RateLimitConfig>>,
+    globalOptions?: EnhancedRateLimitOptions
+  ): void {
+    if (this.securityEnabled) {
+      const config: MiddlewareConfig = {
+        name: 'endpoint-rate-limit',
+        enabled: true,
+        priority: 90,
+        conditions: {
+          paths: Object.keys(endpointConfigs),
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          userRoles: ['admin']
+        }
+      };
+      
+      if (globalOptions) {
+        config.options = globalOptions;
+      }
+
+      this.use(config, createEndpointRateLimitMiddleware(endpointConfigs, globalOptions));
+    }
+  }
+
+  /**
+   * Add adaptive rate limiting
+   */
+  useAdaptiveRateLimit(options?: EnhancedRateLimitOptions): void {
+    if (this.securityEnabled) {
+      const config: MiddlewareConfig = {
+        name: 'adaptive-rate-limiting',
+        enabled: true,
+        priority: 80,
+        conditions: {
+          paths: ['/api/*'],
+          methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          userRoles: ['admin']
+        }
+      };
+      
+      if (options) {
+        config.options = options;
+      }
+
+      this.use(config, createAdaptiveRateLimitMiddleware(options));
+    }
   }
 }
 
@@ -381,32 +478,37 @@ export const securityHeadersMiddleware: MiddlewareFunction = async (context, nex
 };
 
 /**
- * Error handling middleware
+ * Error handling middleware - now with secure error handling
  */
 export const errorHandlingMiddleware: MiddlewareFunction = async (context, next) => {
   try {
     await next();
   } catch (error) {
-    console.error('Middleware error:', error);
-    
-    ConciergusOpenTelemetry.recordMetric(
-      'conciergus-middleware',
-      'errors.total',
-      1,
+    // Use secure error handler to process the error
+    const sanitizedError = SecureErrorHandler.sanitizeError(
+      error,
+      context.request.id,
       {
         url: context.request.url,
         method: context.request.method,
-        error: error instanceof Error ? error.name : 'UnknownError',
+        timestamp: context.timestamp,
+        userAgent: context.request.headers['user-agent'],
+        clientId: context.user?.id
       }
     );
     
+    // Set secure response
     context.response = {
-      status: 500,
-      body: { 
-        error: 'Internal server error',
-        requestId: context.request.id,
+      status: SecureErrorHandler.getHttpStatusFromErrorType(sanitizedError.type),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-ID': context.request.id
       },
+      body: sanitizedError,
     };
+
+    // Mark as aborted to prevent further processing
+    context.aborted = true;
   }
 };
 
@@ -470,4 +572,99 @@ export const transformationMiddleware = (options: {
       context.response.body = options.transformResponse(context.response.body);
     }
   };
+};
+
+/**
+ * Create a default secure middleware pipeline
+ */
+export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
+  const pipeline = new ConciergusMiddlewarePipeline();
+  
+  const securityCore = getSecurityCore();
+  const config = securityCore.getConfig();
+  
+  // Add rate limiting based on security level
+  switch (config.level) {
+    case 'enterprise':
+      pipeline.useRateLimit({
+        configName: 'enterprise',
+        customConfig: {
+          algorithm: 'token_bucket' as any,
+          strategy: 'combined' as any,
+          windowMs: 60000,
+          maxRequests: 20,
+          burstLimit: 5,
+          ddosProtection: 'enterprise' as any
+        }
+      });
+      break;
+    case 'strict':
+      pipeline.useRateLimit({
+        configName: 'strict',
+        customConfig: {
+          algorithm: 'sliding_window' as any,
+          strategy: 'combined' as any,
+          windowMs: 60000,
+          maxRequests: 50,
+          ddosProtection: 'advanced' as any
+        }
+      });
+      break;
+    case 'standard':
+      pipeline.useRateLimit({
+        configName: 'standard',
+        customConfig: {
+          algorithm: 'sliding_window' as any,
+          strategy: 'combined' as any,
+          windowMs: 60000,
+          maxRequests: 100,
+          ddosProtection: 'basic' as any
+        }
+      });
+      break;
+    case 'relaxed':
+      pipeline.useRateLimit({
+        configName: 'relaxed',
+        customConfig: {
+          algorithm: 'fixed_window' as any,
+          strategy: 'ip_based' as any,
+          windowMs: 60000,
+          maxRequests: 1000,
+          ddosProtection: 'basic' as any
+        }
+      });
+      break;
+  }
+
+  return pipeline;
+}
+
+/**
+ * Legacy rate limiting middleware for backwards compatibility
+ * @deprecated Use createEnhancedRateLimitingMiddleware instead
+ */
+export function createRateLimitingMiddleware(
+  windowMs: number = 60000,
+  maxRequests: number = 100
+): MiddlewareFunction {
+  // Use the enhanced rate limiting middleware with legacy options
+  return createEnhancedRateLimitingMiddleware({
+    customConfig: {
+      algorithm: 'fixed_window' as any,
+      strategy: 'ip_based' as any,
+      windowMs,
+      maxRequests
+    }
+  });
+}
+
+// Export middleware types and utilities
+export {
+  createEnhancedRateLimitingMiddleware,
+  createEndpointRateLimitMiddleware,
+  createAdaptiveRateLimitMiddleware,
+  standardApiRateLimit,
+  strictRateLimit,
+  lenientRateLimit,
+  type EnhancedRateLimitOptions
 }; 

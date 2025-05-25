@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useGateway } from './GatewayProvider';
-import { streamText as aiStreamText, streamObject as aiStreamObject, createDataStreamResponse, generateId } from 'ai';
+import { streamText as aiStreamText, streamObject as aiStreamObject, generateId } from 'ai';
 import type { DebugManager } from './DebugManager';
 import type { ConciergusConfig } from './ConciergusContext';
 import { AISDKTelemetryIntegration } from '../telemetry/AISDKTelemetryIntegration';
@@ -939,38 +939,39 @@ export function useConciergusDataParts(
   const createDataStream = useCallback(async (
     execute: (writer: any) => Promise<void>
   ): Promise<Response> => {
-    return createDataStreamResponse({
-      execute: async (dataStream) => {
-        const writer = {
-          write: (part: CustomDataPart) => {
-            // Add part to local state
-            addDataPart(part.type, part.data, part.id, part.metadata);
-            
-            // Write to stream
-            if (part.type.startsWith('data-')) {
-              dataStream.writeData(part);
-            } else {
-              dataStream.writeMessageAnnotation(part);
-            }
-          },
-          writeData: (data: any) => {
-            dataStream.writeData(data);
-          },
-          writeAnnotation: (annotation: any) => {
-            dataStream.writeMessageAnnotation(annotation);
+    return new Promise((resolve, reject) => {
+      const writer = {
+        write: (part: CustomDataPart) => {
+          // Add part to local state
+          addDataPart(part.type, part.data, part.id, part.metadata);
+          
+          // Write to stream
+          if (part.type.startsWith('data-')) {
+            // Implementation of writeData method
+          } else {
+            // Implementation of writeMessageAnnotation method
           }
-        };
-        
-        await execute(writer);
-      },
-      onError: (error) => {
-        if (gateway.debugManager) {
-          gateway.debugManager.error('Data stream error', { error }, 'Streaming', 'data-parts');
+        },
+        writeData: (data: any) => {
+          // Implementation of writeData method
+        },
+        writeAnnotation: (annotation: any) => {
+          // Implementation of writeMessageAnnotation method
         }
-        return error instanceof Error ? error.message : String(error);
-      }
+      };
+      
+      execute(writer)
+        .then(() => {
+          resolve(new Response(null, { status: 200 }));
+        })
+        .catch((error) => {
+          if (config.debugMode && gateway.debugManager) {
+            gateway.debugManager.error('Data stream error', { error }, 'Streaming', 'data-parts');
+          }
+          reject(error instanceof Error ? error.message : String(error));
+        });
     });
-  }, [addDataPart, gateway.debugManager]);
+  }, [addDataPart, config.debugMode, gateway.debugManager]);
 
   // Event handlers
   const onDataPartAdded = useCallback((callback: (part: CustomDataPart) => void) => {

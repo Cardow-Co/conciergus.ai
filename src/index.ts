@@ -20,6 +20,49 @@ export { default as ConciergusChatWidget } from './components/ConciergusChatWidg
 export { default as ConciergusMessageList } from './components/ConciergusMessageList';
 export { default as ConciergusMessageItem } from './components/ConciergusMessageItem';
 
+// Security Infrastructure (Enhanced with Rate Limiting)
+export {
+  getSecurityCore,
+  createSecureConfig,
+  SecurityLevel,
+  Environment,
+  sanitizeHtml,
+  sanitizeInput,
+  validateInput,
+  validateAiPrompt,
+  sanitizeAiPrompt,
+  generateSecureId,
+  timingSafeEquals,
+  sanitizeError,
+  createValidationError,
+  createSecurityError,
+  createRateLimitError,
+  ErrorType,
+  // Rate limiting exports
+  RateLimitingEngine,
+  createSecureRateLimitingEngine,
+  RateLimitAlgorithm,
+  RateLimitStrategy,
+  DDoSProtectionLevel
+} from './security';
+
+// Middleware Infrastructure (New)
+export {
+  ConciergusMiddlewarePipeline,
+  createSecureMiddlewarePipeline,
+  createEnhancedRateLimitingMiddleware,
+  createEndpointRateLimitMiddleware,
+  createAdaptiveRateLimitMiddleware,
+  standardApiRateLimit,
+  strictRateLimit,
+  lenientRateLimit,
+  createSecurityAwareMiddleware,
+  createBasicRateLimitMiddleware,
+  type MiddlewareFunction,
+  type MiddlewareContext,
+  type EnhancedRateLimitOptions
+} from './middleware';
+
 // Enterprise Examples (lightweight demo)
 export * from './examples/EnterpriseExamples';
 
@@ -28,3 +71,5 @@ export * from './examples/EnterpriseExamples';
 // - Enterprise Features: import from '@conciergus/chat/enterprise'
 // - Enhanced Hooks: import from '@conciergus/chat/hooks'
 // - Components Only: import from '@conciergus/chat/components'
+// - Security (full): import from '@conciergus/chat/security'
+// - Middleware (full): import from '@conciergus/chat/middleware'
