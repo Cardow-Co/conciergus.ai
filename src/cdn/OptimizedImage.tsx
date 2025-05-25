@@ -356,14 +356,14 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }
 
   const { src: optimizedSrc, srcSet, sizes } = getOptimizedUrls();
-  const blurDataUrl = getBlurDataUrl();
+  const blurDataUrlValue = getBlurDataUrl();
 
   return (
     <>
       {/* Blur placeholder */}
-      {blur && blurDataUrl && !isLoaded && (
+      {blur && blurDataUrlValue && !isLoaded && (
         <img
-          src={blurDataUrl}
+          src={blurDataUrlValue}
           alt=""
           className="optimized-image-blur"
           style={{
