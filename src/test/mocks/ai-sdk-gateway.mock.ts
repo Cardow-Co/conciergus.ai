@@ -91,9 +91,43 @@ export const getAvailableModels = jest.fn().mockResolvedValue([
 // Mock Gateway Auth Token (to prevent OIDC errors)
 export const getGatewayAuthToken = jest.fn().mockResolvedValue('mock-gateway-token');
 
-// Mock Gateway function (main entry point)
+// Mock Gateway function (main entry point) - Updated to always return a valid object
 export const gateway = jest.fn().mockImplementation((modelId: string) => {
-  return new MockGatewayLanguageModel(modelId);
+  // Always return a consistent mock object
+  return {
+    id: modelId,
+    provider: 'mock',
+    name: `Mock ${modelId}`,
+    modelId: modelId,
+    generate: jest.fn().mockResolvedValue({
+      text: `Mock response from ${modelId}`,
+      usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 }
+    }),
+    streamText: jest.fn().mockReturnValue({
+      textStream: (async function* () {
+        yield 'Mock ';
+        yield 'stream ';
+        yield 'from ';
+        yield modelId;
+      })(),
+      usage: Promise.resolve({ promptTokens: 10, completionTokens: 15, totalTokens: 25 })
+    }),
+    streamObject: jest.fn().mockReturnValue({
+      partialObjectStream: (async function* () {
+        yield { status: 'generating' };
+        yield { status: 'complete', result: 'mock object' };
+      })(),
+      object: Promise.resolve({ status: 'complete', result: 'mock object' })
+    }),
+    generateText: jest.fn().mockResolvedValue({
+      text: `Generated text from ${modelId}`,
+      usage: { promptTokens: 15, completionTokens: 25, totalTokens: 40 }
+    }),
+    generateObject: jest.fn().mockResolvedValue({
+      object: { modelId, response: 'generated object' },
+      usage: { promptTokens: 20, completionTokens: 30, totalTokens: 50 }
+    })
+  };
 });
 
 // Mock Gateway Fetch Metadata

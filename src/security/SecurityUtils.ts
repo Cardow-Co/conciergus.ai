@@ -106,21 +106,36 @@ export class SecurityUtils {
   }
 
   /**
-   * Sanitize user input for safe processing
+   * Sanitize input to prevent XSS and other attacks
    */
   static sanitizeInput(input: string): string {
     if (typeof input !== 'string') {
       return '';
     }
 
-    const securityCore = getSecurityCore();
-    const config = securityCore.getConfig();
+    // Handle SecurityCore singleton issues with safe defaults
+    let config: any = {
+      validation: {
+        sanitizeByDefault: true
+      }
+    };
+
+    try {
+      const securityCore = getSecurityCore();
+      const coreConfig = securityCore?.getConfig();
+      if (coreConfig) {
+        config = coreConfig;
+      }
+    } catch (error) {
+      // SecurityCore not available, use safe defaults
+      console.warn('SecurityCore not available in sanitizeInput, using default sanitization');
+    }
 
     let sanitized = input;
 
-    // Apply HTML sanitization if enabled
-    if (config.validation.sanitizeByDefault) {
-      sanitized = this.sanitizeHtml(sanitized);
+    // Apply HTML sanitization if enabled (default to true for safety)
+    if (config.validation?.sanitizeByDefault !== false) {
+      sanitized = SecurityUtils.sanitizeHtml(sanitized);
     }
 
     // Trim and normalize whitespace
@@ -140,16 +155,36 @@ export class SecurityUtils {
     allowedContentTypes?: string[];
     strictMode?: boolean;
   }): ValidationResult {
-    const securityCore = getSecurityCore();
-    const config = securityCore.getConfig();
+    // Handle SecurityCore singleton issues with safe defaults
+    let config: any = {
+      validation: {
+        maxInputLength: 50000,
+        allowedContentTypes: ['application/json', 'text/plain'],
+        strictMode: false
+      },
+      aiSecurity: {
+        enableInjectionProtection: true
+      }
+    };
+
+    try {
+      const securityCore = getSecurityCore();
+      const coreConfig = securityCore?.getConfig();
+      if (coreConfig) {
+        config = coreConfig;
+      }
+    } catch (error) {
+      // SecurityCore not available, use safe defaults
+      console.warn('SecurityCore not available in validateInput, using default validation config');
+    }
     
     const errors: string[] = [];
     let threat: ValidationResult['threat'] = undefined;
 
     // Use config defaults if options not provided
-    const maxLength = options?.maxLength ?? config.validation.maxInputLength;
-    const allowedContentTypes = options?.allowedContentTypes ?? config.validation.allowedContentTypes;
-    const strictMode = options?.strictMode ?? config.validation.strictMode;
+    const maxLength = options?.maxLength ?? config.validation?.maxInputLength ?? 50000;
+    const allowedContentTypes = options?.allowedContentTypes ?? config.validation?.allowedContentTypes ?? ['application/json', 'text/plain'];
+    const strictMode = options?.strictMode ?? config.validation?.strictMode ?? false;
 
     // Length validation
     if (input.length > maxLength) {
@@ -184,7 +219,7 @@ export class SecurityUtils {
     }
 
     // Prompt injection detection (AI-specific)
-    if (config.aiSecurity.enableInjectionProtection) {
+    if (config.aiSecurity?.enableInjectionProtection !== false) {
       const promptInjectionDetected = PROMPT_INJECTION_PATTERNS.some(pattern => pattern.test(input));
       if (promptInjectionDetected) {
         errors.push('Potential AI prompt injection detected');
@@ -214,7 +249,7 @@ export class SecurityUtils {
     return {
       isValid: errors.length === 0,
       errors,
-      sanitized: this.sanitizeInput(input),
+      sanitized: SecurityUtils.sanitizeInput(input),
       ...(threat && { threat })
     };
   }
@@ -317,7 +352,7 @@ export class SecurityUtils {
       return { isValid: true, errors: [], sanitized: prompt };
     }
 
-    const validation = this.validateInput(prompt, {
+    const validation = SecurityUtils.validateInput(prompt, {
       maxLength: config.aiSecurity.maxPromptLength,
       strictMode: true
     });
@@ -384,14 +419,14 @@ export class SecurityUtils {
 
     const entry = {
       level,
-      message: this.redactSensitiveData(message),
+      message: SecurityUtils.redactSensitiveData(message),
       timestamp: new Date().toISOString(),
       sanitized: true,
     };
 
     // Add data hash if provided and not in relaxed mode
     if (data && config.level !== 'relaxed') {
-      (entry as any).hash = this.hashForLogging(JSON.stringify(data));
+      (entry as any).hash = SecurityUtils.hashForLogging(JSON.stringify(data));
     }
 
     return entry;

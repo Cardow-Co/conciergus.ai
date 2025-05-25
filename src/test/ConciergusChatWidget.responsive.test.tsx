@@ -21,20 +21,7 @@ const mockWindowProperties = (width: number, height: number) => {
   });
 };
 
-// Mock matchMedia for accessibility testing
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// window.matchMedia is already mocked in src/test/setup.ts
 
 // Mock ConciergusContext to prevent dependency issues
 jest.mock('../context/ConciergusContext', () => ({

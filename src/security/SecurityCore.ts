@@ -242,18 +242,33 @@ export class SecurityCore {
   private warnings: SecurityWarning[] = [];
 
   private constructor(config?: Partial<SecurityConfig>) {
-    this.config = this.createConfig(config);
-    this.validateConfiguration();
+    try {
+      this.config = this.createConfig(config);
+      this.validateConfiguration();
+    } catch (error) {
+      console.error('Error in SecurityCore constructor:', error);
+      throw error;
+    }
   }
 
   /**
    * Get singleton instance
    */
   static getInstance(config?: Partial<SecurityConfig>): SecurityCore {
-    if (!this.instance) {
-      this.instance = new SecurityCore(config);
+    try {
+      if (!this.instance) {
+        this.instance = new SecurityCore(config);
+      } else if (config) {
+        // If config is provided and instance exists, update the configuration
+        this.instance.updateConfig(config);
+      }
+      return this.instance;
+    } catch (error) {
+      console.error('Error in SecurityCore.getInstance():', error);
+      // Reset instance on error to allow retry
+      this.instance = null;
+      throw error;
     }
-    return this.instance;
   }
 
   /**

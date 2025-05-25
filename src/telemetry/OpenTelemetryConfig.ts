@@ -239,6 +239,14 @@ export class ConciergusOpenTelemetry {
         recordException: () => {},
         end: () => {},
         setAttribute: () => {},
+        setAttributes: () => {},
+        addEvent: () => {},
+        updateName: () => {},
+        isRecording: () => false,
+        spanContext: () => ({
+          traceId: 'mock-trace-id',
+          spanId: 'mock-span-id'
+        })
       };
       return fn(noOpSpan);
     }

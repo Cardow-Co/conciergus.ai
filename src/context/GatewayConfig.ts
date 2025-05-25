@@ -195,9 +195,7 @@ export interface GatewayConfig {
  * @param config Optional configuration
  * @returns Configured gateway model
  */
-import { GatewayModel } from '@vercel/ai-sdk-gateway'; // Adjust import based on actual type
-
-export function createGatewayModel(modelId: string, config?: GatewayConfig): GatewayModel {
+export function createGatewayModel(modelId: string, config?: GatewayConfig): any {
   const modelConfig = GATEWAY_MODELS[modelId];
   
   if (!modelConfig) {

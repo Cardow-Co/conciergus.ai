@@ -207,11 +207,11 @@ export function useConciergusRAG(
   // Get embedding model from gateway or use default
   const getEmbeddingModel = useCallback(() => {
     // Check if gateway provides embedding model
-    const gatewayModel = gateway.getEmbeddingModel?.();
+    const gatewayModel = gateway?.getEmbeddingModel?.();
     if (gatewayModel) return gatewayModel;
     
     // Fallback to OpenAI model (assuming it's configured in gateway)
-    return gateway.createEmbeddingModel?.(config.embeddingModel) || null;
+    return gateway?.createEmbeddingModel?.(config.embeddingModel) || null;
   }, [gateway, config.embeddingModel]);
 
   // Rerank results using a reranking model - MOVED BEFORE search function
@@ -283,12 +283,12 @@ export function useConciergusRAG(
       
       return embedding;
     } catch (error) {
-      if (gateway.debugManager) {
+      if (gateway?.debugManager) {
         gateway.debugManager.error('Embedding generation failed', { error }, 'RAG', 'embedding');
       }
       throw error;
     }
-  }, [config, getEmbeddingModel, gateway.debugManager]);
+  }, [config, getEmbeddingModel, gateway]);
 
   // Generate multiple embeddings
   const generateEmbeddings = useCallback(async (texts: string[]): Promise<number[][]> => {
@@ -364,12 +364,12 @@ export function useConciergusRAG(
       
       return allEmbeddings;
     } catch (error) {
-      if (gateway.debugManager) {
+      if (gateway?.debugManager) {
         gateway.debugManager.error('Batch embedding generation failed', { error }, 'RAG', 'embedding');
       }
       throw error;
     }
-  }, [config, getEmbeddingModel, gateway.debugManager]);
+  }, [config, getEmbeddingModel, gateway]);
 
   // Main search function
   const search = useCallback(async (
@@ -402,7 +402,7 @@ export function useConciergusRAG(
       const queryEmbedding = await generateEmbedding(query);
       
       // Get knowledge bases from gateway or use provided ID
-      const knowledgeBases = gateway.getKnowledgeBases?.() || {};
+      const knowledgeBases = gateway?.getKnowledgeBases?.() || {};
       const targetBases = knowledgeBaseId 
         ? { [knowledgeBaseId]: knowledgeBases[knowledgeBaseId] }
         : knowledgeBases;
@@ -471,7 +471,7 @@ export function useConciergusRAG(
         timestamp: new Date()
       });
       
-      if (config.debugMode && gateway.debugManager) {
+      if (config.debugMode && gateway?.debugManager) {
         gateway.debugManager.info('Search completed', {
           query,
           resultsCount: finalResults.length,
@@ -482,7 +482,7 @@ export function useConciergusRAG(
       
       return finalResults;
     } catch (error) {
-      if (gateway.debugManager) {
+      if (gateway?.debugManager) {
         gateway.debugManager.error('Search failed', { query, error }, 'RAG', 'search');
       }
       throw error;
@@ -784,7 +784,7 @@ export function useConciergusKnowledge(
 
   // Initialize knowledge bases from gateway
   useEffect(() => {
-    const gatewayKnowledgeBases = gateway.getKnowledgeBases?.();
+    const gatewayKnowledgeBases = gateway?.getKnowledgeBases?.();
     if (gatewayKnowledgeBases) {
       setKnowledgeBases(Object.values(gatewayKnowledgeBases));
     }
@@ -824,7 +824,7 @@ export function useConciergusKnowledge(
     setKnowledgeBases(prev => [...prev, newKnowledgeBase]);
     
     // Store in gateway if available
-    gateway.addKnowledgeBase?.(id, newKnowledgeBase);
+    gateway?.addKnowledgeBase?.(id, newKnowledgeBase);
     
     setLastOperation({
       type: 'createKnowledgeBase',
@@ -839,7 +839,7 @@ export function useConciergusKnowledge(
   // Delete knowledge base
   const deleteKnowledgeBase = useCallback(async (id: string): Promise<void> => {
     setKnowledgeBases(prev => prev.filter(kb => kb.id !== id));
-    gateway.removeKnowledgeBase?.(id);
+    gateway?.removeKnowledgeBase?.(id);
     
     setLastOperation({
       type: 'deleteKnowledgeBase',
@@ -858,7 +858,7 @@ export function useConciergusKnowledge(
       kb.id === id ? { ...kb, ...updates } : kb
     ));
     
-    gateway.updateKnowledgeBase?.(id, updates);
+    gateway?.updateKnowledgeBase?.(id, updates);
     
     setLastOperation({
       type: 'updateKnowledgeBase',

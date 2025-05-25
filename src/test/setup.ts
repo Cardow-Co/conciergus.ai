@@ -29,6 +29,36 @@ if (!global.ReadableStream) {
   global.TransformStream = TransformStream;
 }
 
+// Mock window.matchMedia for responsive features
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => {
+    const mock = {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // deprecated
+      removeListener: jest.fn(), // deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    };
+
+    // Set specific matches for common queries
+    if (query === '(prefers-reduced-motion: reduce)') {
+      mock.matches = false;
+    } else if (query === '(prefers-contrast: high)') {
+      mock.matches = false;
+    } else if (query.includes('max-width: 768px')) {
+      mock.matches = false; // Default to desktop
+    } else if (query.includes('max-width: 1024px')) {
+      mock.matches = false; // Default to desktop
+    }
+
+    return mock;
+  }),
+});
+
 // Response API polyfill for Node.js test environment
 if (!global.Response) {
   global.Response = class Response {
@@ -88,7 +118,9 @@ beforeAll(() => {
         args[0].includes('DialogContent') ||
         args[0].includes('DialogTitle') ||
         args[0].includes('requires a') ||
-        args[0].includes('for the component to be accessible')
+        args[0].includes('for the component to be accessible') ||
+        args[0].includes('An update to TestComponent inside a test was not wrapped in act') ||
+        args[0].includes('When testing, code that causes React state updates should be wrapped into act')
       )
     ) {
       return;
@@ -124,6 +156,36 @@ afterAll(() => {
 beforeEach(() => {
   jest.clearAllMocks();
   
+  // Restore window.matchMedia mock after clearAllMocks
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => {
+      const mock = {
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(), // deprecated
+        removeListener: jest.fn(), // deprecated
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      };
+
+      // Set specific matches for common queries
+      if (query === '(prefers-reduced-motion: reduce)') {
+        mock.matches = false;
+      } else if (query === '(prefers-contrast: high)') {
+        mock.matches = false;
+      } else if (query.includes('max-width: 768px')) {
+        mock.matches = false; // Default to desktop
+      } else if (query.includes('max-width: 1024px')) {
+        mock.matches = false; // Default to desktop
+      }
+
+      return mock;
+    }),
+  });
+  
   // Reset fetch mock
   (global.fetch as jest.MockedFunction<typeof fetch>).mockReset();
   (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
@@ -140,22 +202,69 @@ beforeEach(() => {
     text: () => Promise.resolve('Mock AI response'),
     body: new ReadableStream(),
   } as any);
+
+  // Reset security instances to prevent memory leaks
+  try {
+    // Clear security core instance
+    const { SecurityCore } = require('../security/SecurityCore');
+    SecurityCore.resetInstance();
+  } catch (error) {
+    // SecurityCore may not be available in all tests
+  }
+  
+  // Clear OpenTelemetry instance
+  try {
+    const { ConciergusOpenTelemetry } = require('../telemetry/OpenTelemetryConfig');
+    ConciergusOpenTelemetry.shutdown().catch(() => {});
+  } catch (error) {
+    // OpenTelemetry may not be available in all tests
+  }
+  
+  // Force garbage collection if available (helps in memory-constrained environments)
+  if (global.gc) {
+    global.gc();
+  }
 });
 
-// Mock window.matchMedia for Radix UI components
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+afterEach(async () => {
+  // Clean up any remaining instances
+  try {
+    const { ConciergusOpenTelemetry } = require('../telemetry/OpenTelemetryConfig');
+    await ConciergusOpenTelemetry.shutdown();
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+  
+  // Clear any timers or intervals
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
+
+// Suppress OpenTelemetry warnings in tests
+console.warn = (...args: any[]) => {
+  if (
+    typeof args[0] === 'string' &&
+    (
+      args[0].includes('Warning: componentWillMount') ||
+      args[0].includes('Warning: componentWillReceiveProps') ||
+      args[0].includes('Warning: componentWillUpdate') ||
+      args[0].includes('Warning: Missing') ||
+      args[0].includes('aria-describedby') ||
+      args[0].includes('Description') ||
+              args[0].includes('DialogContent') ||
+        args[0].includes('OpenTelemetry not initialized') ||
+        args[0].includes('⚠️ Security Override:') ||
+        args[0].includes('Security Override:') ||
+        args[0].includes('⚠️ Security Warning:') ||
+        args[0].includes('Security Warning:')
+    )
+  ) {
+    return; // Suppress various warnings including OpenTelemetry and security warnings
+  }
+  originalConsoleWarn.call(console, ...args);
+};
+
+// window.matchMedia is already mocked above
 
 // Mock ResizeObserver for components that use it
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

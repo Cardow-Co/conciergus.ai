@@ -351,8 +351,61 @@ export class SecureDefaultsManager {
       acknowledgedRisks: boolean;
     }
   ): { config: SecurityConfig; warnings: SecurityWarning[] } {
-    const securityCore = SecurityCore.getInstance();
-    const baseConfig = securityCore.getConfig();
+    // Create a base configuration directly without relying on SecurityCore singleton
+    // Use environment from overrides if provided, otherwise default based on NODE_ENV
+    const defaultEnvironment = process.env.NODE_ENV === 'test' ? Environment.TEST : Environment.DEVELOPMENT;
+    const environment = overrides.environment || defaultEnvironment;
+    
+    // Create base configuration manually (same logic as SecurityCore.createConfig)
+    const baseConfig: SecurityConfig = {
+      level: baseLevel,
+      environment,
+      validation: {
+        enabled: true,
+        strictMode: baseLevel !== SecurityLevel.RELAXED,
+        maxInputLength: baseLevel === SecurityLevel.ENTERPRISE ? 5000 : 
+                       baseLevel === SecurityLevel.STRICT ? 10000 : 
+                       baseLevel === SecurityLevel.STANDARD ? 50000 : 100000,
+        allowedContentTypes: baseLevel === SecurityLevel.ENTERPRISE || baseLevel === SecurityLevel.STRICT ? 
+                           ['application/json'] : 
+                           baseLevel === SecurityLevel.STANDARD ? 
+                           ['application/json', 'text/plain'] : 
+                           ['application/json', 'text/plain', 'text/html'],
+        sanitizeByDefault: baseLevel !== SecurityLevel.RELAXED,
+      },
+      errorHandling: {
+        exposeStackTrace: baseLevel === SecurityLevel.RELAXED,
+        exposeErrorDetails: baseLevel === SecurityLevel.RELAXED,
+        logSensitiveErrors: baseLevel !== SecurityLevel.STRICT && baseLevel !== SecurityLevel.ENTERPRISE,
+        genericErrorMessage: baseLevel === SecurityLevel.ENTERPRISE ? 'Access denied.' :
+                            baseLevel === SecurityLevel.STRICT ? 'Request could not be processed.' :
+                            'An error occurred while processing your request.',
+      },
+      rateLimiting: {
+        enabled: baseLevel !== SecurityLevel.RELAXED,
+        windowMs: 60000,
+        maxRequests: baseLevel === SecurityLevel.ENTERPRISE ? 20 :
+                    baseLevel === SecurityLevel.STRICT ? 50 :
+                    baseLevel === SecurityLevel.STANDARD ? 100 : 1000,
+        skipSuccessfulRequests: baseLevel === SecurityLevel.STRICT || baseLevel === SecurityLevel.ENTERPRISE,
+      },
+      contentSecurity: {
+        enableCSP: baseLevel !== SecurityLevel.RELAXED,
+        allowInlineScripts: baseLevel === SecurityLevel.RELAXED,
+        allowInlineStyles: baseLevel === SecurityLevel.RELAXED,
+        trustedDomains: baseLevel === SecurityLevel.RELAXED ? ['*'] : [],
+      },
+      aiSecurity: {
+        enablePromptSanitization: baseLevel !== SecurityLevel.RELAXED,
+        maxPromptLength: baseLevel === SecurityLevel.ENTERPRISE ? 2000 :
+                        baseLevel === SecurityLevel.STRICT ? 5000 :
+                        baseLevel === SecurityLevel.STANDARD ? 10000 : 50000,
+        enableContentFiltering: baseLevel !== SecurityLevel.RELAXED,
+        logAIInteractions: baseLevel !== SecurityLevel.RELAXED,
+        enableInjectionProtection: baseLevel !== SecurityLevel.RELAXED,
+      },
+      customOptions: {},
+    };
     
     // Track overrides that weaken security
     const securityOverrides: ConfigurationOverride[] = [];
@@ -582,22 +635,19 @@ export class SecureConfigurationHelpers {
       acknowledgedRisks: boolean;
     };
   }): { config: SecurityConfig; warnings: SecurityWarning[] } {
-    const {
-      level = SecurityLevel.STANDARD,
-      environment,
-      overrides = {},
-      optOut
-    } = options;
-
-    // If environment is provided, set it in overrides
-    if (environment) {
-      overrides.environment = environment;
+    const manager = SecureDefaultsManager.getInstance();
+    
+    // Merge environment into overrides if provided
+    const overrides = { ...options.overrides };
+    if (options.environment) {
+      overrides.environment = options.environment;
     }
-
-    return secureDefaultsManager.createSecureConfigurationWithOptOut(
-      level,
+    
+    // Use the same approach as createSecureConfigurationWithOptOut
+    return manager.createSecureConfigurationWithOptOut(
+      options.level || SecurityLevel.STANDARD,
       overrides,
-      optOut
+      options.optOut
     );
   }
 

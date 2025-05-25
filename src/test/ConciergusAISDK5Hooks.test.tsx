@@ -22,52 +22,58 @@ jest.mock('../context/GatewayConfig', () => ({
 
 // Mock the useGateway hook to provide all necessary gateway methods
 jest.mock('../context/GatewayProvider', () => {
+  const React = require('react');
+  
+  // Create the mock gateway object inline to avoid hoisting issues
   let currentModel = 'openai/gpt-4o-mini';
   let currentChain = 'premium';
   
-  return {
-    ...jest.requireActual('../context/GatewayProvider'),
-    useGateway: jest.fn(() => ({
-      currentModel,
-      setCurrentModel: jest.fn((modelId) => {
-        currentModel = modelId;
-      }),
-      setCurrentChain: jest.fn((chainName) => {
-        currentChain = chainName;
-      }),
-      createModel: jest.fn((modelId) => ({
-        modelId,
-        generateText: jest.fn().mockResolvedValue({
-          text: `Mock response from ${modelId}`,
-          usage: { promptTokens: 10, completionTokens: 20 }
-        })
-      })),
-      executeWithFallback: jest.fn().mockResolvedValue({
-        success: true,
-        data: {
-          id: 'test-message-id',
-          role: 'assistant',
-          content: 'Test response',
-          createdAt: new Date(),
-          metadata: {
-            model: currentModel,
-            tokens: { input: 10, output: 20, total: 30 },
-            cost: 0.01,
-            responseTime: 500
-          }
-        },
-        finalModel: currentModel,
-        attempts: [{ modelId: currentModel, success: true }],
-        fallbacksUsed: 0
-      }),
-      debugManager: {
-        info: jest.fn(),
-        error: jest.fn()
-      },
-      systemHealth: jest.fn(() => ({ status: 'healthy' })),
-      systemDiagnostics: jest.fn(() => ({ uptime: 1000 }))
+  const mockGateway = {
+    currentModel,
+    setCurrentModel: jest.fn((modelId) => {
+      currentModel = modelId;
+    }),
+    setCurrentChain: jest.fn((chainName) => {
+      currentChain = chainName;
+    }),
+    createModel: jest.fn((modelId) => ({
+      modelId,
+      generateText: jest.fn().mockResolvedValue({
+        text: `Mock response from ${modelId}`,
+        usage: { promptTokens: 10, completionTokens: 20 }
+      })
     })),
-    GatewayProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', {}, children)
+    executeWithFallback: jest.fn().mockResolvedValue({
+      success: true,
+      data: {
+        id: 'test-message-id',
+        role: 'assistant',
+        content: 'Test response',
+        createdAt: new Date(),
+        metadata: {
+          model: currentModel,
+          tokens: { input: 10, output: 20, total: 30 },
+          cost: 0.01,
+          responseTime: 500
+        }
+      },
+      finalModel: currentModel,
+      attempts: [{ modelId: currentModel, success: true }],
+      fallbacksUsed: 0
+    }),
+    debugManager: {
+      info: jest.fn(),
+      error: jest.fn()
+    },
+    systemHealth: jest.fn(() => ({ status: 'healthy' })),
+    systemDiagnostics: jest.fn(() => ({ uptime: 1000 }))
+  };
+  
+  return {
+    useGateway: jest.fn(() => mockGateway),
+    GatewayProvider: ({ children }: { children: React.ReactNode }) => {
+      return React.createElement('div', { 'data-testid': 'mock-gateway-provider' }, children);
+    }
   };
 });
 

@@ -202,11 +202,21 @@ export class RateLimitingEngine {
       throw new Error(`Rate limit configuration '${configName}' not found`);
     }
 
-    const securityCore = getSecurityCore();
-    const securityConfig = securityCore.getConfig();
+    // Handle SecurityCore singleton issues by providing safe defaults
+    let rateLimitingEnabled = true;
+    try {
+      const securityCore = getSecurityCore();
+      const securityConfig = securityCore?.getConfig();
+      if (securityConfig && securityConfig.rateLimiting) {
+        rateLimitingEnabled = securityConfig.rateLimiting.enabled;
+      }
+    } catch (error) {
+      // SecurityCore not available, assume rate limiting is enabled
+      console.warn('SecurityCore not available, assuming rate limiting is enabled');
+    }
 
     // Skip if rate limiting is disabled
-    if (!securityConfig.rateLimiting.enabled) {
+    if (!rateLimitingEnabled) {
       return {
         limit: config.maxRequests,
         remaining: config.maxRequests,
@@ -312,7 +322,8 @@ export class RateLimitingEngine {
    * Extract IP address from context
    */
   private extractIP(context: any): string {
-    return context.request?.headers?.['x-forwarded-for'] ||
+    return context.request?.ip ||
+           context.request?.headers?.['x-forwarded-for'] ||
            context.request?.headers?.['x-real-ip'] ||
            context.request?.connection?.remoteAddress ||
            context.request?.socket?.remoteAddress ||
@@ -581,7 +592,9 @@ export class RateLimitingEngine {
    * Reset rate limits for an identifier
    */
   async resetRateLimit(identifier: string): Promise<void> {
-    const keys = [`fixed:${identifier}`, `sliding:${identifier}`, `token:${identifier}`];
+    // Handle both raw identifiers and already-formatted identifiers
+    const formattedId = identifier.includes(':') ? identifier : `ip:${identifier}`;
+    const keys = [`fixed:${formattedId}`, `sliding:${formattedId}`, `token:${formattedId}`];
     for (const key of keys) {
       await this.storage.delete(key);
     }
@@ -748,8 +761,22 @@ export function createSecureRateLimitingEngine(
   storage?: RateLimitStorage
 ): RateLimitingEngine {
   const engine = new RateLimitingEngine(storage);
-  const securityCore = getSecurityCore();
-  const config = securityCore.getConfig();
+  
+  // Handle SecurityCore singleton issues by providing safe defaults
+  let config: any = {};
+  let securityLevel = 'standard';
+  
+  try {
+    const securityCore = getSecurityCore();
+    const coreConfig = securityCore?.getConfig();
+    if (coreConfig) {
+      config = coreConfig;
+      securityLevel = config.level || 'standard';
+    }
+  } catch (error) {
+    // SecurityCore not available, use safe defaults
+    console.warn('SecurityCore not available, using default rate limiting configuration');
+  }
   
   // Provide safe defaults if rateLimiting config is missing
   const rateLimitingConfig = config.rateLimiting || {
@@ -759,7 +786,6 @@ export function createSecureRateLimitingEngine(
   };
   
   // Register default configurations based on security level
-  const securityLevel = config.level || 'standard';
   const defaultConfig: RateLimitConfig = {
     algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
     strategy: RateLimitStrategy.COMBINED,

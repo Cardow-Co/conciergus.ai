@@ -145,6 +145,12 @@ module.exports = {
   // Clear mocks between tests
   clearMocks: true,
   restoreMocks: true,
+  resetMocks: true,
+  
+  // Memory optimization
+  logHeapUsage: true,
+  detectOpenHandles: true,
+  forceExit: true,
   
   // Verbose output for better debugging
   verbose: false,
@@ -153,7 +159,9 @@ module.exports = {
   errorOnDeprecated: true,
   
   // Performance and memory settings
-  maxWorkers: '50%',
+  maxWorkers: process.env.CI ? 2 : '25%',
+  maxConcurrency: 5,
+  workerIdleMemoryLimit: '512MB',
   
   // Test timeout (increased for AI SDK operations)
   testTimeout: 10000,

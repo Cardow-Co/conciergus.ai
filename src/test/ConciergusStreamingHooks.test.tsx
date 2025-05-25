@@ -12,6 +12,18 @@ import {
 import { GatewayProvider } from '../context/GatewayProvider';
 import { ConciergusProvider } from '../context/ConciergusProvider';
 
+// Mock the gateway function from @vercel/ai-sdk-gateway
+jest.mock('@vercel/ai-sdk-gateway', () => ({
+  gateway: jest.fn((modelId: string) => ({
+    id: modelId,
+    provider: 'mock',
+    name: 'Mock Model',
+    generate: jest.fn(),
+    streamText: jest.fn(),
+    streamObject: jest.fn()
+  }))
+}));
+
 // Mock AI SDK 5 functions
 jest.mock('ai', () => ({
   streamText: jest.fn(),
@@ -19,11 +31,60 @@ jest.mock('ai', () => ({
   generateId: jest.fn(() => 'test-id-123')
 }));
 
+// Import the mocked generateId to ensure it's working
+import { generateId } from 'ai';
+const mockGenerateId = generateId as jest.MockedFunction<typeof generateId>;
+
 // Import mocked functions for testing
 import { streamText as aiStreamText, streamObject as aiStreamObject } from 'ai';
 
 const mockStreamText = aiStreamText as jest.MockedFunction<typeof aiStreamText>;
 const mockStreamObject = aiStreamObject as jest.MockedFunction<typeof aiStreamObject>;
+
+// Mock the GatewayProvider context
+jest.mock('../context/GatewayProvider', () => {
+  const React = require('react');
+  const originalModule = jest.requireActual('../context/GatewayProvider');
+  
+  const MockGatewayContext = React.createContext(null);
+  
+  return {
+    ...originalModule,
+    GatewayProvider: ({ children }: { children: React.ReactNode }) => {
+      const mockGateway = {
+        getCurrentModel: jest.fn(() => 'gpt-4'),
+        createModel: jest.fn(() => ({ id: 'gpt-4', name: 'GPT-4' })),
+        getModel: jest.fn(() => ({ id: 'gpt-4', name: 'GPT-4' })),
+        debugManager: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn()
+        }
+      };
+      
+      return React.createElement(
+        MockGatewayContext.Provider,
+        { value: mockGateway },
+        children
+      );
+    },
+    useGateway: () => {
+      const mockGateway = {
+        getCurrentModel: jest.fn(() => 'gpt-4'),
+        createModel: jest.fn(() => ({ id: 'gpt-4', name: 'GPT-4' })),
+        getModel: jest.fn(() => ({ id: 'gpt-4', name: 'GPT-4' })),
+        debugManager: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn()
+        }
+      };
+      return mockGateway;
+    }
+  };
+});
 
 // Mock gateway provider
 const mockGateway = {
@@ -42,7 +103,7 @@ const mockGateway = {
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <ConciergusProvider>
-      <GatewayProvider value={mockGateway as any}>
+      <GatewayProvider>
         {children}
       </GatewayProvider>
     </ConciergusProvider>
@@ -387,6 +448,8 @@ describe('useConciergusObjectStream Hook', () => {
 describe('useConciergusDataParts Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Ensure generateId mock returns the expected value
+    mockGenerateId.mockReturnValue('test-id-123');
   });
 
   it('should initialize with default configuration', () => {
@@ -572,6 +635,8 @@ describe('useConciergusDataParts Hook', () => {
 describe('useConciergusGenerativeUI Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Ensure generateId mock returns the expected value
+    mockGenerateId.mockReturnValue('test-id-123');
   });
 
   it('should initialize with default configuration', () => {
