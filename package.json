@@ -205,7 +205,7 @@
     "prettier": "^3.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "redoc-cli": "^0.13.21",
+    "@redocly/cli": "^1.4.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",

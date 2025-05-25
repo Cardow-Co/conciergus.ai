@@ -212,7 +212,7 @@ function generateRedocDocs() {
     ensureDir(path.dirname(outputPath));
     
     const sourcePath = path.resolve(config.openapi.source);
-    const cmd = `npx redoc-cli build "${sourcePath}" --output "${outputPath}" --title "Conciergus Chat API" --theme.colors.primary.main="#1976d2"`;
+        const cmd = `npx @redocly/cli build-docs "${sourcePath}" --output "${outputPath}" --title "Conciergus Chat API"`;  
     execSync(cmd, { stdio: 'inherit' });
     
     log(`Redoc documentation generated: ${outputPath}`);
