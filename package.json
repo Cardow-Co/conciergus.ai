@@ -102,20 +102,12 @@
     "docs:dev": "storybook dev -p 6006",
     "docs:serve": "npx serve docs",
     "docs:preview": "pnpm run docs:build && pnpm run docs:serve",
-    "contributor:setup": "node scripts/contributor-setup.js",
-    "contributor:metrics": "node scripts/contributor-metrics.js",
-    "contributor:dashboard": "node scripts/contributor-metrics.js dashboard",
-    "contributor:report": "node scripts/contributor-metrics.js report",
-    "contributor:health": "node scripts/contributor-metrics.js health",
+
     "dev:helper": "node scripts/dev-helper.js",
     "dev:quick-check": "node scripts/dev-helper.js quick-check",
     "dev:clean-install": "node scripts/dev-helper.js clean-install",
     "dev:full-test": "node scripts/dev-helper.js full-test",
-    "roadmap": "node scripts/roadmap-tracker.js",
-    "roadmap:report": "node scripts/roadmap-tracker.js report",
-    "roadmap:next": "node scripts/roadmap-tracker.js next",
-    "roadmap:validate": "node scripts/roadmap-tracker.js validate",
-    "roadmap:issues": "node scripts/roadmap-tracker.js issues"
+
   },
   "peerDependencies": {
     "react": "^19.1.0",

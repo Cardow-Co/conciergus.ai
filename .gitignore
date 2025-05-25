@@ -59,3 +59,17 @@ pids
 !/docs/api/openapi.yaml
 /docs/storybook
 .vercel
+
+# Task management (development only)
+/tasks
+.taskmasterconfig
+README-task-master.md
+
+# Development scripts output
+test-results.txt
+.contributor-metrics.json
+
+# Build caches
+.rollup.cache
+packages/*/node_modules
+packages/*/.rollup.cache
