@@ -496,11 +496,7 @@ export class EnterpriseTelemetryManager {
       }
     );
 
-    ConciergusLogger.error('Custom error reported', {
-      error: enhancedError,
-      category: errorCategory,
-      context,
-    });
+    ConciergusLogger.error('Custom error reported', enhancedError);
   }
 
   /**

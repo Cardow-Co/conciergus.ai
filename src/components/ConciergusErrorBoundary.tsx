@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 // Enhanced error types for enterprise error handling
 export type ErrorCategory = 'network' | 'validation' | 'authorization' | 'system' | 'ai_provider' | 'rate_limit' | 'unknown';
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical' | 'error' | 'warning' | 'info';
 
 export interface ConciergusError extends Error {
   category?: ErrorCategory;
@@ -253,7 +253,7 @@ const enhanceError = (
     error.message.includes('timeout') ||
     error.message.includes('Timeout')
   ) {
-    enhanced.category = 'timeout';
+    enhanced.category = 'network';
     enhanced.severity = 'warning';
     enhanced.userMessage = 'Request timed out. Please try again.';
     enhanced.recoverySuggestions = [
@@ -265,7 +265,7 @@ const enhanceError = (
     error.message.includes('401') ||
     error.message.includes('Unauthorized')
   ) {
-    enhanced.category = 'authentication';
+    enhanced.category = 'authorization';
     enhanced.severity = 'error';
     enhanced.userMessage = 'Authentication failed. Please sign in again.';
     enhanced.recoverySuggestions = [
@@ -277,7 +277,7 @@ const enhanceError = (
     error.message.includes('rate limit') ||
     error.message.includes('429')
   ) {
-    enhanced.category = 'rateLimit';
+    enhanced.category = 'rate_limit';
     enhanced.severity = 'warning';
     enhanced.userMessage =
       'Too many requests. Please wait a moment before trying again.';
@@ -287,7 +287,7 @@ const enhanceError = (
       'Upgrade your plan for higher limits',
     ];
   } else {
-    enhanced.category = 'ui';
+    enhanced.category = 'system';
     enhanced.severity = 'error';
     enhanced.userMessage =
       "Something went wrong. We're working to fix this issue.";
@@ -368,6 +368,9 @@ const DefaultFallbackComponent: React.FC<FallbackComponentProps> = ({
             {error.severity === 'error' && '❌'}
             {error.severity === 'warning' && '⚠️'}
             {error.severity === 'info' && 'ℹ️'}
+            {error.severity === 'high' && '⚠️'}
+            {error.severity === 'medium' && 'ℹ️'}
+            {error.severity === 'low' && '💡'}
           </div>
           <h1 className="error-title">
             {error.userMessage || 'Something went wrong'}

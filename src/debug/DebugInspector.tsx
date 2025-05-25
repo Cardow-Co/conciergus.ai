@@ -104,7 +104,7 @@ export const ConciergusDebugInspector: React.FC<DebugInspectorProps> = ({
   const exportData = () => {
     const data = {
       logs: debug.exportLogs('json'),
-      metrics: debug.exportMetrics('json'),
+      metrics: debug.exportPerformanceMetrics(),
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], {

@@ -148,7 +148,7 @@ describe('ConciergusErrorBoundary', () => {
 
       fireEvent.click(screen.getByText('Technical Details'));
       expect(screen.getByText('Category:')).toBeInTheDocument();
-      expect(screen.getByText('timeout')).toBeInTheDocument();
+      expect(screen.getByText('network')).toBeInTheDocument();
       expect(screen.getByText(/Request timed out/)).toBeInTheDocument();
     });
 
@@ -161,7 +161,7 @@ describe('ConciergusErrorBoundary', () => {
 
       fireEvent.click(screen.getByText('Technical Details'));
       expect(screen.getByText('Category:')).toBeInTheDocument();
-      expect(screen.getByText('authentication')).toBeInTheDocument();
+      expect(screen.getByText('authorization')).toBeInTheDocument();
       expect(screen.getByText(/Authentication failed/)).toBeInTheDocument();
     });
 
@@ -174,7 +174,7 @@ describe('ConciergusErrorBoundary', () => {
 
       fireEvent.click(screen.getByText('Technical Details'));
       expect(screen.getByText('Category:')).toBeInTheDocument();
-      expect(screen.getByText('rateLimit')).toBeInTheDocument();
+      expect(screen.getByText('rate_limit')).toBeInTheDocument();
       expect(screen.getByText(/Too many requests/)).toBeInTheDocument();
     });
   });
