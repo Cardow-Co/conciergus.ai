@@ -156,6 +156,9 @@
       },
       "Exa (Metaphor) API Client (Example for Web Search Tool)": {
         "url": "null"
+      },
+      "zod": {
+        "url": "https://gitmcp.io/colinhacks/zod"
       }
     }
   }
