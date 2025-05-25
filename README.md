@@ -19,13 +19,13 @@ A comprehensive React component library built on top of AI SDK 5 Alpha for creat
 
 ```bash
 # Using pnpm (recommended)
-pnpm add @conciergus/ai ai
+pnpm add @conciergus/chat ai
 
 # Using npm
-npm install @conciergus/ai ai
+npm install @conciergus/chat ai
 
 # Using yarn
-yarn add @conciergus/ai ai
+yarn add @conciergus/chat ai
 ```
 
 **Note**: This library requires AI SDK 5 Alpha (`ai@^5.0.0-alpha`) as a peer dependency.
@@ -35,7 +35,7 @@ yarn add @conciergus/ai ai
 Wrap your application with the `ConciergusProvider`:
 
 ```tsx
-import { ConciergusProvider } from '@conciergus/ai';
+import { ConciergusProvider } from '@conciergus/chat';
 import { createAnthropic } from '@ai-sdk/anthropic';
 
 const anthropic = createAnthropic({
@@ -60,7 +60,7 @@ function App() {
 ### 3. Add a Chat Widget
 
 ```tsx
-import { ConciergusChatWidget } from '@conciergus/ai';
+import { ConciergusChatWidget } from '@conciergus/chat';
 
 function ChatPage() {
   return (
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
 For enterprise deployments with multiple AI providers:
 
 ```tsx
-import { ConciergusProvider, createAIGateway } from '@conciergus/ai';
+import { ConciergusProvider, createAIGateway } from '@conciergus/chat';
 
 const gateway = createAIGateway({
   providers: [
@@ -148,7 +148,7 @@ const gateway = createAIGateway({
 Use Conciergus hooks for fine-grained control:
 
 ```tsx
-import { useConciergusChat, useConciergusAgent } from '@conciergus/ai';
+import { useConciergusChat, useConciergusAgent } from '@conciergus/chat';
 
 function CustomChatComponent() {
   const { messages, append, isLoading, metadata } = useConciergusChat({
@@ -207,7 +207,7 @@ function CustomChatComponent() {
 Enable voice capabilities:
 
 ```tsx
-import { ConciergusVoiceRecorder, ConciergusAudioPlayer } from '@conciergus/ai';
+import { ConciergusVoiceRecorder, ConciergusAudioPlayer } from '@conciergus/chat';
 
 function VoiceChat() {
   return (
@@ -251,7 +251,7 @@ If you're upgrading from AI SDK 4.x:
 
 1. **Update Dependencies**:
    ```bash
-   pnpm add ai@^5.0.0-alpha @conciergus/ai
+   pnpm add ai@^5.0.0-alpha @conciergus/chat
    ```
 
 2. **Update Import Paths**:
@@ -260,7 +260,7 @@ If you're upgrading from AI SDK 4.x:
    import { useChat } from 'ai/react';
    
    // After (AI SDK 5 + Conciergus)
-   import { useConciergusChat } from '@conciergus/ai';
+   import { useConciergusChat } from '@conciergus/chat';
    ```
 
 3. **Update Configuration**:
