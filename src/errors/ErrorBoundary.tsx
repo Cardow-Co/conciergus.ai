@@ -1,62 +1,45 @@
-import React, { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
-import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
+/**
+ * Error Boundary Components
+ * React error boundaries for UI resilience with fallback components and error logging
+ */
+
+import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
 
 /**
- * Error categories for classification
+ * Error boundary configuration
  */
-export enum ErrorCategory {
-  NETWORK = 'network',
-  VALIDATION = 'validation',
-  AUTHENTICATION = 'authentication',
-  AUTHORIZATION = 'authorization',
-  RATE_LIMIT = 'rate_limit',
-  SYSTEM = 'system',
-  UI = 'ui',
-  AI_PROVIDER = 'ai_provider',
-  CONFIGURATION = 'configuration',
-  UNKNOWN = 'unknown'
+export interface ErrorBoundaryConfig {
+  // UI configuration
+  showErrorDetails: boolean;
+  enableRetry: boolean;
+  enableReporting: boolean;
+  
+  // Fallback configuration
+  fallbackComponent?: React.ComponentType<ErrorFallbackProps>;
+  level: 'page' | 'section' | 'component';
+  
+  // Error handling
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onReset?: () => void;
+  isolateErrors: boolean; // Prevent error propagation to parent boundaries
+  
+  // Recovery configuration
+  autoRetry: boolean;
+  retryDelay: number; // milliseconds
+  maxRetries: number;
 }
 
 /**
- * Error severity levels
+ * Error fallback component props
  */
-export enum ErrorSeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
-}
-
-/**
- * Enhanced error structure
- */
-export interface ConciergusError extends Error {
-  category: ErrorCategory;
-  severity: ErrorSeverity;
-  code?: string;
-  context?: Record<string, any>;
-  timestamp: Date;
-  userId?: string;
-  sessionId?: string;
-  requestId?: string;
-  retryable: boolean;
-  originalError?: Error;
-}
-
-/**
- * Error boundary props
- */
-export interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: (error: ConciergusError, retry: () => void) => ReactNode;
-  onError?: (error: ConciergusError, errorInfo: ErrorInfo) => void;
-  enableReporting?: boolean;
-  enableTelemetry?: boolean;
-  maxRetries?: number;
-  retryDelay?: number;
-  isolateFailures?: boolean;
-  category?: ErrorCategory;
+export interface ErrorFallbackProps {
+  error: Error;
+  errorInfo: ErrorInfo;
+  resetError: () => void;
+  retryCount: number;
+  canRetry: boolean;
+  level: ErrorBoundaryConfig['level'];
 }
 
 /**
@@ -64,576 +47,686 @@ export interface ErrorBoundaryProps {
  */
 interface ErrorBoundaryState {
   hasError: boolean;
-  error: ConciergusError | null;
+  error: Error | null;
   errorInfo: ErrorInfo | null;
   retryCount: number;
-  isRetrying: boolean;
+  errorId: string | null;
+  timestamp: Date | null;
 }
 
 /**
- * Enterprise error boundary with comprehensive error handling
+ * Error details for reporting
  */
-export class ConciergusErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeout: NodeJS.Timeout | null = null;
+interface ErrorDetails {
+  error: Error;
+  errorInfo: ErrorInfo;
+  errorId: string;
+  timestamp: Date;
+  userAgent: string;
+  url: string;
+  userId?: string;
+  level: ErrorBoundaryConfig['level'];
+  retryCount: number;
+  componentStack: string;
+}
 
-  constructor(props: ErrorBoundaryProps) {
+/**
+ * Base Error Boundary Component
+ */
+export class ErrorBoundary extends Component<
+  React.PropsWithChildren<{
+    config: ErrorBoundaryConfig;
+    name?: string;
+    userId?: string;
+  }>,
+  ErrorBoundaryState
+> {
+  private performanceMonitor: PerformanceMonitor | null = null;
+  private retryTimer: NodeJS.Timeout | null = null;
+  private name: string;
+
+  constructor(props: React.PropsWithChildren<{ config: ErrorBoundaryConfig; name?: string; userId?: string }>) {
     super(props);
+    
+    this.name = props.name || 'ErrorBoundary';
+    this.performanceMonitor = PerformanceMonitor.getInstance();
     
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
       retryCount: 0,
-      isRetrying: false,
+      errorId: null,
+      timestamp: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     return {
       hasError: true,
-      error: ConciergusErrorBoundary.enhanceError(error),
+      error,
+      errorId,
+      timestamp: new Date(),
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const enhancedError = ConciergusErrorBoundary.enhanceError(error, this.props.category);
-    
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({
-      error: enhancedError,
       errorInfo,
     });
 
-    // Report error to telemetry
-    if (this.props.enableTelemetry !== false) {
-      this.reportToTelemetry(enhancedError, errorInfo);
+    // Log error details
+    this.logError(error, errorInfo);
+    
+    // Report error if enabled
+    if (this.props.config.enableReporting) {
+      this.reportError(error, errorInfo);
     }
-
+    
     // Call custom error handler
-    if (this.props.onError) {
-      this.props.onError(enhancedError, errorInfo);
-    }
-
-    // Report to external systems
-    if (this.props.enableReporting !== false) {
-      this.reportError(enhancedError, errorInfo);
-    }
-
-    // Auto-retry for retryable errors
-    if (enhancedError.retryable && this.state.retryCount < (this.props.maxRetries || 3)) {
+    this.props.config.onError?.(error, errorInfo);
+    
+    // Schedule auto-retry if enabled
+    if (this.props.config.autoRetry && this.state.retryCount < this.props.config.maxRetries) {
       this.scheduleRetry();
     }
   }
 
-  componentWillUnmount() {
-    if (this.retryTimeout) {
-      clearTimeout(this.retryTimeout);
+  componentWillUnmount(): void {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
     }
   }
 
-  static enhanceError(error: Error, category?: ErrorCategory): ConciergusError {
-    const enhanced = error as ConciergusError;
+  /**
+   * Log error details
+   */
+  private logError(error: Error, errorInfo: ErrorInfo): void {
+    const errorDetails: ErrorDetails = {
+      error,
+      errorInfo,
+      errorId: this.state.errorId!,
+      timestamp: this.state.timestamp!,
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      userId: this.props.userId,
+      level: this.props.config.level,
+      retryCount: this.state.retryCount,
+      componentStack: errorInfo.componentStack,
+    };
+
+    console.error(`[${this.name}] Error caught:`, errorDetails);
     
-    // Add enhancement if not already enhanced
-    if (!enhanced.category) {
-      enhanced.category = category || ConciergusErrorBoundary.categorizeError(error);
-      enhanced.severity = ConciergusErrorBoundary.determineSeverity(error, enhanced.category);
-      enhanced.timestamp = new Date();
-      enhanced.retryable = ConciergusErrorBoundary.isRetryable(error, enhanced.category);
-      enhanced.originalError = error;
-      
-      // Extract additional context
-      enhanced.context = {
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-        timestamp: enhanced.timestamp.toISOString(),
-        stackTrace: error.stack,
-      };
-    }
-    
-    return enhanced;
-  }
-
-private static categorizeError(error: Error): ErrorCategory {
-   // Check for specific error types first
-   if (error instanceof TypeError && error.name === 'NetworkError') {
-     return ErrorCategory.NETWORK;
-   }
-   
-   // Check for custom error properties
-   if ('category' in error && typeof error.category === 'string') {
-     return error.category as ErrorCategory;
-   }
-   
-   // Check error codes (more reliable than message strings)
-   if ('code' in error) {
-     const code = error.code;
-     if (code === 'NETWORK_ERROR' || code === 'FETCH_ERROR') {
-       return ErrorCategory.NETWORK;
-     }
-     if (code === 401 || code === 'UNAUTHORIZED') {
-       return ErrorCategory.AUTHENTICATION;
-     }
-   }
-   
-    const message = error.message.toLowerCase();
-    const name = error.name.toLowerCase();
-    
-   // Fallback to string matching with more specific patterns
-   if (/network|fetch|connection|timeout/i.test(message + name)) {
-      return ErrorCategory.NETWORK;
-    }
-    if (message.includes('401') || message.includes('unauthorized') || message.includes('auth')) {
-      return ErrorCategory.AUTHENTICATION;
-    }
-    if (message.includes('403') || message.includes('forbidden')) {
-      return ErrorCategory.AUTHORIZATION;
-    }
-    if (message.includes('429') || message.includes('rate limit')) {
-      return ErrorCategory.RATE_LIMIT;
-    }
-    if (message.includes('validation') || message.includes('invalid')) {
-      return ErrorCategory.VALIDATION;
-    }
-    if (message.includes('ai') || message.includes('model') || message.includes('provider')) {
-      return ErrorCategory.AI_PROVIDER;
-    }
-    if (message.includes('config') || message.includes('configuration')) {
-      return ErrorCategory.CONFIGURATION;
-    }
-    if (name.includes('typeerror') || name.includes('referenceerror')) {
-      return ErrorCategory.UI;
-    }
-    
-    return ErrorCategory.UNKNOWN;
-  }
-
-  private static determineSeverity(error: Error, category: ErrorCategory): ErrorSeverity {
-    switch (category) {
-      case ErrorCategory.SYSTEM:
-      case ErrorCategory.CONFIGURATION:
-        return ErrorSeverity.CRITICAL;
-      case ErrorCategory.AUTHENTICATION:
-      case ErrorCategory.AUTHORIZATION:
-      case ErrorCategory.AI_PROVIDER:
-        return ErrorSeverity.HIGH;
-      case ErrorCategory.NETWORK:
-      case ErrorCategory.RATE_LIMIT:
-        return ErrorSeverity.MEDIUM;
-      case ErrorCategory.VALIDATION:
-      case ErrorCategory.UI:
-        return ErrorSeverity.LOW;
-      default:
-        return ErrorSeverity.MEDIUM;
-    }
-  }
-
-  private static isRetryable(error: Error, category: ErrorCategory): boolean {
-    switch (category) {
-      case ErrorCategory.NETWORK:
-      case ErrorCategory.RATE_LIMIT:
-      case ErrorCategory.AI_PROVIDER:
-        return true;
-      case ErrorCategory.AUTHENTICATION:
-      case ErrorCategory.AUTHORIZATION:
-      case ErrorCategory.VALIDATION:
-      case ErrorCategory.CONFIGURATION:
-        return false;
-      default:
-        return false;
-    }
-  }
-
-private reportToTelemetry(error: ConciergusError, errorInfo: ErrorInfo) {
-   try {
-     // Prevent infinite recursion by checking if this is already a telemetry error
-     if (error.context?.isTelemetryError) {
-       console.warn('Skipping telemetry for telemetry error to prevent recursion');
-       return;
-     }
-
-      ConciergusOpenTelemetry.createSpan(
-        'conciergus-error-boundary',
-        'error-caught',
-        async (span) => {
-          span?.setAttributes({
-            'error.category': error.category,
-            'error.severity': error.severity,
-            'error.name': error.name,
-            'error.message': error.message,
-            'error.retryable': error.retryable,
-            'error.code': error.code || '',
-            'error.user_id': error.userId || '',
-            'error.session_id': error.sessionId || '',
-            'error.request_id': error.requestId || '',
-          });
-
-          span?.recordException(error);
-        }
-      );
-
-      ConciergusOpenTelemetry.recordMetric(
-        'conciergus-error-boundary',
-        'errors.total',
+    // Record to performance monitor
+    if (this.performanceMonitor) {
+      this.performanceMonitor.recordMetric(
+        'error_boundary_triggered' as any,
         1,
         {
-          category: error.category,
-          severity: error.severity,
-          retryable: String(error.retryable),
-        }
+          errorBoundaryName: this.name,
+          level: this.props.config.level,
+          errorMessage: error.message,
+          errorId: this.state.errorId,
+        },
+        'error-boundary'
       );
-   } catch (telemetryError) {
-     console.error('Telemetry reporting failed:', telemetryError);
-     // Don't rethrow to avoid infinite recursion
-   }
+    }
   }
 
-  private async reportError(error: ConciergusError, errorInfo: ErrorInfo) {
+  /**
+   * Report error to external service
+   */
+  private async reportError(error: Error, errorInfo: ErrorInfo): Promise<void> {
     try {
-      // This would typically send to your error reporting service
-      // (Sentry, Bugsnag, etc.)
-      console.error('🚨 Error Boundary caught error:', {
+      const errorDetails: ErrorDetails = {
         error: {
           name: error.name,
           message: error.message,
-          category: error.category,
-          severity: error.severity,
           stack: error.stack,
-          context: error.context,
-        },
-        errorInfo: {
-          componentStack: errorInfo.componentStack,
-        },
-        metadata: {
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-        },
-      });
+        } as Error,
+        errorInfo,
+        errorId: this.state.errorId!,
+        timestamp: this.state.timestamp!,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
+        url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+        userId: this.props.userId,
+        level: this.props.config.level,
+        retryCount: this.state.retryCount,
+        componentStack: errorInfo.componentStack,
+      };
+
+      // This would typically send to an error reporting service
+      // For example: Sentry, Bugsnag, LogRocket, etc.
+      console.log('Error reported:', errorDetails);
+      
+      // Mock API call for error reporting
+      if (typeof window !== 'undefined' && 'fetch' in window) {
+        await fetch('/api/errors', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(errorDetails),
+        }).catch(reportingError => {
+          console.warn('Failed to report error:', reportingError);
+        });
+      }
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
+      console.warn('Error reporting failed:', reportingError);
     }
   }
 
-private scheduleRetry = () => {
-    this.setState({ isRetrying: true });
-    
-   const baseDelay = this.props.retryDelay || 1000;
-   const exponentialDelay = baseDelay * Math.pow(2, this.state.retryCount);
-   // Cap maximum delay at 30 seconds
-   const delay = Math.min(exponentialDelay, 30000);
-    
-    this.retryTimeout = setTimeout(() => {
-     // Check if component is still mounted
-     if (!this.retryTimeout) return;
-     
+  /**
+   * Schedule automatic retry
+   */
+  private scheduleRetry(): void {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+    }
+
+    this.retryTimer = setTimeout(() => {
+      this.handleRetry();
+    }, this.props.config.retryDelay);
+  }
+
+  /**
+   * Handle retry attempt
+   */
+  private handleRetry = (): void => {
+    if (this.state.retryCount < this.props.config.maxRetries) {
       this.setState(prevState => ({
         hasError: false,
         error: null,
         errorInfo: null,
         retryCount: prevState.retryCount + 1,
-        isRetrying: false,
+        errorId: null,
+        timestamp: null,
       }));
-    }, delay);
+
+      this.props.config.onReset?.();
+      
+      if (this.performanceMonitor) {
+        this.performanceMonitor.recordMetric(
+          'error_boundary_retry' as any,
+          1,
+          {
+            errorBoundaryName: this.name,
+            retryCount: this.state.retryCount + 1,
+          },
+          'error-boundary'
+        );
+      }
+    }
   };
 
-  private retry = () => {
+  /**
+   * Manual reset error state
+   */
+  private resetError = (): void => {
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
       retryCount: 0,
-      isRetrying: false,
+      errorId: null,
+      timestamp: null,
     });
+
+    this.props.config.onReset?.();
+    
+    if (this.performanceMonitor) {
+      this.performanceMonitor.recordMetric(
+        'error_boundary_manual_reset' as any,
+        1,
+        { errorBoundaryName: this.name },
+        'error-boundary'
+      );
+    }
   };
 
-  private renderFallback() {
-    const { error } = this.state;
-    const { fallback } = this.props;
-    
-    if (fallback && error) {
-      return fallback(error, this.retry);
-    }
-    
-    return (
-      <DefaultErrorFallback 
-        error={error} 
-        retry={this.retry}
-        isRetrying={this.state.isRetrying}
-        retryCount={this.state.retryCount}
-        maxRetries={this.props.maxRetries || 3}
-      />
-    );
-  }
+  render(): ReactNode {
+    if (this.state.hasError && this.state.error && this.state.errorInfo) {
+      const canRetry = this.props.config.enableRetry && this.state.retryCount < this.props.config.maxRetries;
+      
+      // Use custom fallback component if provided
+      if (this.props.config.fallbackComponent) {
+        const FallbackComponent = this.props.config.fallbackComponent;
+        return (
+          <FallbackComponent
+            error={this.state.error}
+            errorInfo={this.state.errorInfo}
+            resetError={this.resetError}
+            retryCount={this.state.retryCount}
+            canRetry={canRetry}
+            level={this.props.config.level}
+          />
+        );
+      }
 
-  render() {
-    if (this.state.hasError) {
-      return this.renderFallback();
+      // Default fallback UI based on level
+      return this.renderDefaultFallback(canRetry);
     }
 
     return this.props.children;
   }
+
+  /**
+   * Render default fallback UI
+   */
+  private renderDefaultFallback(canRetry: boolean): ReactNode {
+    const { error, errorInfo, retryCount, errorId } = this.state;
+    const { config } = this.props;
+
+    switch (config.level) {
+      case 'page':
+        return (
+          <div style={styles.pageError}>
+            <div style={styles.errorContainer}>
+              <h1 style={styles.errorTitle}>Something went wrong</h1>
+              <p style={styles.errorDescription}>
+                We're sorry, but something unexpected happened. Please try refreshing the page.
+              </p>
+              
+              {canRetry && (
+                <button style={styles.retryButton} onClick={this.resetError}>
+                  Try Again {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
+                </button>
+              )}
+              
+              <button style={styles.reloadButton} onClick={() => window.location.reload()}>
+                Reload Page
+              </button>
+              
+              {config.showErrorDetails && (
+                <details style={styles.errorDetails}>
+                  <summary>Error Details</summary>
+                  <div style={styles.errorContent}>
+                    <p><strong>Error ID:</strong> {errorId}</p>
+                    <p><strong>Error:</strong> {error?.message}</p>
+                    <pre style={styles.errorStack}>{error?.stack}</pre>
+                    {errorInfo && (
+                      <pre style={styles.componentStack}>{errorInfo.componentStack}</pre>
+                    )}
+                  </div>
+                </details>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'section':
+        return (
+          <div style={styles.sectionError}>
+            <div style={styles.errorContainer}>
+              <h2 style={styles.errorTitle}>Section unavailable</h2>
+              <p style={styles.errorDescription}>
+                This section is temporarily unavailable. Please try again.
+              </p>
+              
+              {canRetry && (
+                <button style={styles.retryButton} onClick={this.resetError}>
+                  Retry {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
+                </button>
+              )}
+              
+              {config.showErrorDetails && (
+                <details style={styles.errorDetails}>
+                  <summary>Technical Details</summary>
+                  <div style={styles.errorContent}>
+                    <p><strong>Error ID:</strong> {errorId}</p>
+                    <p><strong>Error:</strong> {error?.message}</p>
+                  </div>
+                </details>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'component':
+        return (
+          <div style={styles.componentError}>
+            <span style={styles.componentErrorIcon}>⚠️</span>
+            <span style={styles.componentErrorText}>
+              Component error
+              {canRetry && (
+                <button style={styles.inlineRetryButton} onClick={this.resetError}>
+                  retry
+                </button>
+              )}
+            </span>
+          </div>
+        );
+
+      default:
+        return (
+          <div style={styles.genericError}>
+            <p>An error occurred</p>
+            {canRetry && (
+              <button style={styles.retryButton} onClick={this.resetError}>
+                Retry
+              </button>
+            )}
+          </div>
+        );
+    }
+  }
 }
 
 /**
- * Default error fallback component
+ * Specialized Error Boundaries
  */
-interface DefaultErrorFallbackProps {
-  error: ConciergusError | null;
-  retry: () => void;
-  isRetrying: boolean;
-  retryCount: number;
-  maxRetries: number;
-}
 
-function DefaultErrorFallback({ 
-  error, 
-  retry, 
-  isRetrying, 
-  retryCount, 
-  maxRetries 
-}: DefaultErrorFallbackProps) {
-  if (!error) return null;
+/**
+ * Page-level error boundary
+ */
+export const PageErrorBoundary: React.FC<React.PropsWithChildren<{
+  name?: string;
+  userId?: string;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  showErrorDetails?: boolean;
+}>> = ({ children, name = 'PageErrorBoundary', userId, onError, showErrorDetails = false }) => (
+  <ErrorBoundary
+    config={{
+      level: 'page',
+      showErrorDetails,
+      enableRetry: true,
+      enableReporting: true,
+      autoRetry: false,
+      retryDelay: 2000,
+      maxRetries: 3,
+      isolateErrors: false,
+      onError,
+    }}
+    name={name}
+    userId={userId}
+  >
+    {children}
+  </ErrorBoundary>
+);
 
-  const getSeverityColor = (severity: ErrorSeverity) => {
-    switch (severity) {
-      case ErrorSeverity.CRITICAL: return '#dc2626';
-      case ErrorSeverity.HIGH: return '#ea580c';
-      case ErrorSeverity.MEDIUM: return '#d97706';
-      case ErrorSeverity.LOW: return '#65a30d';
-      default: return '#6b7280';
-    }
-  };
+/**
+ * Section-level error boundary
+ */
+export const SectionErrorBoundary: React.FC<React.PropsWithChildren<{
+  name?: string;
+  userId?: string;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  enableAutoRetry?: boolean;
+}>> = ({ children, name = 'SectionErrorBoundary', userId, onError, enableAutoRetry = true }) => (
+  <ErrorBoundary
+    config={{
+      level: 'section',
+      showErrorDetails: false,
+      enableRetry: true,
+      enableReporting: true,
+      autoRetry: enableAutoRetry,
+      retryDelay: 1000,
+      maxRetries: 2,
+      isolateErrors: true,
+      onError,
+    }}
+    name={name}
+    userId={userId}
+  >
+    {children}
+  </ErrorBoundary>
+);
 
-  const getCategoryIcon = (category: ErrorCategory) => {
-    switch (category) {
-      case ErrorCategory.NETWORK: return '🌐';
-      case ErrorCategory.AUTHENTICATION: return '🔐';
-      case ErrorCategory.AUTHORIZATION: return '🚫';
-      case ErrorCategory.AI_PROVIDER: return '🤖';
-      case ErrorCategory.RATE_LIMIT: return '⏱️';
-      case ErrorCategory.VALIDATION: return '⚠️';
-      case ErrorCategory.CONFIGURATION: return '⚙️';
-      case ErrorCategory.UI: return '💻';
-      case ErrorCategory.SYSTEM: return '🔧';
-      default: return '❌';
-    }
-  };
+/**
+ * Component-level error boundary
+ */
+export const ComponentErrorBoundary: React.FC<React.PropsWithChildren<{
+  name?: string;
+  userId?: string;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  fallback?: React.ComponentType<ErrorFallbackProps>;
+}>> = ({ children, name = 'ComponentErrorBoundary', userId, onError, fallback }) => (
+  <ErrorBoundary
+    config={{
+      level: 'component',
+      showErrorDetails: false,
+      enableRetry: true,
+      enableReporting: false,
+      autoRetry: true,
+      retryDelay: 500,
+      maxRetries: 1,
+      isolateErrors: true,
+      onError,
+      fallbackComponent: fallback,
+    }}
+    name={name}
+    userId={userId}
+  >
+    {children}
+  </ErrorBoundary>
+);
 
-  return (
-    <div style={{
-      padding: '20px',
-      border: `2px solid ${getSeverityColor(error.severity)}`,
-      borderRadius: '8px',
-      backgroundColor: '#fafafa',
-      margin: '10px',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-        <span style={{ fontSize: '24px', marginRight: '10px' }}>
-          {getCategoryIcon(error.category)}
-        </span>
-        <div>
-          <h3 style={{ margin: 0, color: getSeverityColor(error.severity) }}>
-            {error.category.toUpperCase()} Error ({error.severity.toUpperCase()})
-          </h3>
-          <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
-            {error.message}
-          </p>
-        </div>
-      </div>
+/**
+ * Custom fallback components
+ */
 
-      <div style={{ marginBottom: '15px' }}>
-        <strong>Details:</strong>
-        <ul style={{ margin: '5px 0', paddingLeft: '20px', fontSize: '13px', color: '#666' }}>
-          <li>Error: {error.name}</li>
-          <li>Category: {error.category}</li>
-          <li>Severity: {error.severity}</li>
-          <li>Retryable: {error.retryable ? 'Yes' : 'No'}</li>
-          <li>Time: {error.timestamp.toLocaleString()}</li>
-          {error.code && <li>Code: {error.code}</li>}
-        </ul>
-      </div>
+/**
+ * Minimal fallback component
+ */
+export const MinimalErrorFallback: React.FC<ErrorFallbackProps> = ({
+  error,
+  resetError,
+  canRetry,
+}) => (
+  <div style={styles.minimalError}>
+    <p>Something went wrong</p>
+    {canRetry && (
+      <button style={styles.minimalRetryButton} onClick={resetError}>
+        Try again
+      </button>
+    )}
+  </div>
+);
 
-      {error.retryable && retryCount < maxRetries && (
-        <div style={{ marginBottom: '15px' }}>
-          <button 
-            onClick={retry}
-            disabled={isRetrying}
-            style={{
-              backgroundColor: isRetrying ? '#ccc' : '#3b82f6',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: isRetrying ? 'not-allowed' : 'pointer',
-              marginRight: '10px'
-            }}
-          >
-            {isRetrying ? 'Retrying...' : `Retry (${retryCount}/${maxRetries})`}
-          </button>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              backgroundColor: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Reload Page
-          </button>
-        </div>
+/**
+ * Detailed fallback component
+ */
+export const DetailedErrorFallback: React.FC<ErrorFallbackProps> = ({
+  error,
+  errorInfo,
+  resetError,
+  retryCount,
+  canRetry,
+  level,
+}) => (
+  <div style={styles.detailedError}>
+    <h3 style={styles.detailedErrorTitle}>Error Details</h3>
+    <div style={styles.detailedErrorContent}>
+      <p><strong>Message:</strong> {error.message}</p>
+      <p><strong>Level:</strong> {level}</p>
+      <p><strong>Retry Count:</strong> {retryCount}</p>
+      
+      {canRetry && (
+        <button style={styles.detailedRetryButton} onClick={resetError}>
+          Retry Operation
+        </button>
       )}
-
-      {(!error.retryable || retryCount >= maxRetries) && (
-        <div style={{ marginBottom: '15px' }}>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              backgroundColor: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Reload Application
-          </button>
-        </div>
-      )}
-
-      <details style={{ fontSize: '12px', color: '#666' }}>
-        <summary style={{ cursor: 'pointer', marginBottom: '10px' }}>
-          Technical Details
-        </summary>
-        <pre style={{ 
-          backgroundColor: '#f5f5f5', 
-          padding: '10px', 
-          borderRadius: '4px', 
-          overflow: 'auto',
-          fontSize: '11px'
-        }}>
-          {error.stack}
-        </pre>
+      
+      <details style={styles.errorDetails}>
+        <summary>Stack Trace</summary>
+        <pre style={styles.errorStack}>{error.stack}</pre>
+      </details>
+      
+      <details style={styles.errorDetails}>
+        <summary>Component Stack</summary>
+        <pre style={styles.componentStack}>{errorInfo.componentStack}</pre>
       </details>
     </div>
-  );
-}
+  </div>
+);
 
 /**
- * Higher-order component for error boundary
+ * Styles for error boundary components
  */
-export function withErrorBoundary<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
-) {
-  const WithErrorBoundaryComponent = (props: P) => (
-    <ConciergusErrorBoundary {...errorBoundaryProps}>
-      <WrappedComponent {...props} />
-    </ConciergusErrorBoundary>
-  );
+const styles = {
+  pageError: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+  },
+  sectionError: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '200px',
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    borderRadius: '8px',
+    margin: '10px 0',
+  },
+  componentError: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 12px',
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffeaa7',
+    borderRadius: '4px',
+    fontSize: '14px',
+    color: '#856404',
+  },
+  errorContainer: {
+    textAlign: 'center' as const,
+    maxWidth: '600px',
+    width: '100%',
+  },
+  errorTitle: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#dc3545',
+    marginBottom: '16px',
+  },
+  errorDescription: {
+    fontSize: '16px',
+    color: '#6c757d',
+    marginBottom: '24px',
+    lineHeight: '1.5',
+  },
+  retryButton: {
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '6px',
+    fontSize: '16px',
+    cursor: 'pointer',
+    marginRight: '12px',
+  },
+  reloadButton: {
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '6px',
+    fontSize: '16px',
+    cursor: 'pointer',
+  },
+  inlineRetryButton: {
+    backgroundColor: 'transparent',
+    color: '#007bff',
+    border: 'none',
+    padding: '0 4px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+  componentErrorIcon: {
+    fontSize: '16px',
+  },
+  componentErrorText: {
+    fontSize: '14px',
+  },
+  errorDetails: {
+    marginTop: '24px',
+    textAlign: 'left' as const,
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    borderRadius: '4px',
+    padding: '16px',
+  },
+  errorContent: {
+    marginTop: '12px',
+  },
+  errorStack: {
+    backgroundColor: '#f1f3f4',
+    padding: '12px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    overflow: 'auto',
+    maxHeight: '200px',
+  },
+  componentStack: {
+    backgroundColor: '#f1f3f4',
+    padding: '12px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    overflow: 'auto',
+    maxHeight: '150px',
+    marginTop: '8px',
+  },
+  genericError: {
+    padding: '16px',
+    backgroundColor: '#f8d7da',
+    border: '1px solid #f5c6cb',
+    borderRadius: '4px',
+    color: '#721c24',
+  },
+  minimalError: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px',
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffeaa7',
+    borderRadius: '4px',
+    color: '#856404',
+  },
+  minimalRetryButton: {
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    padding: '6px 12px',
+    borderRadius: '4px',
+    fontSize: '14px',
+    cursor: 'pointer',
+  },
+  detailedError: {
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    borderRadius: '8px',
+    maxWidth: '800px',
+    margin: '20px auto',
+  },
+  detailedErrorTitle: {
+    color: '#dc3545',
+    marginBottom: '16px',
+  },
+  detailedErrorContent: {
+    lineHeight: '1.6',
+  },
+  detailedRetryButton: {
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    cursor: 'pointer',
+    marginTop: '12px',
+    marginBottom: '16px',
+  },
+};
 
-  WithErrorBoundaryComponent.displayName = 
-    `withErrorBoundary(${WrappedComponent.displayName || WrappedComponent.name})`;
-
-  return WithErrorBoundaryComponent;
-}
-
-/**
- * React hook for error reporting
- */
-export function useErrorReporting() {
-  return {
-    reportError: (error: Error, context?: Record<string, any>) => {
-      const enhancedError = ConciergusErrorBoundary.enhanceError(error);
-      if (context) {
-        enhancedError.context = { ...enhancedError.context, ...context };
-      }
-      
-      ConciergusOpenTelemetry.createSpan(
-        'conciergus-error-reporting',
-        'manual-error-report',
-        async (span) => {
-          span?.setAttributes({
-            'error.category': enhancedError.category,
-            'error.severity': enhancedError.severity,
-            'error.manual': 'true',
-          });
-          span?.recordException(enhancedError);
-        }
-      );
-    }
-  };
-}
-
-/**
- * Error factory for creating categorized errors
- */
-export class ConciergusErrorFactory {
-  static create(
-    message: string,
-    category: ErrorCategory,
-    options?: {
-      severity?: ErrorSeverity;
-      code?: string;
-      context?: Record<string, any>;
-      cause?: Error;
-      retryable?: boolean;
-    }
-  ): ConciergusError {
-    const error = new Error(message) as ConciergusError;
-    error.category = category;
-    error.severity = options?.severity || ErrorSeverity.MEDIUM;
-    if (options?.code !== undefined) error.code = options.code;
-    if (options?.context !== undefined) error.context = options.context;
-    error.timestamp = new Date();
-    error.retryable = options?.retryable ?? false;
-    if (options?.cause !== undefined) error.originalError = options.cause;
-    
-    return error;
-  }
-
-  static network(message: string, retryable = true): ConciergusError {
-    return this.create(message, ErrorCategory.NETWORK, { 
-      severity: ErrorSeverity.MEDIUM, 
-      retryable 
-    });
-  }
-
-  static authentication(message: string): ConciergusError {
-    return this.create(message, ErrorCategory.AUTHENTICATION, { 
-      severity: ErrorSeverity.HIGH 
-    });
-  }
-
-  static authorization(message: string): ConciergusError {
-    return this.create(message, ErrorCategory.AUTHORIZATION, { 
-      severity: ErrorSeverity.HIGH 
-    });
-  }
-
-  static validation(message: string, context?: Record<string, any>): ConciergusError {
-        return this.create(message, ErrorCategory.VALIDATION, {
-      severity: ErrorSeverity.LOW,
-      ...(context && { context })
-    });
-  }
-
-  static aiProvider(message: string, retryable = true): ConciergusError {
-    return this.create(message, ErrorCategory.AI_PROVIDER, { 
-      severity: ErrorSeverity.HIGH,
-      retryable
-    });
-  }
-
-  static rateLimit(message: string, retryAfter?: number): ConciergusError {
-    return this.create(message, ErrorCategory.RATE_LIMIT, { 
-      severity: ErrorSeverity.MEDIUM,
-      retryable: true,
-      context: { retryAfter }
-    });
-  }
-} 
+export default ErrorBoundary; 

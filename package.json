@@ -125,8 +125,10 @@
     "@rollup/plugin-json": "^6.1.0",
     "@vercel/ai-sdk-gateway": "^0.1.6",
     "ai": "canary",
+    "ioredis": "^5.4.1",
     "react-markdown": "^8.0.0",
     "react-textarea-autosize": "^8.0.0",
+    "redis": "^4.7.0",
     "rehype-sanitize": "^5.0.1",
     "remark-gfm": "^3.0.1"
   },
@@ -152,6 +154,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "@types/redis": "^4.0.11",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^8.57.1",
