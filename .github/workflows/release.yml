@@ -1,9 +1,10 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch: # Manual triggering only - disable auto-publishing until NPM_TOKEN is configured
+  # push:
+  #   branches:
+  #     - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
