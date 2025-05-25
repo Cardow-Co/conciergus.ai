@@ -55,6 +55,7 @@ pids
 !.changeset/README.md
 
 # Documentation build outputs
-/docs/api
+/docs/api/*
+!/docs/api/openapi.yaml
 /docs/storybook
 .vercel

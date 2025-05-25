@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Conciergus AI SDK API
+  description: Enterprise-grade AI chat SDK with comprehensive security, monitoring, and developer experience features
+  version: 0.2.0
+  contact:
+    name: Conciergus AI Support
+    url: https://github.com/conciergus/ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.conciergus.ai/v1
+    description: Production server
+  - url: https://staging-api.conciergus.ai/v1
+    description: Staging server
+
+paths:
+  /chat/completions:
+    post:
+      summary: Create chat completion
+      description: Generate AI responses using various providers with enterprise security
+      operationId: createChatCompletion
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant, system]
+                      content:
+                        type: string
+                model:
+                  type: string
+                  example: "gpt-4"
+                provider:
+                  type: string
+                  example: "openai"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: object
+                          properties:
+                            role:
+                              type: string
+                            content:
+                              type: string
+
+components:
+  schemas:
+    Message:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+      required:
+        - role
+        - content
+        
+    ChatRequest:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        model:
+          type: string
+        provider:
+          type: string
+      required:
+        - messages
+        - model
+
+tags:
+  - name: Chat
+    description: Chat completion operations 

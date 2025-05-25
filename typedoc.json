@@ -55,7 +55,7 @@
     "includeGroups": true
   },
   "searchInComments": true,
-  "cleanOutputDir": true,
+  "cleanOutputDir": false,
   "includeVersion": true,
   "disableSources": false,
   "sourceLinkTemplate": "https://github.com/conciergus/chat/blob/{gitRevision}/{path}#L{line}",
