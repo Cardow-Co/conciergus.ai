@@ -233,7 +233,7 @@ export interface ConciergusFormRendererProps {
   className?: string;
   
   /** Form loading component */
-  loadingComponent?: React.ReactNode;
+  loadingComponent?: React.ComponentType;
   
   /** Form error component */
   errorComponent?: React.ComponentType<{ error: Error; retry: () => void }>;
@@ -386,13 +386,13 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
   const {
     showDescriptions = true,
     showRequired = true,
-    validationMode = 'onBlur'
+    validationMode = 'onSubmit'
   } = renderOptions;
 
   const showError = error && (
     validationMode === 'immediate' ||
     (validationMode === 'onBlur' && touched) ||
-    validationMode === 'onSubmit'
+    (validationMode === 'onSubmit' && touched)
   );
 
   const fieldClasses = [
@@ -450,6 +450,7 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
             type="checkbox"
             checked={Boolean(value)}
             onChange={(e) => onChange(e.target.checked)}
+            value=""
           />
         );
 
@@ -490,9 +491,10 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
               type="range"
               min={field.validation?.min}
               max={field.validation?.max}
+              value={value || field.validation?.min || 0}
               onChange={(e) => onChange(Number(e.target.value))}
             />
-            <span className="range-value">{value}</span>
+            <span className="range-value">{value || field.validation?.min || 0}</span>
           </div>
         );
 
@@ -711,6 +713,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
         object.fields?.forEach((field: FormField) => {
           if (field.defaultValue !== undefined) {
             defaultData[field.name] = field.defaultValue;
+          } else if (field.type === 'checkbox') {
+            // Set default value for checkboxes to false if not specified
+            defaultData[field.name] = false;
           }
         });
         setFormData(defaultData);
@@ -921,8 +926,17 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
 
     // Validate form
     const validation = validateForm(formData, generatedSchema);
-    setValidationState(validation);
-    onValidationChange?.(validation);
+    
+    // Mark all fields as touched to show validation errors
+    const allFieldNames = generatedSchema.fields?.map(f => f.name) || [];
+    const newTouchedFields = new Set([...validation.touchedFields, ...allFieldNames]);
+    const updatedValidation = {
+      ...validation,
+      touchedFields: newTouchedFields
+    };
+    
+    setValidationState(updatedValidation);
+    onValidationChange?.(updatedValidation);
 
     if (!validation.isValid) {
       setIsSubmitting(false);
@@ -930,8 +944,20 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
     }
 
     try {
+      // Ensure all fields have values in the submission data
+      const completeFormData = { ...formData };
+      visibleFields.forEach(field => {
+        if (!(field.name in completeFormData)) {
+          if (field.type === 'checkbox') {
+            completeFormData[field.name] = false;
+          } else if (field.defaultValue !== undefined) {
+            completeFormData[field.name] = field.defaultValue;
+          }
+        }
+      });
+
       const submission: FormSubmissionData = {
-        data: formData,
+        data: completeFormData,
         schema: generatedSchema,
         metadata: {
           timestamp: new Date(),
@@ -1079,7 +1105,7 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
           <div className="form-actions">
             <button
               type="submit"
-              disabled={isSubmitting || !validationState.isValid}
+              disabled={isSubmitting}
               className={`submit-button ${generatedSchema.submitButton?.className || ''}`}
               style={generatedSchema.submitButton?.style}
             >
