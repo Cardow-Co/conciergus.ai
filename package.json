@@ -152,7 +152,7 @@
     "@vercel/ai-sdk-gateway": "^0.1.6",
     "ai": "canary",
     "ioredis": "^5.4.1",
-    "react-markdown": "^8.0.0",
+    "react-markdown": "^10.1.0",
     "react-textarea-autosize": "^8.0.0",
     "redis": "^4.7.0",
     "rehype-sanitize": "^5.0.1",
