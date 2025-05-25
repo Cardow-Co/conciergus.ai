@@ -307,14 +307,16 @@ export class ErrorBoundary extends Component<
       if (this.props.config.fallbackComponent) {
         const FallbackComponent = this.props.config.fallbackComponent;
         return (
-          <FallbackComponent
-            error={this.state.error}
-            errorInfo={this.state.errorInfo}
-            resetError={this.resetError}
-            retryCount={this.state.retryCount}
-            canRetry={canRetry}
-            level={this.props.config.level}
-          />
+          <div data-testid="error-boundary">
+            <FallbackComponent
+              error={this.state.error}
+              errorInfo={this.state.errorInfo}
+              resetError={this.resetError}
+              retryCount={this.state.retryCount}
+              canRetry={canRetry}
+              level={this.props.config.level}
+            />
+          </div>
         );
       }
 
@@ -335,7 +337,7 @@ export class ErrorBoundary extends Component<
     switch (config.level) {
       case 'page':
         return (
-          <div style={styles.pageError}>
+          <div style={styles.pageError} data-testid="error-boundary">
             <div style={styles.errorContainer}>
               <h1 style={styles.errorTitle}>Something went wrong</h1>
               <p style={styles.errorDescription}>
@@ -382,7 +384,7 @@ export class ErrorBoundary extends Component<
 
       case 'section':
         return (
-          <div style={styles.sectionError}>
+          <div style={styles.sectionError} data-testid="error-boundary">
             <div style={styles.errorContainer}>
               <h2 style={styles.errorTitle}>Section unavailable</h2>
               <p style={styles.errorDescription}>
@@ -415,7 +417,7 @@ export class ErrorBoundary extends Component<
 
       case 'component':
         return (
-          <div style={styles.componentError}>
+          <div style={styles.componentError} data-testid="error-boundary">
             <span style={styles.componentErrorIcon}>⚠️</span>
             <span style={styles.componentErrorText}>
               Component error
@@ -433,7 +435,7 @@ export class ErrorBoundary extends Component<
 
       default:
         return (
-          <div style={styles.genericError}>
+          <div style={styles.genericError} data-testid="error-boundary">
             <p>An error occurred</p>
             {canRetry && (
               <button style={styles.retryButton} onClick={this.resetError}>

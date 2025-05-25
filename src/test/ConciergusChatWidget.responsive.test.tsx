@@ -46,17 +46,21 @@ jest.mock('../context/GatewayProvider', () => ({
   }),
 }));
 
-jest.mock('../errors/ErrorBoundary', () => ({
-  ConciergusErrorBoundary: ({ children }: { children: React.ReactNode }) => (
+jest.mock('../components/ConciergusErrorBoundary', () => {
+  const MockConciergusErrorBoundary = ({ children }: { children: React.ReactNode }) => (
     <div data-testid="error-boundary">{children}</div>
-  ),
-  ErrorCategory: {
-    NETWORK: 'network',
-    AI_PROVIDER: 'ai_provider',
-    RATE_LIMIT: 'rate_limit',
-    AUTHENTICATION: 'authentication',
-  },
-}));
+  );
+  return {
+    __esModule: true,
+    default: MockConciergusErrorBoundary,
+    ErrorCategory: {
+      NETWORK: 'network',
+      AI_PROVIDER: 'ai_provider',
+      RATE_LIMIT: 'rate_limit',
+      AUTHENTICATION: 'authentication',
+    },
+  };
+});
 
 jest.mock('../components/ConciergusMetadataDisplay', () => {
   return function MockConciergusMetadataDisplay() {

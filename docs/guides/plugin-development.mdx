@@ -1,0 +1,730 @@
+---
+title: Plugin Development Guide
+description: Complete guide to developing plugins for Conciergus Chat with examples, best practices, and API reference
+category: Developer Experience
+tags: [plugins, development, extension, customization]
+---
+
+# Plugin Development Guide
+
+Conciergus Chat provides a powerful plugin system that allows developers to extend and customize the library's functionality. This guide covers everything you need to know to create your own plugins.
+
+## Overview
+
+The plugin system is built around a flexible architecture that supports multiple extension points:
+
+- **Message Processing**: Transform incoming and outgoing messages
+- **Stream Processing**: Handle real-time streaming data
+- **Conversation Management**: Hook into conversation lifecycle events
+- **Agent Integration**: Extend multi-agent functionality
+- **UI Customization**: Add custom components and themes
+- **Analytics & Reporting**: Track events and generate insights
+
+## Quick Start
+
+### Creating Your First Plugin
+
+Here's a simple example of a message transformation plugin:
+
+```typescript
+import type { Plugin, PluginContext, MessagePlugin } from '@conciergus/chat';
+import type { EnhancedUIMessage } from '@conciergus/chat';
+
+class MyFirstPlugin implements Plugin, MessagePlugin {
+  metadata = {
+    id: 'my-first-plugin',
+    name: 'My First Plugin',
+    version: '1.0.0',
+    description: 'A simple example plugin',
+    author: {
+      name: 'Your Name',
+      email: 'your.email@example.com',
+    },
+  };
+
+  async processMessage(
+    message: EnhancedUIMessage, 
+    context: PluginContext
+  ): Promise<EnhancedUIMessage> {
+    context.logger.info('Processing message:', message.id);
+    
+    // Transform the message
+    return {
+      ...message,
+      content: `[Processed] ${message.content}`,
+    };
+  }
+}
+
+export default MyFirstPlugin;
+```
+
+### Registering and Using Plugins
+
+```typescript
+import { createPluginManager, createConciergusProvider } from '@conciergus/chat';
+import MyFirstPlugin from './MyFirstPlugin';
+
+// Create plugin manager
+const pluginManager = createPluginManager(conciergusConfig);
+
+// Register your plugin
+await pluginManager.register(new MyFirstPlugin());
+
+// Use with Conciergus Provider
+const ConciergusWithPlugins = createConciergusProvider({
+  pluginManager,
+  // ... other config
+});
+```
+
+## Plugin Architecture
+
+### Core Interfaces
+
+#### Plugin Interface
+
+Every plugin must implement the base `Plugin` interface:
+
+```typescript
+interface Plugin {
+  /** Plugin metadata */
+  metadata: PluginMetadata;
+  /** Default configuration */
+  defaultConfig?: Partial<PluginConfig>;
+  /** Configuration schema for validation */
+  configSchema?: any;
+  
+  // Lifecycle hooks
+  onLoad?(context: PluginContext): void | Promise<void>;
+  onEnable?(context: PluginContext): void | Promise<void>;
+  onDisable?(context: PluginContext): void | Promise<void>;
+  onUnload?(context: PluginContext): void | Promise<void>;
+  onConfigChange?(context: PluginContext, newConfig: ConciergusConfig): void | Promise<void>;
+}
+```
+
+#### Plugin Context
+
+The plugin context provides access to utilities and services:
+
+```typescript
+interface PluginContext {
+  /** Plugin metadata */
+  metadata: PluginMetadata;
+  /** Plugin configuration */
+  config: PluginConfig;
+  /** Conciergus configuration */
+  conciergusConfig: ConciergusConfig;
+  /** Plugin logger */
+  logger: PluginLogger;
+  /** Plugin storage */
+  storage: PluginStorage;
+  /** Event emitter for plugin communication */
+  events: PluginEventEmitter;
+  /** Utility functions */
+  utils: PluginUtils;
+}
+```
+
+## Extension Points
+
+### Message Processing
+
+Implement `MessagePlugin` to process messages:
+
+```typescript
+interface MessagePlugin {
+  /** Process incoming messages */
+  processMessage?(message: EnhancedUIMessage, context: PluginContext): EnhancedUIMessage | Promise<EnhancedUIMessage>;
+  /** Process outgoing messages */
+  processOutgoingMessage?(message: EnhancedUIMessage, context: PluginContext): EnhancedUIMessage | Promise<EnhancedUIMessage>;
+  /** Transform message metadata */
+  transformMetadata?(metadata: MessageMetadata, context: PluginContext): MessageMetadata | Promise<MessageMetadata>;
+}
+```
+
+**Example: Text Formatting Plugin**
+
+```typescript
+class TextFormattingPlugin implements Plugin, MessagePlugin {
+  metadata = {
+    id: 'text-formatting',
+    name: 'Text Formatting Plugin',
+    version: '1.0.0',
+    description: 'Applies markdown-style formatting to messages',
+    author: { name: 'Developer' },
+  };
+
+  async processMessage(
+    message: EnhancedUIMessage, 
+    context: PluginContext
+  ): Promise<EnhancedUIMessage> {
+    if (typeof message.content !== 'string') return message;
+    
+    let content = message.content;
+    
+    // Apply formatting
+    content = content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic
+      .replace(/`(.*?)`/g, '<code>$1</code>');           // Code
+    
+    return {
+      ...message,
+      content,
+      metadata: {
+        ...message.metadata,
+        formatted: true,
+        formattedBy: this.metadata.id,
+      },
+    };
+  }
+}
+```
+
+### Stream Processing
+
+Implement `StreamPlugin` to handle streaming data:
+
+```typescript
+interface StreamPlugin {
+  /** Process stream parts */
+  processStreamPart?(part: EnhancedStreamPart, context: PluginContext): EnhancedStreamPart | Promise<EnhancedStreamPart>;
+  /** Handle stream start */
+  onStreamStart?(context: PluginContext): void | Promise<void>;
+  /** Handle stream end */
+  onStreamEnd?(context: PluginContext): void | Promise<void>;
+  /** Handle stream error */
+  onStreamError?(error: Error, context: PluginContext): void | Promise<void>;
+}
+```
+
+**Example: Stream Monitoring Plugin**
+
+```typescript
+class StreamMonitoringPlugin implements Plugin, StreamPlugin {
+  private streamMetrics = {
+    totalParts: 0,
+    totalBytes: 0,
+    errors: 0,
+  };
+
+  async processStreamPart(
+    part: EnhancedStreamPart, 
+    context: PluginContext
+  ): Promise<EnhancedStreamPart> {
+    this.streamMetrics.totalParts++;
+    
+    if (part.type === 'text-delta' && part.textDelta) {
+      this.streamMetrics.totalBytes += part.textDelta.length;
+    }
+    
+    context.logger.debug('Stream part processed', {
+      type: part.type,
+      totalParts: this.streamMetrics.totalParts,
+    });
+    
+    return part;
+  }
+
+  async onStreamError(error: Error, context: PluginContext): Promise<void> {
+    this.streamMetrics.errors++;
+    context.logger.error('Stream error occurred', error);
+  }
+}
+```
+
+### Conversation Management
+
+Implement `ConversationPlugin` to hook into conversation events:
+
+```typescript
+interface ConversationPlugin {
+  /** Process conversation creation */
+  onConversationCreate?(conversation: Conversation, context: PluginContext): Conversation | Promise<Conversation>;
+  /** Process conversation update */
+  onConversationUpdate?(conversation: Conversation, context: PluginContext): Conversation | Promise<Conversation>;
+  /** Process conversation deletion */
+  onConversationDelete?(conversationId: string, context: PluginContext): void | Promise<void>;
+  /** Transform conversation messages */
+  transformMessages?(messages: ConversationMessage[], context: PluginContext): ConversationMessage[] | Promise<ConversationMessage[]>;
+}
+```
+
+### Analytics & Reporting
+
+Implement `AnalyticsPlugin` to track events and generate reports:
+
+```typescript
+interface AnalyticsPlugin {
+  /** Track custom events */
+  trackEvent?(event: AnalyticsEvent, context: PluginContext): void | Promise<void>;
+  /** Process analytics data */
+  processAnalytics?(data: AnalyticsData, context: PluginContext): AnalyticsData | Promise<AnalyticsData>;
+  /** Generate custom reports */
+  generateReport?(type: string, options: any, context: PluginContext): any | Promise<any>;
+}
+```
+
+## Plugin Configuration
+
+### Configuration Schema
+
+Define a schema to validate plugin configuration:
+
+```typescript
+class ConfigurablePlugin implements Plugin {
+  configSchema = {
+    type: 'object',
+    required: ['enabled', 'apiKey'],
+    properties: {
+      enabled: { type: 'boolean' },
+      apiKey: { type: 'string', minLength: 1 },
+      maxRetries: { type: 'number', minimum: 0, maximum: 10 },
+      endpoints: {
+        type: 'object',
+        properties: {
+          primary: { type: 'string', format: 'uri' },
+          fallback: { type: 'string', format: 'uri' },
+        },
+      },
+    },
+  };
+
+  defaultConfig = {
+    enabled: true,
+    options: {
+      enabled: true,
+      maxRetries: 3,
+      endpoints: {
+        primary: 'https://api.example.com',
+      },
+    },
+  };
+}
+```
+
+### Dynamic Configuration
+
+Handle configuration changes at runtime:
+
+```typescript
+class DynamicPlugin implements Plugin {
+  async onConfigChange(
+    context: PluginContext, 
+    newConfig: ConciergusConfig
+  ): Promise<void> {
+    const pluginConfig = context.config.options;
+    
+    // Validate new configuration
+    const validation = context.utils.validateSchema(
+      pluginConfig, 
+      this.configSchema
+    );
+    
+    if (!validation.valid) {
+      context.logger.error('Invalid configuration', validation.errors);
+      return;
+    }
+    
+    // Apply configuration changes
+    await this.reconfigure(pluginConfig, context);
+    
+    context.logger.info('Configuration updated successfully');
+  }
+
+  private async reconfigure(config: any, context: PluginContext): Promise<void> {
+    // Implement configuration logic
+  }
+}
+```
+
+## Plugin Utilities
+
+### Storage
+
+Plugins have access to persistent storage:
+
+```typescript
+class StorageExamplePlugin implements Plugin {
+  async onEnable(context: PluginContext): Promise<void> {
+    // Store data
+    await context.storage.set('userPreferences', {
+      theme: 'dark',
+      language: 'en',
+    });
+    
+    // Retrieve data
+    const preferences = await context.storage.get('userPreferences');
+    
+    // Check if key exists
+    const hasPreferences = await context.storage.has('userPreferences');
+    
+    // Get all keys
+    const keys = await context.storage.keys();
+    
+    // Remove data
+    await context.storage.remove('oldData');
+    
+    // Clear all plugin data
+    await context.storage.clear();
+  }
+}
+```
+
+### Events
+
+Plugins can communicate through events:
+
+```typescript
+class EventExamplePlugin implements Plugin {
+  async onEnable(context: PluginContext): Promise<void> {
+    // Listen to events
+    context.events.on('custom:event', (data) => {
+      context.logger.info('Received custom event', data);
+    });
+    
+    // Listen once
+    context.events.once('startup:complete', () => {
+      context.logger.info('Startup completed');
+    });
+    
+    // Emit events
+    context.events.emit('plugin:ready', {
+      pluginId: this.metadata.id,
+      timestamp: new Date(),
+    });
+  }
+
+  async onDisable(context: PluginContext): Promise<void> {
+    // Clean up event listeners
+    context.events.removeAllListeners('custom:event');
+  }
+}
+```
+
+### Utilities
+
+Access helpful utility functions:
+
+```typescript
+class UtilityExamplePlugin implements Plugin {
+  async processData(data: any, context: PluginContext): Promise<any> {
+    // Generate unique IDs
+    const id = context.utils.generateId();
+    
+    // Deep clone objects
+    const clonedData = context.utils.deepClone(data);
+    
+    // Merge objects
+    const merged = context.utils.merge(data, { id, processed: true });
+    
+    // Debounce function calls
+    const debouncedSave = context.utils.debounce(
+      async (data) => await this.saveData(data, context),
+      1000
+    );
+    
+    // Validate against schema
+    const validation = context.utils.validateSchema(data, this.dataSchema);
+    if (!validation.valid) {
+      throw new Error(`Invalid data: ${validation.errors?.join(', ')}`);
+    }
+    
+    return merged;
+  }
+}
+```
+
+## Best Practices
+
+### Error Handling
+
+Always handle errors gracefully:
+
+```typescript
+class RobustPlugin implements Plugin, MessagePlugin {
+  async processMessage(
+    message: EnhancedUIMessage, 
+    context: PluginContext
+  ): Promise<EnhancedUIMessage> {
+    try {
+      // Plugin logic here
+      return await this.transformMessage(message, context);
+    } catch (error) {
+      context.logger.error('Failed to process message', error);
+      
+      // Return original message on error
+      return message;
+    }
+  }
+
+  private async transformMessage(
+    message: EnhancedUIMessage, 
+    context: PluginContext
+  ): Promise<EnhancedUIMessage> {
+    // Actual transformation logic
+    return message;
+  }
+}
+```
+
+### Performance Optimization
+
+Optimize for performance:
+
+```typescript
+class OptimizedPlugin implements Plugin, MessagePlugin {
+  private cache = new Map<string, any>();
+  private processMessage = this.createDebouncedProcessor();
+
+  private createDebouncedProcessor() {
+    return this.context.utils.debounce(
+      async (messages: EnhancedUIMessage[]) => {
+        // Batch process messages
+        return await this.batchProcessMessages(messages);
+      },
+      100 // 100ms debounce
+    );
+  }
+
+  async processMessage(
+    message: EnhancedUIMessage, 
+    context: PluginContext
+  ): Promise<EnhancedUIMessage> {
+    // Check cache first
+    const cacheKey = this.getCacheKey(message);
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    // Process and cache result
+    const result = await this.doProcessMessage(message, context);
+    this.cache.set(cacheKey, result);
+    
+    return result;
+  }
+
+  private getCacheKey(message: EnhancedUIMessage): string {
+    return `${message.id}-${message.role}`;
+  }
+}
+```
+
+### Resource Management
+
+Clean up resources properly:
+
+```typescript
+class ResourceManagedPlugin implements Plugin {
+  private connections: Connection[] = [];
+  private timers: NodeJS.Timeout[] = [];
+
+  async onEnable(context: PluginContext): Promise<void> {
+    // Create resources
+    const connection = await this.createConnection();
+    this.connections.push(connection);
+    
+    const timer = setInterval(() => {
+      this.performPeriodicTask(context);
+    }, 60000);
+    this.timers.push(timer);
+  }
+
+  async onDisable(context: PluginContext): Promise<void> {
+    // Clean up resources
+    await Promise.all(
+      this.connections.map(conn => conn.close())
+    );
+    this.connections = [];
+    
+    this.timers.forEach(timer => clearInterval(timer));
+    this.timers = [];
+  }
+}
+```
+
+## Testing Plugins
+
+### Unit Testing
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createMockPluginContext } from '@conciergus/chat/testing';
+import MyPlugin from './MyPlugin';
+
+describe('MyPlugin', () => {
+  let plugin: MyPlugin;
+  let context: PluginContext;
+
+  beforeEach(() => {
+    plugin = new MyPlugin();
+    context = createMockPluginContext(plugin.metadata);
+  });
+
+  it('should process messages correctly', async () => {
+    const message = {
+      id: 'test-1',
+      role: 'user',
+      content: 'Hello world',
+    };
+
+    const result = await plugin.processMessage(message, context);
+    
+    expect(result.content).toBe('[Processed] Hello world');
+  });
+
+  it('should handle configuration changes', async () => {
+    const newConfig = { enabled: false };
+    
+    await plugin.onConfigChange(context, newConfig);
+    
+    expect(context.logger.info).toHaveBeenCalledWith(
+      'Configuration updated successfully'
+    );
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+import { createPluginManager } from '@conciergus/chat';
+import MyPlugin from './MyPlugin';
+
+describe('MyPlugin Integration', () => {
+  it('should integrate with plugin manager', async () => {
+    const manager = createPluginManager(mockConfig);
+    const plugin = new MyPlugin();
+    
+    await manager.register(plugin);
+    
+    expect(manager.isEnabled(plugin.metadata.id)).toBe(true);
+    
+    const message = { id: '1', role: 'user', content: 'test' };
+    const result = await manager.executeMessagePlugins(message);
+    
+    expect(result.content).toBe('[Processed] test');
+  });
+});
+```
+
+## Publishing Plugins
+
+### Package Structure
+
+```
+my-conciergus-plugin/
+├── src/
+│   ├── index.ts
+│   ├── plugin.ts
+│   └── types.ts
+├── dist/
+├── docs/
+├── tests/
+├── package.json
+├── README.md
+└── LICENSE
+```
+
+### Package.json
+
+```json
+{
+  "name": "@yourorg/conciergus-plugin-name",
+  "version": "1.0.0",
+  "description": "Description of your plugin",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": ["conciergus", "plugin", "chat"],
+  "peerDependencies": {
+    "@conciergus/chat": "^1.0.0"
+  },
+  "conciergus": {
+    "plugin": true,
+    "apiVersion": "1.0.0",
+    "entryPoint": "dist/index.js"
+  }
+}
+```
+
+## Advanced Topics
+
+### Plugin Dependencies
+
+Declare dependencies between plugins:
+
+```typescript
+class DependentPlugin implements Plugin {
+  metadata = {
+    id: 'dependent-plugin',
+    name: 'Dependent Plugin',
+    version: '1.0.0',
+    description: 'A plugin that depends on others',
+    author: { name: 'Developer' },
+    dependencies: {
+      'analytics': '^1.0.0',
+      'message-transform': '^1.0.0',
+    },
+  };
+}
+```
+
+### Custom Extension Points
+
+Create your own extension points:
+
+```typescript
+interface CustomPlugin {
+  customMethod?(data: any, context: PluginContext): any | Promise<any>;
+}
+
+class ExtendedPluginManager extends PluginManager {
+  async executeCustomPlugins(data: any): Promise<any> {
+    const plugins = this.getEnabledPlugins();
+    let result = data;
+    
+    for (const plugin of plugins) {
+      if ('customMethod' in plugin) {
+        const context = this.getPluginContext(plugin.metadata.id);
+        result = await (plugin as CustomPlugin).customMethod(result, context);
+      }
+    }
+    
+    return result;
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Plugin not loading**: Check metadata and ensure all required fields are present
+2. **Configuration errors**: Validate against schema and check for typos
+3. **Memory leaks**: Ensure proper cleanup in `onDisable` and `onUnload`
+4. **Performance issues**: Use debouncing, caching, and batch processing
+
+### Debugging
+
+Enable debug logging:
+
+```typescript
+class DebuggablePlugin implements Plugin {
+  async onEnable(context: PluginContext): Promise<void> {
+    context.logger.debug('Plugin enabled with config', context.config);
+    
+    // Add debug event listeners
+    context.events.on('*', (event, ...args) => {
+      context.logger.debug('Event received', { event, args });
+    });
+  }
+}
+```
+
+## Conclusion
+
+The Conciergus Chat plugin system provides a powerful and flexible way to extend the library's functionality. By following the patterns and best practices outlined in this guide, you can create robust, performant plugins that enhance the chat experience for your users.
+
+For more examples and advanced use cases, check out the [Plugin Examples Repository](https://github.com/conciergus/plugin-examples) and the [Plugin API Reference](/docs/api/plugins). 

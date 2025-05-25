@@ -122,6 +122,7 @@ export {
 
 // Error Handling & Debugging
 export * from './errors/ErrorBoundary';
+export { default as ConciergusErrorBoundary } from './components/ConciergusErrorBoundary';
 export * from './debug/DebugUtils';
 export { default as ConciergusDebugInspector } from './debug/DebugInspector';
 

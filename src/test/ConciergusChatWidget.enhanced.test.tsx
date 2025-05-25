@@ -11,7 +11,6 @@ import type {
   RateLimitingConfig 
 } from '../components/ConciergusChatWidget';
 import type { GatewayConfig } from '../context/GatewayConfig';
-import { ErrorCategory } from '../errors/ErrorBoundary';
 
 // Mock the gateway provider
 jest.mock('../context/GatewayProvider', () => ({
@@ -25,18 +24,25 @@ jest.mock('../context/GatewayProvider', () => ({
   }),
 }));
 
-// Mock the error boundary
-jest.mock('../errors/ErrorBoundary', () => ({
-  ConciergusErrorBoundary: ({ children }: { children: React.ReactNode }) => (
+// Mock the error boundary 
+jest.mock('../components/ConciergusErrorBoundary', () => {
+  const MockConciergusErrorBoundary = ({ children }: { children: React.ReactNode }) => (
     <div data-testid="error-boundary">{children}</div>
-  ),
-  ErrorCategory: {
-    NETWORK: 'network',
-    AI_PROVIDER: 'ai_provider',
-    RATE_LIMIT: 'rate_limit',
-    AUTHENTICATION: 'authentication',
-  },
-}));
+  );
+  return {
+    __esModule: true,
+    default: MockConciergusErrorBoundary,
+    ErrorCategory: {
+      NETWORK: 'network',
+      AI_PROVIDER: 'ai_provider',
+      RATE_LIMIT: 'rate_limit',
+      AUTHENTICATION: 'authentication',
+    },
+  };
+});
+
+// Import ErrorCategory from the mock
+const { ErrorCategory } = jest.requireMock('../components/ConciergusErrorBoundary');
 
 // Mock the telemetry and model switcher components
 jest.mock('../components/ConciergusMetadataDisplay', () => {

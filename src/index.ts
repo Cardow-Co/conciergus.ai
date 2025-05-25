@@ -1,6 +1,12 @@
 // Main Entry Point - Conciergus AI SDK 5 Integration
 // Core functionality optimized for AI SDK 5 Alpha
 
+// TypeScript Type Definitions (Enhanced Developer Experience)
+export * from './types';
+
+// Plugin System (Complete Extension Architecture)
+export * from './plugins';
+
 // Core Context & Providers
 export * from './context/ConciergusContext';
 export { ConciergusProvider as BasicConciergusProvider } from './context/ConciergusProvider';

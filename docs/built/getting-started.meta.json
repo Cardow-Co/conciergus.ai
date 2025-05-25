@@ -1,0 +1,18 @@
+{
+  "title": "Getting Started with Conciergus Chat",
+  "description": "Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features",
+  "category": "Guide",
+  "order": 1,
+  "tags": [
+    "quickstart",
+    "installation",
+    "setup",
+    "react"
+  ],
+  "lastUpdated": "2025-05-25T00:00:00.000Z",
+  "fileName": "getting-started",
+  "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/getting-started.mdx",
+  "compiledAt": "2025-05-25T14:21:48.406Z",
+  "wordCount": 784,
+  "readingTime": 4
+}

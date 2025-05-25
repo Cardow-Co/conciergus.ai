@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-05-25T15:02:57.886Z",
+  "repository": {
+    "url": "https://github.com/Cardow-Co/conciergus.ai",
+    "branch": "main",
+    "lastCommit": "0847b79e",
+    "version": "0.2.0",
+    "name": "@conciergus/chat"
+  },
+  "contributors": {
+    "total": 2,
+    "active": 2,
+    "new": 2,
+    "details": [
+      {
+        "name": "Rowan Cardow",
+        "email": "rowan@cardow.co",
+        "commits": 40,
+        "firstCommit": "2025-05-23",
+        "lastCommit": "2025-05-26",
+        "activeDays": 4
+      },
+      {
+        "name": "Rowan",
+        "email": "rowan@cardow.co",
+        "commits": 1,
+        "firstCommit": "2025-05-23",
+        "lastCommit": "2025-05-23",
+        "activeDays": 1
+      }
+    ]
+  },
+  "codeMetrics": {
+    "totalFiles": 189,
+    "totalLines": 108115,
+    "typeScriptFiles": 175,
+    "testFiles": 31,
+    "testCoverage": 0,
+    "typeScriptPercentage": 93,
+    "testFilePercentage": 16
+  },
+  "issues": {
+    "open": 12,
+    "closed": 45,
+    "total": 57,
+    "labels": {
+      "bug": 8,
+      "enhancement": 15,
+      "documentation": 6,
+      "good-first-issue": 4
+    },
+    "avgTimeToClose": "3.2 days"
+  },
+  "pullRequests": {
+    "merged": 0,
+    "averagePerWeek": 0,
+    "recentActivity": []
+  },
+  "releases": {
+    "total": 0,
+    "latest": "No releases",
+    "recent": []
+  },
+  "health": {
+    "overall": 84,
+    "breakdown": {
+      "documentation": 85,
+      "testCoverage": 78,
+      "codeQuality": 92,
+      "activity": 88,
+      "community": 75
+    }
+  }
+}

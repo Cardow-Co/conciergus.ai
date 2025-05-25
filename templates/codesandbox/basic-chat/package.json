@@ -1,0 +1,43 @@
+{
+  "name": "conciergus-chat-basic-example",
+  "version": "1.0.0",
+  "description": "Basic Conciergus Chat integration example for CodeSandbox",
+  "keywords": ["react", "ai", "chat", "conciergus", "typescript"],
+  "main": "src/index.tsx",
+  "dependencies": {
+    "@conciergus/chat": "latest",
+    "ai": "canary", 
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+} 

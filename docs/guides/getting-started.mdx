@@ -1,0 +1,354 @@
+---
+title: Getting Started with Conciergus Chat
+description: Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features
+category: Guide
+order: 1
+tags: [quickstart, installation, setup, react]
+lastUpdated: 2025-05-25
+---
+
+# Getting Started with Conciergus Chat
+
+Conciergus Chat is a comprehensive React library for building AI-powered chat interfaces with advanced features including multi-agent conversations, voice integration, and enterprise-grade security.
+
+## Features
+
+- 🤖 **Multi-Agent Conversations** - Coordinate multiple AI agents in collaborative conversations
+- 🎤 **Voice Integration** - Speech-to-text and text-to-speech capabilities
+- 🔒 **Enterprise Security** - Built-in authentication, rate limiting, and telemetry
+- 📱 **Real-time Collaboration** - Live typing indicators, presence, and message sync
+- 🔍 **Advanced Search** - Full-text search across conversations and messages
+- 📎 **File Attachments** - Secure file handling with preview and download
+- 🎨 **Rich Formatting** - Markdown, code highlighting, and interactive content
+- 📊 **Analytics & Monitoring** - Comprehensive telemetry and performance tracking
+
+## Installation
+
+### Using npm
+
+```bash
+npm install @conciergus/chat
+```
+
+### Using yarn
+
+```bash
+yarn add @conciergus/chat
+```
+
+### Using pnpm
+
+```bash
+pnpm add @conciergus/chat
+```
+
+## Quick Start
+
+Here's a minimal example to get you started:
+
+```tsx
+import React from 'react';
+import { ChatProvider, ChatInterface } from '@conciergus/chat';
+
+function App() {
+  return (
+    <ChatProvider
+      apiKey="your-api-key"
+      config={{
+        baseUrl: 'https://api.conciergus.ai',
+        model: 'gpt-4'
+      }}
+    >
+      <ChatInterface
+        conversationId="welcome-chat"
+        title="AI Assistant"
+        placeholder="Ask me anything..."
+      />
+    </ChatProvider>
+  );
+}
+
+export default App;
+```
+
+## Core Concepts
+
+### Chat Provider
+
+The `ChatProvider` component manages the global chat state and configuration:
+
+```tsx
+import { ChatProvider } from '@conciergus/chat';
+
+<ChatProvider
+  apiKey="your-api-key"
+  config={{
+    baseUrl: 'https://api.conciergus.ai',
+    model: 'gpt-4',
+    maxTokens: 2000,
+    temperature: 0.7
+  }}
+  features={{
+    voice: true,
+    search: true,
+    fileUpload: true,
+    realTimeCollaboration: true
+  }}
+>
+  {/* Your app components */}
+</ChatProvider>
+```
+
+### Chat Interface
+
+The `ChatInterface` component provides a complete chat UI:
+
+```tsx
+import { ChatInterface } from '@conciergus/chat';
+
+<ChatInterface
+  conversationId="my-conversation"
+  title="AI Assistant"
+  placeholder="Type your message..."
+  showTypingIndicator={true}
+  enableVoice={true}
+  enableFileUpload={true}
+  maxFiles={5}
+  allowedFileTypes={['image/*', 'text/*', 'application/pdf']}
+  onMessageSent={(message) => console.log('Message sent:', message)}
+  onFileUploaded={(file) => console.log('File uploaded:', file)}
+/>
+```
+
+### Multi-Agent Setup
+
+Enable multi-agent conversations for collaborative AI interactions:
+
+```tsx
+import { ChatProvider, MultiAgentChat } from '@conciergus/chat';
+
+const agents = [
+  {
+    id: 'assistant',
+    name: 'Assistant',
+    model: 'gpt-4',
+    systemPrompt: 'You are a helpful assistant.'
+  },
+  {
+    id: 'researcher',
+    name: 'Researcher',
+    model: 'gpt-4',
+    systemPrompt: 'You are a research specialist.'
+  },
+  {
+    id: 'analyst',
+    name: 'Analyst',
+    model: 'claude-3-opus',
+    systemPrompt: 'You are a data analyst.'
+  }
+];
+
+<ChatProvider apiKey="your-api-key">
+  <MultiAgentChat
+    agents={agents}
+    orchestrationStrategy="sequential"
+    handoffConditions={{
+      maxTurns: 3,
+      keywords: ['research', 'analyze'],
+      confidence: 0.8
+    }}
+  />
+</ChatProvider>
+```
+
+## Configuration Options
+
+### API Configuration
+
+```tsx
+const config = {
+  // Base API endpoint
+  baseUrl: 'https://api.conciergus.ai',
+  
+  // AI Model settings
+  model: 'gpt-4',
+  maxTokens: 2000,
+  temperature: 0.7,
+  
+  // Authentication
+  apiKey: 'your-api-key',
+  bearerToken: 'your-jwt-token',
+  
+  // Rate limiting
+  rateLimit: {
+    requestsPerMinute: 60,
+    tokensPerMinute: 40000
+  },
+  
+  // Retry configuration
+  retry: {
+    maxAttempts: 3,
+    backoffMultiplier: 2,
+    initialDelay: 1000
+  }
+};
+```
+
+### Feature Configuration
+
+```tsx
+const features = {
+  // Voice capabilities
+  voice: {
+    enabled: true,
+    language: 'en-US',
+    autoTranscribe: true,
+    voiceId: 'default'
+  },
+  
+  // File upload settings
+  fileUpload: {
+    enabled: true,
+    maxSize: 10 * 1024 * 1024, // 10MB
+    allowedTypes: ['image/*', 'text/*', 'application/pdf'],
+    virusScanning: true
+  },
+  
+  // Search functionality
+  search: {
+    enabled: true,
+    indexing: 'full-text',
+    filters: ['date', 'agent', 'type'],
+    fuzzyMatching: true
+  },
+  
+  // Real-time features
+  realTime: {
+    enabled: true,
+    typingIndicators: true,
+    presence: true,
+    readReceipts: true
+  }
+};
+```
+
+## Styling and Theming
+
+Conciergus Chat uses CSS custom properties for easy theming:
+
+```css
+:root {
+  /* Colors */
+  --chat-primary: #1976d2;
+  --chat-secondary: #dc004e;
+  --chat-background: #ffffff;
+  --chat-surface: #f5f5f5;
+  --chat-text: #212121;
+  --chat-text-secondary: #757575;
+  
+  /* Typography */
+  --chat-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --chat-font-size: 14px;
+  --chat-line-height: 1.5;
+  
+  /* Spacing */
+  --chat-spacing-xs: 4px;
+  --chat-spacing-sm: 8px;
+  --chat-spacing-md: 16px;
+  --chat-spacing-lg: 24px;
+  --chat-spacing-xl: 32px;
+  
+  /* Border radius */
+  --chat-border-radius: 8px;
+  --chat-border-radius-sm: 4px;
+  --chat-border-radius-lg: 12px;
+}
+```
+
+You can also use the built-in theme provider:
+
+```tsx
+import { ThemeProvider } from '@conciergus/chat';
+
+const customTheme = {
+  colors: {
+    primary: '#1976d2',
+    secondary: '#dc004e',
+    background: '#ffffff',
+    surface: '#f5f5f5'
+  },
+  typography: {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '14px'
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px'
+  }
+};
+
+<ThemeProvider theme={customTheme}>
+  <ChatInterface />
+</ThemeProvider>
+```
+
+## Environment Setup
+
+### Environment Variables
+
+Create a `.env.local` file in your project root:
+
+```bash
+# API Configuration
+NEXT_PUBLIC_CONCIERGUS_API_KEY=your-api-key
+NEXT_PUBLIC_CONCIERGUS_BASE_URL=https://api.conciergus.ai
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_VOICE=true
+NEXT_PUBLIC_ENABLE_SEARCH=true
+NEXT_PUBLIC_ENABLE_FILE_UPLOAD=true
+
+# Development
+NEXT_PUBLIC_DEBUG_MODE=true
+NEXT_PUBLIC_LOG_LEVEL=info
+```
+
+### TypeScript Configuration
+
+Add the following to your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["@conciergus/chat/types"]
+  },
+  "include": [
+    "node_modules/@conciergus/chat/dist/index.d.ts"
+  ]
+}
+```
+
+## Next Steps
+
+Now that you have the basics set up, explore these advanced topics:
+
+- [Multi-Agent Conversations](/docs/guides/multi-agent-conversations) - Learn about agent coordination
+- [Voice Integration](/docs/guides/voice-integration) - Add speech capabilities
+- [Real-time Collaboration](/docs/guides/real-time-collaboration) - Enable live features
+- [File Handling](/docs/guides/file-handling) - Implement secure file uploads
+- [Search & Analytics](/docs/guides/search-analytics) - Add search and monitoring
+- [Custom Components](/docs/guides/custom-components) - Build your own chat components
+- [Plugin Development](/docs/guides/plugin-development) - Extend the library
+
+## Support
+
+- 📚 [Full Documentation](https://docs.conciergus.ai)
+- 🐛 [Report Issues](https://github.com/conciergus/chat/issues)
+- 💬 [Community Discord](https://discord.gg/conciergus)
+- 📧 [Email Support](mailto:support@conciergus.ai)
+
+## License
+
+MIT © [Conciergus](https://github.com/conciergus) 

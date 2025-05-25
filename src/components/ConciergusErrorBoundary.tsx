@@ -6,11 +6,17 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import type {
-  ConciergusError,
-  ErrorCategory,
-  ErrorSeverity,
-} from '../errors/ErrorBoundary';
+// Enhanced error types for enterprise error handling
+export type ErrorCategory = 'network' | 'validation' | 'authorization' | 'system' | 'ai_provider' | 'rate_limit' | 'unknown';
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface ConciergusError extends Error {
+  category?: ErrorCategory;
+  severity?: ErrorSeverity;
+  context?: Record<string, any>;
+  userMessage?: string;
+  recoverySuggestions?: string[];
+}
 import type { TelemetryData } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -687,7 +693,11 @@ class ConciergusErrorBoundary extends Component<
 
     // Render custom fallback component if provided
     if (this.props.fallbackComponent) {
-      return <this.props.fallbackComponent {...fallbackProps} />;
+      return (
+        <div data-testid="error-boundary">
+          <this.props.fallbackComponent {...fallbackProps} />
+        </div>
+      );
     }
 
     // Render based on fallback mode
@@ -695,17 +705,26 @@ class ConciergusErrorBoundary extends Component<
       case 'inline':
         const InlineComponent =
           this.props.inlineFallback || DefaultInlineFallback;
-        return <InlineComponent {...fallbackProps} />;
+        return (
+          <div data-testid="error-boundary">
+            <InlineComponent {...fallbackProps} />
+          </div>
+        );
 
       case 'toast':
         const ToastComponent =
           this.props.toastComponent || DefaultToastComponent;
-        return <ToastComponent {...fallbackProps} />;
+        return (
+          <div data-testid="error-boundary">
+            <ToastComponent {...fallbackProps} />
+          </div>
+        );
 
       case 'banner':
         return (
           <div
             className={`error-boundary-fallback banner-mode theme-${this.props.theme || 'auto'}`}
+            data-testid="error-boundary"
           >
             <div className="banner-error">
               <span className="error-icon">⚠️</span>
@@ -726,6 +745,7 @@ class ConciergusErrorBoundary extends Component<
         return (
           <div
             className={`error-boundary-fallback modal-mode theme-${this.props.theme || 'auto'}`}
+            data-testid="error-boundary"
           >
             <div className="modal-backdrop">
               <div className="modal-content">
@@ -740,7 +760,11 @@ class ConciergusErrorBoundary extends Component<
 
       case 'full':
       default:
-        return <DefaultFallbackComponent {...fallbackProps} />;
+        return (
+          <div data-testid="error-boundary">
+            <DefaultFallbackComponent {...fallbackProps} />
+          </div>
+        );
     }
   }
 }

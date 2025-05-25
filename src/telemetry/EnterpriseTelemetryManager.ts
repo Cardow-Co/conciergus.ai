@@ -14,11 +14,9 @@ import {
   corsMiddleware,
 } from '../middleware/MiddlewarePipeline';
 import {
-  ConciergusErrorBoundary,
-  type ConciergusError,
-  ErrorCategory,
-  ConciergusErrorFactory,
-} from '../errors/ErrorBoundary';
+  ErrorBoundary,
+  ErrorUtils,
+} from '../errors';
 import {
   PerformanceMonitor,
   MemoryMonitor,
@@ -475,20 +473,11 @@ export class EnterpriseTelemetryManager {
    * Report a custom error
    */
   reportError(
-    error: Error | ConciergusError,
+    error: Error,
     context?: Record<string, any>
   ): void {
-    let enhancedError: ConciergusError;
-
-    if ('category' in error) {
-      enhancedError = error as ConciergusError;
-    } else {
-      enhancedError = ConciergusErrorBoundary.enhanceError(error);
-    }
-
-    if (context) {
-      enhancedError.context = { ...enhancedError.context, ...context };
-    }
+    const enhancedError = error;
+    const errorCategory = ErrorUtils.categorizeError(error);
 
     // Report to telemetry
     ConciergusOpenTelemetry.createSpan(
@@ -496,15 +485,22 @@ export class EnterpriseTelemetryManager {
       'custom-error-report',
       async (span) => {
         span?.setAttributes({
-          'error.category': enhancedError.category,
-          'error.severity': enhancedError.severity,
+          'error.category': errorCategory,
+          'error.severity': 'error',
           'error.custom': 'true',
+          'error.message': error.message,
+          'error.name': error.name,
+          ...(context && { 'error.context': JSON.stringify(context) }),
         });
         span?.recordException(enhancedError);
       }
     );
 
-    ConciergusLogger.error('Custom error reported', enhancedError);
+    ConciergusLogger.error('Custom error reported', {
+      error: enhancedError,
+      category: errorCategory,
+      context,
+    });
   }
 
   /**

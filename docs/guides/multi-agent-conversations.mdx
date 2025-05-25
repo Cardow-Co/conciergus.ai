@@ -1,0 +1,524 @@
+---
+title: Multi-Agent Conversations
+description: Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies
+category: Guide
+order: 2
+tags: [multi-agent, orchestration, collaboration, ai]
+lastUpdated: 2025-05-25
+---
+
+# Multi-Agent Conversations
+
+Multi-agent conversations allow you to coordinate multiple AI agents with different specializations to handle complex tasks collaboratively. This guide covers everything you need to know about implementing and orchestrating multi-agent systems.
+
+## Overview
+
+Multi-agent conversations enable:
+
+- **Specialized Agents** - Each agent can have unique expertise (coding, research, analysis)
+- **Dynamic Handoffs** - Automatic transfer of conversation control between agents
+- **Collaborative Problem Solving** - Multiple perspectives on complex problems
+- **Context Preservation** - Shared conversation memory across all agents
+- **Orchestration Strategies** - Control how agents interact and collaborate
+
+## Basic Setup
+
+### Define Your Agents
+
+Start by defining the agents with their specific roles and capabilities:
+
+```tsx
+import { MultiAgentChat, Agent } from '@conciergus/chat';
+
+const agents: Agent[] = [
+  {
+    id: 'assistant',
+    name: 'General Assistant',
+    model: 'gpt-4',
+    systemPrompt: `You are a helpful general assistant. When you encounter 
+                   questions requiring specialized knowledge, suggest which 
+                   specialist should handle the query.`,
+    capabilities: ['general-help', 'routing', 'summarization'],
+    avatar: '/agents/assistant.png'
+  },
+  {
+    id: 'researcher',
+    name: 'Research Specialist',
+    model: 'gpt-4',
+    systemPrompt: `You are a research specialist. Provide detailed, well-sourced 
+                   information on topics. Always cite your sources and provide 
+                   multiple perspectives when relevant.`,
+    capabilities: ['research', 'fact-checking', 'analysis'],
+    avatar: '/agents/researcher.png'
+  },
+  {
+    id: 'coder',
+    name: 'Code Assistant',
+    model: 'claude-3-opus',
+    systemPrompt: `You are a coding specialist. Help with programming questions, 
+                   code reviews, debugging, and technical architecture decisions.`,
+    capabilities: ['coding', 'debugging', 'architecture', 'code-review'],
+    avatar: '/agents/coder.png'
+  },
+  {
+    id: 'analyst',
+    name: 'Data Analyst',
+    model: 'gpt-4',
+    systemPrompt: `You are a data analysis expert. Help with data interpretation, 
+                   statistical analysis, and creating insights from data.`,
+    capabilities: ['data-analysis', 'statistics', 'visualization'],
+    avatar: '/agents/analyst.png'
+  }
+];
+```
+
+### Basic Multi-Agent Chat
+
+```tsx
+import React from 'react';
+import { ChatProvider, MultiAgentChat } from '@conciergus/chat';
+
+function App() {
+  return (
+    <ChatProvider apiKey="your-api-key">
+      <MultiAgentChat
+        agents={agents}
+        conversationId="multi-agent-demo"
+        title="Multi-Agent Assistant"
+        orchestrationStrategy="intelligent"
+      />
+    </ChatProvider>
+  );
+}
+```
+
+## Orchestration Strategies
+
+### 1. Intelligent Orchestration (Recommended)
+
+The system automatically determines which agent should respond based on the conversation context and agent capabilities:
+
+```tsx
+<MultiAgentChat
+  agents={agents}
+  orchestrationStrategy="intelligent"
+  orchestrationConfig={{
+    routingModel: 'gpt-4',
+    confidenceThreshold: 0.8,
+    allowMultipleAgents: true,
+    maxAgentsPerTurn: 2
+  }}
+/>
+```
+
+### 2. Sequential Orchestration
+
+Agents respond in a predefined order:
+
+```tsx
+<MultiAgentChat
+  agents={agents}
+  orchestrationStrategy="sequential"
+  orchestrationConfig={{
+    sequence: ['assistant', 'researcher', 'analyst'],
+    skipInactive: true,
+    loopCount: 1
+  }}
+/>
+```
+
+### 3. Round-Robin Orchestration
+
+Each agent gets a turn to respond:
+
+```tsx
+<MultiAgentChat
+  agents={agents}
+  orchestrationStrategy="round-robin"
+  orchestrationConfig={{
+    turnsPerAgent: 1,
+    skipEmptyResponses: true,
+    resetOnNewTopic: true
+  }}
+/>
+```
+
+### 4. Manual Agent Selection
+
+Users can manually select which agent should respond:
+
+```tsx
+<MultiAgentChat
+  agents={agents}
+  orchestrationStrategy="manual"
+  showAgentSelector={true}
+  allowAgentSwitching={true}
+/>
+```
+
+## Advanced Configuration
+
+### Handoff Conditions
+
+Define when and how agents should hand off conversations:
+
+```tsx
+const handoffConditions = {
+  // Maximum turns before handoff
+  maxTurns: 3,
+  
+  // Keywords that trigger handoffs
+  keywords: {
+    'researcher': ['research', 'study', 'data', 'evidence'],
+    'coder': ['code', 'programming', 'debug', 'function'],
+    'analyst': ['analyze', 'statistics', 'trends', 'insights']
+  },
+  
+  // Confidence threshold for handoffs
+  confidence: 0.7,
+  
+  // Time-based handoffs (milliseconds)
+  timeout: 30000,
+  
+  // Custom handoff logic
+  customCondition: (context, currentAgent, message) => {
+    // Custom logic to determine if handoff is needed
+    return context.turnCount > 2 && message.includes('help');
+  }
+};
+
+<MultiAgentChat
+  agents={agents}
+  handoffConditions={handoffConditions}
+/>
+```
+
+### Agent Communication
+
+Enable agents to communicate with each other:
+
+```tsx
+const communicationConfig = {
+  // Allow agents to see each other's messages
+  sharedContext: true,
+  
+  // Enable direct agent-to-agent communication
+  agentToAgentChat: true,
+  
+  // Show agent collaboration in UI
+  showCollaboration: true,
+  
+  // Merge similar agent responses
+  mergeResponses: true,
+  
+  // Agent consensus building
+  consensusBuilding: {
+    enabled: true,
+    threshold: 0.8,
+    maxRounds: 3
+  }
+};
+
+<MultiAgentChat
+  agents={agents}
+  communicationConfig={communicationConfig}
+/>
+```
+
+## Agent Specialization
+
+### Creating Specialized Agents
+
+Define agents with specific expertise and tools:
+
+```tsx
+const specializedAgents = [
+  {
+    id: 'sql-expert',
+    name: 'SQL Expert',
+    model: 'gpt-4',
+    systemPrompt: `You are a SQL expert. Help users write, optimize, and debug SQL queries.`,
+    tools: [
+      {
+        name: 'execute_sql',
+        description: 'Execute SQL queries safely',
+        parameters: {
+          query: 'string',
+          database: 'string'
+        }
+      },
+      {
+        name: 'explain_query',
+        description: 'Explain SQL query execution plan',
+        parameters: {
+          query: 'string'
+        }
+      }
+    ],
+    capabilities: ['sql', 'database-design', 'query-optimization']
+  },
+  {
+    id: 'api-expert',
+    name: 'API Expert',
+    model: 'claude-3-opus',
+    systemPrompt: `You are an API expert. Help with REST API design, testing, and integration.`,
+    tools: [
+      {
+        name: 'test_api',
+        description: 'Test API endpoints',
+        parameters: {
+          url: 'string',
+          method: 'string',
+          headers: 'object'
+        }
+      }
+    ],
+    capabilities: ['api-design', 'rest', 'graphql', 'testing']
+  }
+];
+```
+
+### Agent Memory and Context
+
+Configure how agents maintain context and memory:
+
+```tsx
+const memoryConfig = {
+  // Shared memory across all agents
+  sharedMemory: {
+    enabled: true,
+    maxEntries: 100,
+    ttl: 3600000 // 1 hour
+  },
+  
+  // Individual agent memory
+  agentMemory: {
+    enabled: true,
+    maxEntries: 50,
+    persistent: true
+  },
+  
+  // Context window management
+  contextWindow: {
+    maxTokens: 8000,
+    compressionStrategy: 'summarize',
+    preserveImportant: true
+  }
+};
+
+<MultiAgentChat
+  agents={agents}
+  memoryConfig={memoryConfig}
+/>
+```
+
+## UI Customization
+
+### Custom Agent Display
+
+Customize how agents appear in the chat interface:
+
+```tsx
+const agentUIConfig = {
+  // Show agent avatars
+  showAvatars: true,
+  
+  // Display agent status
+  showStatus: true,
+  
+  // Agent thinking indicators
+  showThinking: true,
+  
+  // Collaboration visualization
+  showCollaboration: true,
+  
+  // Custom agent colors
+  agentColors: {
+    'assistant': '#1976d2',
+    'researcher': '#388e3c',
+    'coder': '#f57c00',
+    'analyst': '#7b1fa2'
+  }
+};
+
+<MultiAgentChat
+  agents={agents}
+  uiConfig={agentUIConfig}
+/>
+```
+
+### Agent Selector Component
+
+Create a custom agent selector:
+
+```tsx
+import { AgentSelector } from '@conciergus/chat';
+
+<AgentSelector
+  agents={agents}
+  selectedAgent="assistant"
+  onAgentChange={(agentId) => setSelectedAgent(agentId)}
+  showCapabilities={true}
+  showStatus={true}
+  layout="grid" // or "list"
+/>
+```
+
+## Event Handling
+
+Handle multi-agent specific events:
+
+```tsx
+<MultiAgentChat
+  agents={agents}
+  onAgentHandoff={(fromAgent, toAgent, reason) => {
+    console.log(`Handoff from ${fromAgent} to ${toAgent}: ${reason}`);
+  }}
+  onAgentResponse={(agent, message, context) => {
+    console.log(`${agent.name} responded:`, message);
+  }}
+  onCollaboration={(agents, topic) => {
+    console.log(`Agents collaborating:`, agents, topic);
+  }}
+  onConsensus={(agents, decision) => {
+    console.log(`Consensus reached:`, decision);
+  }}
+  onError={(error, agent) => {
+    console.error(`Error with ${agent?.name}:`, error);
+  }}
+/>
+```
+
+## Performance Optimization
+
+### Lazy Agent Loading
+
+Load agents only when needed:
+
+```tsx
+const lazyAgents = [
+  {
+    id: 'researcher',
+    name: 'Research Specialist',
+    loadWhen: ['research', 'study', 'data'],
+    loader: () => import('./agents/ResearchAgent')
+  },
+  {
+    id: 'coder',
+    name: 'Code Assistant',
+    loadWhen: ['code', 'programming', 'debug'],
+    loader: () => import('./agents/CodeAgent')
+  }
+];
+
+<MultiAgentChat
+  agents={lazyAgents}
+  lazyLoading={true}
+/>
+```
+
+### Caching and Memoization
+
+Optimize performance with caching:
+
+```tsx
+const performanceConfig = {
+  // Cache agent responses
+  responseCache: {
+    enabled: true,
+    maxSize: 100,
+    ttl: 300000 // 5 minutes
+  },
+  
+  // Memoize agent routing decisions
+  routingCache: {
+    enabled: true,
+    maxSize: 50,
+    ttl: 600000 // 10 minutes
+  },
+  
+  // Debounce rapid agent switches
+  switchDebounce: 1000 // 1 second
+};
+
+<MultiAgentChat
+  agents={agents}
+  performanceConfig={performanceConfig}
+/>
+```
+
+## Best Practices
+
+### 1. Agent Design
+
+- **Clear Roles**: Give each agent a distinct, well-defined role
+- **Complementary Skills**: Ensure agents have complementary rather than overlapping capabilities
+- **Specific Prompts**: Use detailed system prompts that define behavior and expertise
+- **Capability Mapping**: Clearly define what each agent can and cannot do
+
+### 2. Orchestration
+
+- **Start Simple**: Begin with intelligent orchestration and customize as needed
+- **Monitor Performance**: Track handoff success rates and user satisfaction
+- **Gradual Complexity**: Add more agents and features incrementally
+- **User Control**: Always provide users with override options
+
+### 3. Error Handling
+
+- **Graceful Fallbacks**: Have backup agents for critical functions
+- **Error Recovery**: Implement retry logic and error reporting
+- **User Communication**: Keep users informed about agent status and issues
+- **Monitoring**: Track agent performance and availability
+
+## Troubleshooting
+
+### Common Issues
+
+**Agents not responding:**
+```tsx
+// Check agent configuration
+console.log('Active agents:', agents.filter(a => a.status === 'active'));
+
+// Verify orchestration settings
+<MultiAgentChat
+  agents={agents}
+  debug={true} // Enable debug mode
+/>
+```
+
+**Poor handoff decisions:**
+```tsx
+// Adjust confidence thresholds
+const handoffConditions = {
+  confidence: 0.6, // Lower threshold for more handoffs
+  maxTurns: 2 // Shorter agent turns
+};
+```
+
+**Performance issues:**
+```tsx
+// Enable performance monitoring
+const performanceConfig = {
+  monitoring: {
+    enabled: true,
+    logSlow: true,
+    slowThreshold: 2000 // 2 seconds
+  }
+};
+```
+
+## Examples
+
+Check out these complete examples:
+
+- [Customer Support Multi-Agent](https://github.com/conciergus/chat/examples/customer-support)
+- [Research Assistant Team](https://github.com/conciergus/chat/examples/research-team)
+- [Development Helper Agents](https://github.com/conciergus/chat/examples/dev-helpers)
+- [Educational Tutoring System](https://github.com/conciergus/chat/examples/tutoring-system)
+
+## Next Steps
+
+- [Voice Integration](/docs/guides/voice-integration) - Add speech to multi-agent conversations
+- [Real-time Collaboration](/docs/guides/real-time-collaboration) - Enable live agent coordination
+- [Plugin Development](/docs/guides/plugin-development) - Create custom agent plugins
+- [Performance Monitoring](/docs/guides/monitoring) - Track multi-agent performance 

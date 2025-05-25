@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Getting Started with Conciergus Chat",
+    "description": "Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features",
+    "category": "Guide",
+    "order": 1,
+    "tags": [
+      "quickstart",
+      "installation",
+      "setup",
+      "react"
+    ],
+    "lastUpdated": "2025-05-25T00:00:00.000Z",
+    "fileName": "getting-started",
+    "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/getting-started.mdx",
+    "compiledAt": "2025-05-25T14:21:48.406Z",
+    "wordCount": 784,
+    "readingTime": 4
+  },
+  {
+    "title": "Multi-Agent Conversations",
+    "description": "Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies",
+    "category": "Guide",
+    "order": 2,
+    "tags": [
+      "multi-agent",
+      "orchestration",
+      "collaboration",
+      "ai"
+    ],
+    "lastUpdated": "2025-05-25T00:00:00.000Z",
+    "fileName": "multi-agent-conversations",
+    "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/multi-agent-conversations.mdx",
+    "compiledAt": "2025-05-25T14:21:48.417Z",
+    "wordCount": 1316,
+    "readingTime": 7
+  }
+]

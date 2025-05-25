@@ -1,0 +1,474 @@
+name: Contribution Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-contribution:
+    name: Analyze Contribution
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      has-code-changes: ${{ steps.changes.outputs.has-code-changes }}
+      has-docs-changes: ${{ steps.changes.outputs.has-docs-changes }}
+      has-test-changes: ${{ steps.changes.outputs.has-test-changes }}
+      changeset-needed: ${{ steps.changeset.outputs.needed }}
+      contribution-type: ${{ steps.analyze.outputs.type }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze file changes
+        id: changes
+        run: |
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Analyze changes
+          HAS_CODE_CHANGES=false
+          HAS_DOCS_CHANGES=false
+          HAS_TEST_CHANGES=false
+          
+          while IFS= read -r file; do
+            if [[ "$file" =~ ^src/ && "$file" =~ \.(ts|tsx|js|jsx)$ ]]; then
+              HAS_CODE_CHANGES=true
+            elif [[ "$file" =~ ^docs/ || "$file" =~ \.md$ ]]; then
+              HAS_DOCS_CHANGES=true
+            elif [[ "$file" =~ \.(test|spec)\.(ts|tsx|js|jsx)$ ]]; then
+              HAS_TEST_CHANGES=true
+            fi
+          done <<< "$CHANGED_FILES"
+          
+          echo "has-code-changes=$HAS_CODE_CHANGES" >> $GITHUB_OUTPUT
+          echo "has-docs-changes=$HAS_DOCS_CHANGES" >> $GITHUB_OUTPUT
+          echo "has-test-changes=$HAS_TEST_CHANGES" >> $GITHUB_OUTPUT
+          
+          echo "Changed files analysis:"
+          echo "- Code changes: $HAS_CODE_CHANGES"
+          echo "- Docs changes: $HAS_DOCS_CHANGES" 
+          echo "- Test changes: $HAS_TEST_CHANGES"
+
+      - name: Check changeset requirement
+        id: changeset
+        run: |
+          # Check if changeset is needed based on file changes
+          CHANGESET_NEEDED=false
+          
+          # Check for public API changes
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '^src/(index\.ts|types/|components/|hooks/|context/)'; then
+            if ! ls .changeset/*.md 2>/dev/null | grep -v 'README.md' >/dev/null; then
+              CHANGESET_NEEDED=true
+            fi
+          fi
+          
+          echo "needed=$CHANGESET_NEEDED" >> $GITHUB_OUTPUT
+
+      - name: Analyze contribution type
+        id: analyze
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          # Determine contribution type from PR title and body
+          if [[ "$PR_TITLE" =~ ^feat(\(.+\))?: ]]; then
+            echo "type=feature" >> $GITHUB_OUTPUT
+          elif [[ "$PR_TITLE" =~ ^fix(\(.+\))?: ]]; then
+            echo "type=bugfix" >> $GITHUB_OUTPUT
+          elif [[ "$PR_TITLE" =~ ^docs(\(.+\))?: ]]; then
+            echo "type=documentation" >> $GITHUB_OUTPUT
+          elif [[ "$PR_TITLE" =~ ^refactor(\(.+\))?: ]]; then
+            echo "type=refactor" >> $GITHUB_OUTPUT
+          elif [[ "$PR_TITLE" =~ ^test(\(.+\))?: ]]; then
+            echo "type=test" >> $GITHUB_OUTPUT
+          else
+            echo "type=other" >> $GITHUB_OUTPUT
+          fi
+
+  validate-pr-structure:
+    name: Validate PR Structure
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    steps:
+      - name: Validate PR title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Check conventional commit format
+          if ! echo "$PR_TITLE" | grep -E '^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+'; then
+            echo "❌ PR title should follow conventional commit format"
+            echo "Examples:"
+            echo "  feat: add new feature"
+            echo "  fix: resolve bug in component" 
+            echo "  docs: update API documentation"
+            exit 1
+          fi
+          
+          echo "✅ PR title follows conventional commit format"
+
+      - name: Validate PR description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          # Check for required sections
+          if ! echo "$PR_BODY" | grep -i "## description"; then
+            echo "❌ PR description missing 'Description' section"
+            exit 1
+          fi
+          
+          if ! echo "$PR_BODY" | grep -i "## testing"; then
+            echo "❌ PR description missing 'Testing' section"
+            exit 1
+          fi
+          
+          echo "✅ PR description has required sections"
+
+  enhanced-code-quality:
+    name: Enhanced Code Quality
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.has-code-changes == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run enhanced linting
+        run: |
+          echo "Running ESLint with detailed output..."
+          pnpm run lint --format=stylish --max-warnings=0
+
+      - name: Check code formatting
+        run: |
+          echo "Checking Prettier formatting..."
+          pnpm run format
+
+      - name: TypeScript strict checks
+        run: |
+          echo "Running TypeScript compiler with strict checks..."
+          npx tsc --noEmit --strict
+
+      - name: Detect code smells
+        run: |
+          echo "Analyzing code complexity and potential issues..."
+          
+          # Check for large files (>500 lines)
+          find src -name "*.ts" -o -name "*.tsx" | xargs wc -l | awk '$1 > 500 { print "⚠️  Large file detected: " $2 " (" $1 " lines)" }'
+          
+          # Check for TODO/FIXME comments
+          TODO_COUNT=$(grep -r "TODO\|FIXME" src/ || true | wc -l)
+          if [ "$TODO_COUNT" -gt 0 ]; then
+            echo "⚠️  Found $TODO_COUNT TODO/FIXME comments"
+          fi
+
+  test-coverage-analysis:
+    name: Test Coverage Analysis
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.has-code-changes == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Analyze test coverage
+        run: |
+          # Check if new code has adequate test coverage
+          if [ -f coverage/lcov.info ]; then
+            COVERAGE=$(grep -oP 'LF:\K\d+' coverage/lcov.info | tail -1)
+            COVERED=$(grep -oP 'LH:\K\d+' coverage/lcov.info | tail -1)
+            
+            if [ "$COVERAGE" -gt 0 ]; then
+              PERCENTAGE=$((COVERED * 100 / COVERAGE))
+              echo "Test coverage: $PERCENTAGE%"
+              
+              if [ "$PERCENTAGE" -lt 80 ]; then
+                echo "⚠️  Test coverage below 80% threshold"
+              else
+                echo "✅ Test coverage meets requirements"
+              fi
+            fi
+          fi
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  documentation-validation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.has-docs-changes == 'true' || needs.analyze-contribution.outputs.has-code-changes == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate documentation build
+        run: |
+          echo "Building documentation..."
+          pnpm run docs:build
+
+      - name: Check for broken links in docs
+        run: |
+          echo "Checking for broken internal links..."
+          # Simple check for common broken link patterns
+          find docs -name "*.md" -exec grep -l "](/" {} \; | while read file; do
+            echo "Checking links in $file"
+            grep -o "](/" "$file" || true
+          done
+
+      - name: Validate TypeDoc comments
+        run: |
+          echo "Checking TypeScript documentation coverage..."
+          # Check for missing JSDoc on public APIs
+          find src -name "*.ts" -not -path "*/test/*" -not -name "*.test.ts" | xargs grep -l "export" | while read file; do
+            if ! grep -q "/\*\*" "$file"; then
+              echo "⚠️  Missing JSDoc in $file"
+            fi
+          done
+
+  performance-impact:
+    name: Performance Impact Analysis
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.has-code-changes == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and analyze bundle size
+        run: |
+          echo "Building for production..."
+          pnpm run build
+          
+          echo "Analyzing bundle size..."
+          pnpm run size
+          
+          echo "Bundle analysis:"
+          find dist -name "*.js" -exec basename {} \; | while read file; do
+            size=$(stat -c%s "dist/$file" | numfmt --to=iec-i)
+            echo "  $file: $size"
+          done
+
+      - name: Performance regression check
+        run: |
+          echo "Checking for potential performance regressions..."
+          
+          # Check for performance anti-patterns
+          grep -r "console.log\|console.warn\|console.error" src/ && echo "⚠️  Console statements found in production code" || true
+          grep -r "any\[\]" src/ && echo "⚠️  Loose any[] types found" || true
+
+  security-validation:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.has-code-changes == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Security audit
+        run: |
+          echo "Running security audit..."
+          pnpm audit --prod
+
+      - name: Check for security anti-patterns
+        run: |
+          echo "Checking for security anti-patterns..."
+          
+          # Check for potential security issues
+          grep -r "innerHTML\|dangerouslySetInnerHTML" src/ && echo "⚠️  Potential XSS vulnerability found" || true
+          grep -r "eval\|Function(" src/ && echo "⚠️  Code execution patterns found" || true
+          grep -r "window\." src/ && echo "ℹ️  Direct window access found" || true
+
+  changeset-validation:
+    name: Changeset Validation
+    runs-on: ubuntu-latest
+    needs: analyze-contribution
+    if: needs.analyze-contribution.outputs.changeset-needed == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for changeset
+        run: |
+          if ! ls .changeset/*.md 2>/dev/null | grep -v 'README.md' >/dev/null; then
+            echo "❌ Changeset required for public API changes"
+            echo ""
+            echo "This PR modifies public APIs and requires a changeset."
+            echo "Please run 'pnpm changeset' and commit the generated file."
+            echo ""
+            echo "Guidelines:"
+            echo "- patch: Bug fixes, non-breaking changes"
+            echo "- minor: New features, non-breaking additions"
+            echo "- major: Breaking changes"
+            exit 1
+          fi
+          
+          echo "✅ Changeset found"
+
+  first-time-contributor:
+    name: First-time Contributor Welcome
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+      - name: Check if first-time contributor
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: context.payload.pull_request.user.login,
+              state: 'all'
+            });
+            
+            return pullRequests.length === 1;
+
+      - name: Welcome first-time contributor
+        if: steps.check.outputs.result == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `🎉 Welcome to Conciergus Chat! Thank you for your first contribution!
+            
+            Here are some helpful resources:
+            - 📖 [Contributing Guidelines](https://github.com/conciergus/chat/blob/main/CONTRIBUTING.md)
+            - 💬 [Discord Community](https://discord.gg/conciergus)
+            - 🐛 [Good First Issues](https://github.com/conciergus/chat/labels/good-first-issue)
+            
+            A maintainer will review your PR soon. Thanks for helping make Conciergus better! 🚀`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: message
+            });
+
+  generate-contribution-summary:
+    name: Generate Contribution Summary
+    runs-on: ubuntu-latest
+    needs: [analyze-contribution, validate-pr-structure, enhanced-code-quality, test-coverage-analysis, documentation-validation, performance-impact, security-validation]
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              'PR Structure': '${{ needs.validate-pr-structure.result }}',
+              'Code Quality': '${{ needs.enhanced-code-quality.result }}',
+              'Test Coverage': '${{ needs.test-coverage-analysis.result }}',
+              'Documentation': '${{ needs.documentation-validation.result }}',
+              'Performance': '${{ needs.performance-impact.result }}',
+              'Security': '${{ needs.security-validation.result }}'
+            };
+            
+            let summary = '## 🔍 Contribution Validation Summary\n\n';
+            
+            for (const [check, result] of Object.entries(results)) {
+              const icon = result === 'success' ? '✅' : result === 'failure' ? '❌' : result === 'skipped' ? '⏭️' : '🟡';
+              summary += `${icon} **${check}**: ${result}\n`;
+            }
+            
+            summary += '\n---\n';
+            summary += '💡 **Tip**: Check the individual job logs for detailed feedback and suggestions!';
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: summary
+            }); 

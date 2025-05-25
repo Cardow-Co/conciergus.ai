@@ -1,0 +1,31 @@
+{
+  "name": "conciergus-chat-nextjs-stackblitz",
+  "version": "1.0.0",
+  "description": "Next.js Conciergus Chat integration example for StackBlitz",
+  "keywords": ["nextjs", "react", "ai", "chat", "conciergus", "typescript"],
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@conciergus/chat": "latest",
+    "ai": "canary",
+    "next": "^15.1.7",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.1.7",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

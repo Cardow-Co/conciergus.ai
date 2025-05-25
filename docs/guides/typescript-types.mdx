@@ -1,0 +1,623 @@
+---
+title: TypeScript Types & Utilities
+description: Comprehensive guide to TypeScript types, utilities, and advanced patterns in Conciergus Chat
+category: Developer Experience
+tags: [typescript, types, utilities, developer-experience]
+---
+
+# TypeScript Types & Utilities
+
+Conciergus Chat provides comprehensive TypeScript support with enhanced type definitions, utility types, and advanced patterns to improve your developer experience.
+
+## Core Type System
+
+### Message Types
+
+The foundation of Conciergus Chat is built on enhanced message types that extend AI SDK 5's capabilities:
+
+```typescript
+import type { 
+  EnhancedUIMessage, 
+  MessageMetadata, 
+  StreamingMessage,
+  CompletedMessage 
+} from '@conciergus/chat';
+
+// Basic enhanced message with metadata
+const message: EnhancedUIMessage = {
+  id: '123',
+  role: 'assistant',
+  content: 'Hello! How can I help you today?',
+  metadata: {
+    duration: 1200,
+    totalTokens: 15,
+    model: 'claude-3-sonnet',
+    finishReason: 'stop'
+  }
+};
+
+// Streaming message with required streaming metadata
+const streamingMessage: StreamingMessage = {
+  id: '456',
+  role: 'assistant',
+  content: 'Thinking...',
+  metadata: {
+    isStreaming: true,
+    streamId: 'stream-789'
+  }
+};
+
+// Completed message with required completion metadata
+const completedMessage: CompletedMessage = {
+  id: '789',
+  role: 'assistant',
+  content: 'Here is your answer.',
+  metadata: {
+    duration: 2500,
+    totalTokens: 42,
+    finishReason: 'stop'
+  }
+};
+```
+
+### Stream Part Types
+
+Type-safe streaming with comprehensive stream part definitions:
+
+```typescript
+import type { 
+  EnhancedStreamPart,
+  StreamPartByType,
+  TextDeltaStreamPart,
+  ToolCallStreamPart,
+  ReasoningStreamPart 
+} from '@conciergus/chat';
+
+// Type-safe stream part handling
+function handleStreamPart(part: EnhancedStreamPart) {
+  switch (part.type) {
+    case 'text-delta':
+      // TypeScript knows this is TextDeltaStreamPart
+      console.log('Text delta:', part.textDelta);
+      break;
+    
+    case 'tool-call':
+      // TypeScript knows this is ToolCallStreamPart
+      console.log('Tool call:', part.toolName, part.args);
+      break;
+    
+    case 'reasoning':
+      // TypeScript knows this is ReasoningStreamPart
+      console.log('Reasoning:', part.reasoning);
+      break;
+  }
+}
+
+// Extract specific stream part types
+type TextPart = StreamPartByType<'text-delta'>;
+type ToolPart = StreamPartByType<'tool-call'>;
+```
+
+### Conversation Types
+
+Multi-agent conversation support with comprehensive typing:
+
+```typescript
+import type { 
+  Conversation,
+  ConversationMessage,
+  AgentInfo,
+  TypedConversation,
+  ConversationWithAgents 
+} from '@conciergus/chat';
+
+// Custom agent type
+interface CustomAgent extends AgentInfo {
+  specialization: 'coding' | 'research' | 'creative';
+  experience: number;
+}
+
+// Typed conversation with custom agents
+type MyConversation = TypedConversation<ConversationMessage, CustomAgent>;
+
+const conversation: MyConversation = {
+  id: 'conv-123',
+  userId: 'user-456',
+  title: 'Code Review Session',
+  status: 'active',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  currentAgentId: 'agent-coding',
+  participatingAgents: [
+    {
+      id: 'agent-coding',
+      name: 'Code Assistant',
+      type: 'coding',
+      capabilities: ['code-review', 'debugging'],
+      specialization: 'coding',
+      experience: 5
+    }
+  ],
+  messages: [],
+  metadata: {
+    messageCount: 0,
+    totalTokens: 0
+  }
+};
+```
+
+## Utility Types
+
+### Core Utilities
+
+Powerful utility types for common patterns:
+
+```typescript
+import type { 
+  DeepPartial, 
+  DeepRequired, 
+  PickByType, 
+  Paths, 
+  PathValue 
+} from '@conciergus/chat';
+
+// Make all properties optional recursively
+type PartialConfig = DeepPartial<{
+  api: {
+    endpoint: string;
+    timeout: number;
+    retries: number;
+  };
+  ui: {
+    theme: 'light' | 'dark';
+    animations: boolean;
+  };
+}>;
+
+// Make all properties required recursively
+type RequiredConfig = DeepRequired<PartialConfig>;
+
+// Pick properties by type
+interface MixedObject {
+  name: string;
+  age: number;
+  isActive: boolean;
+  callback: () => void;
+  data: object;
+}
+
+type StringProps = PickByType<MixedObject, string>; // { name: string }
+type FunctionProps = PickByType<MixedObject, Function>; // { callback: () => void }
+
+// Type-safe object paths
+type ConfigPaths = Paths<RequiredConfig>; // 'api' | 'ui' | 'api.endpoint' | 'api.timeout' | ...
+type EndpointType = PathValue<RequiredConfig, 'api.endpoint'>; // string
+```
+
+### Message Utilities
+
+Specialized utilities for message handling:
+
+```typescript
+import type { 
+  MessageByRole, 
+  CustomMessage, 
+  MessageWithMetadata,
+  hasMetadata 
+} from '@conciergus/chat';
+
+// Extract messages by role
+type AssistantMessage = MessageByRole<'assistant'>;
+type UserMessage = MessageByRole<'user'>;
+
+// Custom message with specific metadata
+interface CustomMetadata {
+  sentiment: 'positive' | 'negative' | 'neutral';
+  confidence: number;
+}
+
+type SentimentMessage = CustomMessage<CustomMetadata>;
+
+const sentimentMessage: SentimentMessage = {
+  id: '123',
+  role: 'assistant',
+  content: 'Great question!',
+  metadata: {
+    duration: 1000,
+    sentiment: 'positive',
+    confidence: 0.95
+  }
+};
+
+// Type-safe metadata checking
+function processMessage(message: EnhancedUIMessage) {
+  if (hasMetadata(message, 'duration')) {
+    // TypeScript knows message.metadata.duration exists
+    console.log(`Response took ${message.metadata.duration}ms`);
+  }
+}
+```
+
+### Component Utilities
+
+Enhanced component prop handling:
+
+```typescript
+import type { 
+  ComponentProps, 
+  RequireProps, 
+  OptionalProps, 
+  OverrideProps 
+} from '@conciergus/chat';
+
+interface BaseButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary';
+}
+
+// Make specific props required
+type RequiredButton = RequireProps<BaseButtonProps, 'onClick'>;
+
+// Make specific props optional
+type OptionalButton = OptionalProps<BaseButtonProps, 'children'>;
+
+// Override props with new types
+type CustomButton = OverrideProps<BaseButtonProps, {
+  onClick: (event: MouseEvent) => Promise<void>;
+  variant: 'success' | 'danger' | 'warning';
+}>;
+```
+
+## Advanced Patterns
+
+### Branded Types
+
+Type-safe identifiers with branded types:
+
+```typescript
+import type { 
+  Brand, 
+  MessageId, 
+  ConversationId, 
+  AgentId,
+  isMessageId,
+  isConversationId 
+} from '@conciergus/chat';
+
+// Built-in branded types
+const messageId: MessageId = 'msg-123' as MessageId;
+const conversationId: ConversationId = 'conv-456' as ConversationId;
+const agentId: AgentId = 'agent-789' as AgentId;
+
+// Custom branded types
+type ProductId = Brand<string, 'ProductId'>;
+type OrderId = Brand<number, 'OrderId'>;
+
+// Type guards for runtime validation
+function processMessage(id: string) {
+  if (isMessageId(id)) {
+    // TypeScript knows id is MessageId
+    console.log('Processing message:', id);
+  }
+}
+```
+
+### Event Emitters
+
+Type-safe event handling:
+
+```typescript
+import type { TypedEventEmitter } from '@conciergus/chat';
+
+// Define event types
+interface ChatEvents {
+  'message:sent': [message: EnhancedUIMessage];
+  'message:received': [message: EnhancedUIMessage];
+  'stream:start': [streamId: string];
+  'stream:complete': [streamId: string, message: EnhancedUIMessage];
+  'error': [error: Error];
+}
+
+// Type-safe event emitter
+const chatEmitter: TypedEventEmitter<ChatEvents> = {
+  on(event, listener) {
+    // TypeScript ensures listener matches event signature
+  },
+  off(event, listener) {
+    // Type-safe event removal
+  },
+  emit(event, ...args) {
+    // Type-safe event emission
+  }
+};
+
+// Usage with full type safety
+chatEmitter.on('message:sent', (message) => {
+  // TypeScript knows message is EnhancedUIMessage
+  console.log('Message sent:', message.content);
+});
+
+chatEmitter.emit('stream:complete', 'stream-123', completedMessage);
+```
+
+### State Machines
+
+Type-safe state management:
+
+```typescript
+import type { StateMachine } from '@conciergus/chat';
+
+// Define states and events
+type ChatState = 'idle' | 'typing' | 'streaming' | 'error';
+type ChatEvent = 'start_typing' | 'start_streaming' | 'complete' | 'error' | 'reset';
+
+const chatStateMachine: StateMachine<ChatState, ChatEvent> = {
+  currentState: 'idle',
+  
+  transition(event) {
+    // Type-safe state transitions
+    switch (this.currentState) {
+      case 'idle':
+        if (event === 'start_typing') return 'typing';
+        if (event === 'start_streaming') return 'streaming';
+        break;
+      case 'typing':
+        if (event === 'complete') return 'idle';
+        if (event === 'error') return 'error';
+        break;
+      // ... more transitions
+    }
+    return this.currentState;
+  },
+  
+  canTransition(event) {
+    // Check if transition is valid
+    return this.transition(event) !== this.currentState;
+  },
+  
+  getValidTransitions() {
+    // Get valid events for current state
+    const validEvents: ChatEvent[] = [];
+    // Implementation...
+    return validEvents;
+  }
+};
+```
+
+### Builder Pattern
+
+Type-safe object construction:
+
+```typescript
+import type { Builder } from '@conciergus/chat';
+
+interface ChatConfig {
+  apiKey: string;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  enableStreaming: boolean;
+}
+
+// Type-safe builder
+const configBuilder: Builder<ChatConfig> = {
+  setApiKey(value) { /* implementation */ return this; },
+  setModel(value) { /* implementation */ return this; },
+  setTemperature(value) { /* implementation */ return this; },
+  setMaxTokens(value) { /* implementation */ return this; },
+  setEnableStreaming(value) { /* implementation */ return this; },
+  build() { /* implementation */ return {} as ChatConfig; }
+};
+
+// Usage with method chaining and type safety
+const config = configBuilder
+  .setApiKey('sk-...')
+  .setModel('claude-3-sonnet')
+  .setTemperature(0.7)
+  .setMaxTokens(1000)
+  .setEnableStreaming(true)
+  .build();
+```
+
+## Configuration Types
+
+### Feature Flags
+
+Type-safe feature configuration:
+
+```typescript
+import type { FeatureFlags, ProviderConfig, EnvironmentConfig } from '@conciergus/chat';
+
+const features: FeatureFlags = {
+  enableStreaming: true,
+  enableReasoningTraces: true,
+  enableSourceCitations: false,
+  enableCostTracking: true,
+  enablePerformanceMetrics: true,
+  enableTelemetry: false,
+  enableMultiAgent: true,
+  enableVoice: false,
+  enableFileAttachments: true
+};
+
+const config: ProviderConfig = {
+  apiKey: 'sk-...',
+  model: 'claude-3-sonnet',
+  features,
+  environment: 'production',
+  debug: false
+};
+
+// Environment-specific configuration
+const envConfig: EnvironmentConfig<typeof config> = {
+  ...config,
+  development: {
+    debug: true,
+    features: {
+      enableTelemetry: true
+    }
+  },
+  production: {
+    debug: false,
+    features: {
+      enableTelemetry: false
+    }
+  }
+};
+```
+
+## Validation Types
+
+Type-safe validation with comprehensive error handling:
+
+```typescript
+import type { 
+  ValidationResult, 
+  ValidationError, 
+  SchemaValidator 
+} from '@conciergus/chat';
+
+// Define validation schema
+const messageValidator: SchemaValidator<EnhancedUIMessage> = (data) => {
+  const errors: ValidationError[] = [];
+  
+  if (!data || typeof data !== 'object') {
+    errors.push({
+      field: 'root',
+      message: 'Data must be an object',
+      code: 'INVALID_TYPE'
+    });
+  }
+  
+  // More validation logic...
+  
+  return {
+    isValid: errors.length === 0,
+    data: errors.length === 0 ? data as EnhancedUIMessage : undefined,
+    errors: errors.length > 0 ? errors : undefined
+  };
+};
+
+// Usage
+const result = messageValidator(someData);
+if (result.isValid && result.data) {
+  // TypeScript knows result.data is EnhancedUIMessage
+  console.log('Valid message:', result.data.content);
+} else if (result.errors) {
+  // Handle validation errors
+  result.errors.forEach(error => {
+    console.error(`${error.field}: ${error.message}`);
+  });
+}
+```
+
+## Best Practices
+
+### 1. Use Branded Types for IDs
+
+```typescript
+// ✅ Good: Type-safe IDs
+function getMessage(id: MessageId): Promise<EnhancedUIMessage> {
+  // Implementation
+}
+
+// ❌ Bad: Plain strings
+function getMessage(id: string): Promise<EnhancedUIMessage> {
+  // Could accidentally pass wrong ID type
+}
+```
+
+### 2. Leverage Utility Types
+
+```typescript
+// ✅ Good: Use utility types for flexibility
+type PartialMessage = DeepPartial<EnhancedUIMessage>;
+type RequiredMetadata = MessageWithMetadata<'duration' | 'totalTokens'>;
+
+// ❌ Bad: Manually defining similar types
+interface PartialMessage {
+  id?: string;
+  role?: 'user' | 'assistant' | 'system';
+  // ... manually making everything optional
+}
+```
+
+### 3. Type Guards for Runtime Safety
+
+```typescript
+// ✅ Good: Use type guards
+if (hasMetadata(message, 'duration')) {
+  console.log(`Took ${message.metadata.duration}ms`);
+}
+
+// ❌ Bad: Unsafe access
+console.log(`Took ${message.metadata?.duration}ms`); // Could be undefined
+```
+
+### 4. Generic Components
+
+```typescript
+// ✅ Good: Generic, reusable components
+interface ListProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+}
+
+function List<T>({ items, renderItem }: ListProps<T>) {
+  return <div>{items.map(renderItem)}</div>;
+}
+
+// Usage with full type safety
+<List<EnhancedUIMessage>
+  items={messages}
+  renderItem={(message) => <div>{message.content}</div>}
+/>
+```
+
+## Migration Guide
+
+### From Basic Types
+
+If you're upgrading from basic types:
+
+```typescript
+// Before
+import { UIMessage } from '@ai-sdk/react';
+
+// After
+import type { EnhancedUIMessage } from '@conciergus/chat';
+
+// The enhanced version is backward compatible
+const message: EnhancedUIMessage = basicMessage; // ✅ Works
+```
+
+### Adding Type Safety
+
+Gradually add type safety to existing code:
+
+```typescript
+// Step 1: Add basic types
+const messages: EnhancedUIMessage[] = [];
+
+// Step 2: Add utility types
+const streamingMessages: StreamingMessage[] = messages.filter(
+  (msg): msg is StreamingMessage => hasMetadata(msg, 'isStreaming')
+);
+
+// Step 3: Add branded types
+const messageIds: MessageId[] = messages.map(msg => msg.id as MessageId);
+```
+
+## Conclusion
+
+Conciergus Chat's TypeScript support provides:
+
+- **Comprehensive Type Coverage**: All APIs are fully typed
+- **Utility Types**: Common patterns made easy
+- **Advanced Patterns**: Event emitters, state machines, builders
+- **Runtime Safety**: Type guards and validation
+- **Developer Experience**: Excellent IntelliSense and error detection
+
+The type system is designed to grow with your application while maintaining backward compatibility and providing excellent developer experience. 

@@ -8,10 +8,8 @@ import type {
 import { EnhancedConciergusContext } from '../context/EnhancedConciergusContext';
 import { GatewayProvider, useGateway } from '../context/GatewayProvider';
 import type { GatewayConfig } from '../context/GatewayConfig';
-import {
-  ConciergusErrorBoundary,
-  ErrorCategory,
-} from '../errors/ErrorBoundary';
+import { ErrorBoundary } from '../errors';
+import ConciergusErrorBoundary, { ErrorCategory } from './ConciergusErrorBoundary';
 import ConciergusMetadataDisplay from './ConciergusMetadataDisplay';
 import ConciergusModelSwitcher from './ConciergusModelSwitcher';
 import type { TelemetryEvent } from './ConciergusMetadataDisplay';
@@ -222,7 +220,7 @@ const GatewayErrorHandler: React.FC<GatewayErrorHandlerProps> = ({
       isolateFailures={true}
       onError={(error, errorInfo) => {
         // Handle gateway-specific errors
-        if (error.category === ErrorCategory.AI_PROVIDER && onGatewayFallback) {
+        if (error.message.includes('provider') && onGatewayFallback) {
           // Extract model information if available
           const currentModel = error.context?.modelId || 'unknown';
           const fallbackModel = error.context?.fallbackModel || 'fallback';
@@ -230,13 +228,13 @@ const GatewayErrorHandler: React.FC<GatewayErrorHandlerProps> = ({
         }
 
         if (
-          error.category === ErrorCategory.AUTHENTICATION &&
+          error.message.includes('unauthorized') &&
           onGatewayAuthFailure
         ) {
           onGatewayAuthFailure(error);
         }
 
-        if (error.category === ErrorCategory.RATE_LIMIT && onGatewayRateLimit) {
+        if (error.message.includes('rate limit') && onGatewayRateLimit) {
           const modelId = error.context?.modelId || 'unknown';
           const retryAfter = error.context?.retryAfter;
           onGatewayRateLimit(modelId, retryAfter);
@@ -319,9 +317,9 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   // Enhanced error handling
   enableEnhancedErrorHandling = true,
   autoHandleErrorCategories = [
-    ErrorCategory.NETWORK,
-    ErrorCategory.AI_PROVIDER,
-    ErrorCategory.RATE_LIMIT,
+    'network',
+    'system',
+    'authorization',
   ],
   errorReportingEndpoint,
   enableErrorTelemetry = true,

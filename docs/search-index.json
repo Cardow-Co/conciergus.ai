@@ -1,0 +1,32 @@
+[
+  {
+    "id": "guide-getting-started",
+    "type": "guide",
+    "title": "Getting Started with Conciergus Chat",
+    "description": "Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features",
+    "content": "Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features",
+    "path": "/guides/getting-started",
+    "tags": [
+      "quickstart",
+      "installation",
+      "setup",
+      "react"
+    ],
+    "category": "Guide"
+  },
+  {
+    "id": "guide-multi-agent-conversations",
+    "type": "guide",
+    "title": "Multi-Agent Conversations",
+    "description": "Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies",
+    "content": "Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies",
+    "path": "/guides/multi-agent-conversations",
+    "tags": [
+      "multi-agent",
+      "orchestration",
+      "collaboration",
+      "ai"
+    ],
+    "category": "Guide"
+  }
+]

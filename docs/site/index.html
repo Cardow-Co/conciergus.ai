@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conciergus Chat Documentation</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+</head>
+<body>
+  <div id="app">
+    <nav class="sidebar">
+      <div class="logo">
+        <h1>Conciergus Chat</h1>
+        <span class="version">v0.2.0</span>
+      </div>
+      <div class="search">
+        <input type="text" id="search-input" placeholder="Search documentation..." />
+        <div id="search-results"></div>
+      </div>
+      <div class="navigation">
+        <div class="nav-section"><h3>Guides</h3><ul><li><strong>Guide</strong><ul><li><a href="/guides/getting-started">Getting Started with Conciergus Chat</a></li><li><a href="/guides/multi-agent-conversations">Multi-Agent Conversations</a></li></ul></li></ul></div><div class="nav-section"><h3><a href="/api">API Reference</a></h3><ul><li><a href="/api/components">Components</a></li><li><a href="/api/hooks">Hooks</a></li><li><a href="/api/types">Types</a></li><li><a href="/api/utilities">Utilities</a></li></ul></div>
+      </div>
+    </nav>
+    <main class="content">
+      <div id="main-content">
+        <h1>Welcome to Conciergus Chat Documentation</h1>
+        <p>Comprehensive documentation for building AI-powered chat interfaces.</p>
+        <div class="quick-links">
+          <a href="/guides/getting-started" class="quick-link">
+            <h3>🚀 Getting Started</h3>
+            <p>Learn the basics and set up your first chat interface</p>
+          </a>
+          <a href="/guides/multi-agent-conversations" class="quick-link">
+            <h3>🤖 Multi-Agent</h3>
+            <p>Coordinate multiple AI agents in conversations</p>
+          </a>
+          <a href="/api" class="quick-link">
+            <h3>📚 API Reference</h3>
+            <p>Detailed API documentation and type definitions</p>
+          </a>
+          <a href="/examples" class="quick-link">
+            <h3>💡 Examples</h3>
+            <p>Working examples and implementation patterns</p>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    // Inject search index and navigation data
+    window.DOCS_DATA = {
+      navigation: {"guides":[{"title":"Guide","children":[{"title":"Getting Started with Conciergus Chat","path":"/guides/getting-started","description":"Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features","tags":["quickstart","installation","setup","react"],"order":1},{"title":"Multi-Agent Conversations","path":"/guides/multi-agent-conversations","description":"Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies","tags":["multi-agent","orchestration","collaboration","ai"],"order":2}]}],"api":{"title":"API Reference","path":"/api","children":[{"title":"Components","path":"/api/components"},{"title":"Hooks","path":"/api/hooks"},{"title":"Types","path":"/api/types"},{"title":"Utilities","path":"/api/utilities"}]},"examples":{"title":"Examples","path":"/examples","children":[]}},
+      searchIndex: [{"id":"guide-getting-started","type":"guide","title":"Getting Started with Conciergus Chat","description":"Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features","content":"Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features","path":"/guides/getting-started","tags":["quickstart","installation","setup","react"],"category":"Guide"},{"id":"guide-multi-agent-conversations","type":"guide","title":"Multi-Agent Conversations","description":"Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies","content":"Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies","path":"/guides/multi-agent-conversations","tags":["multi-agent","orchestration","collaboration","ai"],"category":"Guide"}],
+      metadata: [{"title":"Getting Started with Conciergus Chat","description":"Complete guide to integrating AI-powered chat interfaces with multi-agent conversations, voice capabilities, and enterprise features","category":"Guide","order":1,"tags":["quickstart","installation","setup","react"],"lastUpdated":"2025-05-25T00:00:00.000Z","fileName":"getting-started","filePath":"/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/getting-started.mdx","compiledAt":"2025-05-25T14:21:48.406Z","wordCount":784,"readingTime":4},{"title":"Multi-Agent Conversations","description":"Learn how to coordinate multiple AI agents in collaborative conversations with advanced orchestration strategies","category":"Guide","order":2,"tags":["multi-agent","orchestration","collaboration","ai"],"lastUpdated":"2025-05-25T00:00:00.000Z","fileName":"multi-agent-conversations","filePath":"/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/multi-agent-conversations.mdx","compiledAt":"2025-05-25T14:21:48.417Z","wordCount":1316,"readingTime":7}]
+    };
+  </script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
