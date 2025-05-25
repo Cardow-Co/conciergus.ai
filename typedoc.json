@@ -58,7 +58,7 @@
   "cleanOutputDir": false,
   "includeVersion": true,
   "disableSources": false,
-  "sourceLinkTemplate": "https://github.com/conciergus/chat/blob/{gitRevision}/{path}#L{line}",
+  "sourceLinkTemplate": "https://github.com/Cardow-Co/conciergus.ai/blob/{gitRevision}/{path}#L{line}",
   "gitRevision": "main",
   "githubPages": false,
   "customCss": "./docs/assets/typedoc-custom.css",

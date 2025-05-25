@@ -20,13 +20,13 @@
     "email": "hello@conciergus.ai"
   },
   "license": "MIT",
-  "homepage": "https://github.com/conciergus/chat#readme",
+  "homepage": "https://github.com/Cardow-Co/conciergus.ai#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/conciergus/chat.git"
+    "url": "https://github.com/Cardow-Co/conciergus.ai.git"
   },
   "bugs": {
-    "url": "https://github.com/conciergus/chat/issues"
+    "url": "https://github.com/Cardow-Co/conciergus.ai/issues"
   },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",

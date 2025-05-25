@@ -324,7 +324,7 @@ if (commands[command]) {
     log('\n🎉 Setup completed successfully!', colors.green + colors.bright);
     log('\n📖 Next steps:', colors.bright);
     log('  1. Read CONTRIBUTING.md for detailed guidelines');
-    log('  2. Check out existing issues: https://github.com/conciergus/chat/issues');
+    log('  2. Check out existing issues: https://github.com/Cardow-Co/conciergus.ai/issues');
     log('  3. Join our Discord community (link in README)');
     log('  4. Start with a good first issue labeled "good-first-issue"');
     

@@ -30,7 +30,7 @@ function _createMdxContent(props) {
     }), "\n", _jsx(_components.pre, {
       children: _jsx(_components.code, {
         className: "language-bash",
-        children: "git clone https://github.com/conciergus/chat.git\ncd chat\nnode scripts/contributor-setup.js\n"
+        children: "git clone https://github.com/Cardow-Co/conciergus.ai.git\ncd chat\nnode scripts/contributor-setup.js\n"
       })
     }), "\n", _jsx(_components.p, {
       children: "The setup script will:"
@@ -599,12 +599,12 @@ function _createMdxContent(props) {
         })]
       }), "\n", _jsxs(_components.li, {
         children: ["Discussions: ", _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/discussions",
+          href: "https://github.com/Cardow-Co/conciergus.ai/discussions",
           children: "GitHub Discussions"
         })]
       }), "\n", _jsxs(_components.li, {
         children: ["Issues: ", _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/issues",
+          href: "https://github.com/Cardow-Co/conciergus.ai/issues",
           children: "Report bugs or request features"
         })]
       }), "\n"]

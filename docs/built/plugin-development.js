@@ -326,7 +326,7 @@ function _createMdxContent(props) {
       children: "The Conciergus Chat plugin system provides a powerful and flexible way to extend the library's functionality. By following the patterns and best practices outlined in this guide, you can create robust, performant plugins that enhance the chat experience for your users."
     }), "\n", _jsxs(_components.p, {
       children: ["For more examples and advanced use cases, check out the ", _jsx(_components.a, {
-        href: "https://github.com/conciergus/plugin-examples",
+        href: "https://github.com/Cardow-Co/plugin-examples",
         children: "Plugin Examples Repository"
       }), " and the ", _jsx(_components.a, {
         href: "/docs/api/plugins",

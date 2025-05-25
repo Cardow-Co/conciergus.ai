@@ -6,7 +6,7 @@ A simple example demonstrating how to integrate Conciergus Chat into a React app
 
 1. **Clone and navigate to the example:**
    ```bash
-   git clone https://github.com/conciergus/chat.git
+   git clone https://github.com/Cardow-Co/conciergus.ai.git
    cd chat/examples/basic-chat
    ```
 
@@ -209,7 +209,7 @@ Modify the CSS in `App.css` to match your brand:
 
 1. Check the [main documentation](../../docs/)
 2. Review other [examples](../)
-3. Open an issue on [GitHub](https://github.com/conciergus/chat/issues)
+3. Open an issue on [GitHub](https://github.com/Cardow-Co/conciergus.ai/issues)
 4. Join our [Discord community](https://discord.gg/conciergus)
 
 ## 📚 Next Steps

@@ -289,22 +289,22 @@ function _createMdxContent(props) {
     }), "\n", _jsxs(_components.ul, {
       children: ["\n", _jsx(_components.li, {
         children: _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/examples/customer-support",
+          href: "https://github.com/Cardow-Co/conciergus.ai/examples/customer-support",
           children: "Customer Support Multi-Agent"
         })
       }), "\n", _jsx(_components.li, {
         children: _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/examples/research-team",
+          href: "https://github.com/Cardow-Co/conciergus.ai/examples/research-team",
           children: "Research Assistant Team"
         })
       }), "\n", _jsx(_components.li, {
         children: _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/examples/dev-helpers",
+          href: "https://github.com/Cardow-Co/conciergus.ai/examples/dev-helpers",
           children: "Development Helper Agents"
         })
       }), "\n", _jsx(_components.li, {
         children: _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/examples/tutoring-system",
+          href: "https://github.com/Cardow-Co/conciergus.ai/examples/tutoring-system",
           children: "Educational Tutoring System"
         })
       }), "\n"]

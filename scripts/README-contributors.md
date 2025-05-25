@@ -139,7 +139,7 @@ node scripts/dev-tools.js setup
 
 1. **Clone and Setup:**
    ```bash
-   git clone https://github.com/conciergus/chat.git
+   git clone https://github.com/Cardow-Co/conciergus.ai.git
    cd chat
    pnpm run contributor:setup
    ```
@@ -288,4 +288,4 @@ When modifying these tools:
 
 ---
 
-**Need help?** Join our [Discord community](https://discord.gg/conciergus) or open a [GitHub Discussion](https://github.com/conciergus/chat/discussions)! 
+**Need help?** Join our [Discord community](https://discord.gg/conciergus) or open a [GitHub Discussion](https://github.com/Cardow-Co/conciergus.ai/discussions)! 

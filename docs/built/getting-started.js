@@ -226,7 +226,7 @@ function _createMdxContent(props) {
         })]
       }), "\n", _jsxs(_components.li, {
         children: ["🐛 ", _jsx(_components.a, {
-          href: "https://github.com/conciergus/chat/issues",
+          href: "https://github.com/Cardow-Co/conciergus.ai/issues",
           children: "Report Issues"
         })]
       }), "\n", _jsxs(_components.li, {
@@ -244,7 +244,7 @@ function _createMdxContent(props) {
       children: "License"
     }), "\n", _jsxs(_components.p, {
       children: ["MIT © ", _jsx(_components.a, {
-        href: "https://github.com/conciergus",
+        href: "https://github.com/Cardow-Co",
         children: "Conciergus"
       })]
     })]

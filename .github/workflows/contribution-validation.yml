@@ -423,9 +423,9 @@ jobs:
             const message = `🎉 Welcome to Conciergus Chat! Thank you for your first contribution!
             
             Here are some helpful resources:
-            - 📖 [Contributing Guidelines](https://github.com/conciergus/chat/blob/main/CONTRIBUTING.md)
+            - 📖 [Contributing Guidelines](https://github.com/Cardow-Co/conciergus.ai/blob/main/CONTRIBUTING.md)
             - 💬 [Discord Community](https://discord.gg/conciergus)
-            - 🐛 [Good First Issues](https://github.com/conciergus/chat/labels/good-first-issue)
+            - 🐛 [Good First Issues](https://github.com/Cardow-Co/conciergus.ai/labels/good-first-issue)
             
             A maintainer will review your PR soon. Thanks for helping make Conciergus better! 🚀`;
             
