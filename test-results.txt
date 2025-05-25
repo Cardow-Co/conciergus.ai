@@ -1,0 +1,5 @@
+
+> @conciergus/chat@0.1.0 test /Users/rowan/github/Cardow & Co/conciergus.ai
+> NODE_OPTIONS='--max-old-space-size=8192' jest --passWithNoTests -- --watchAll\=false --coverage\=false --verbose\=false
+
+No tests found, exiting with code 0
