@@ -1,12 +1,20 @@
 /**
  * Plugin Architecture Types for Conciergus Chat
- * 
+ *
  * This file defines the core interfaces and types for the plugin system,
  * enabling developers to extend and customize the library functionality.
  */
 
-import type { EnhancedUIMessage, EnhancedStreamPart, MessageMetadata } from '../types/ai-sdk-5';
-import type { Conversation, ConversationMessage, AgentInfo } from '../types/conversation';
+import type {
+  EnhancedUIMessage,
+  EnhancedStreamPart,
+  MessageMetadata,
+} from '../types/ai-sdk-5';
+import type {
+  Conversation,
+  ConversationMessage,
+  AgentInfo,
+} from '../types/conversation';
 import type { ConciergusConfig } from '../context/ConciergusContext';
 
 // ==========================================
@@ -72,7 +80,10 @@ export interface PluginLifecycle {
   /** Called when plugin is unloaded */
   onUnload?: (context: PluginContext) => void | Promise<void>;
   /** Called when Conciergus configuration changes */
-  onConfigChange?: (context: PluginContext, newConfig: ConciergusConfig) => void | Promise<void>;
+  onConfigChange?: (
+    context: PluginContext,
+    newConfig: ConciergusConfig
+  ) => void | Promise<void>;
 }
 
 /**
@@ -104,11 +115,20 @@ export interface PluginContext {
  */
 export interface MessagePlugin {
   /** Process incoming messages */
-  processMessage?: (message: EnhancedUIMessage, context: PluginContext) => EnhancedUIMessage | Promise<EnhancedUIMessage>;
+  processMessage?: (
+    message: EnhancedUIMessage,
+    context: PluginContext
+  ) => EnhancedUIMessage | Promise<EnhancedUIMessage>;
   /** Process outgoing messages */
-  processOutgoingMessage?: (message: EnhancedUIMessage, context: PluginContext) => EnhancedUIMessage | Promise<EnhancedUIMessage>;
+  processOutgoingMessage?: (
+    message: EnhancedUIMessage,
+    context: PluginContext
+  ) => EnhancedUIMessage | Promise<EnhancedUIMessage>;
   /** Transform message metadata */
-  transformMetadata?: (metadata: MessageMetadata, context: PluginContext) => MessageMetadata | Promise<MessageMetadata>;
+  transformMetadata?: (
+    metadata: MessageMetadata,
+    context: PluginContext
+  ) => MessageMetadata | Promise<MessageMetadata>;
 }
 
 /**
@@ -116,13 +136,19 @@ export interface MessagePlugin {
  */
 export interface StreamPlugin {
   /** Process stream parts */
-  processStreamPart?: (part: EnhancedStreamPart, context: PluginContext) => EnhancedStreamPart | Promise<EnhancedStreamPart>;
+  processStreamPart?: (
+    part: EnhancedStreamPart,
+    context: PluginContext
+  ) => EnhancedStreamPart | Promise<EnhancedStreamPart>;
   /** Handle stream start */
   onStreamStart?: (context: PluginContext) => void | Promise<void>;
   /** Handle stream end */
   onStreamEnd?: (context: PluginContext) => void | Promise<void>;
   /** Handle stream error */
-  onStreamError?: (error: Error, context: PluginContext) => void | Promise<void>;
+  onStreamError?: (
+    error: Error,
+    context: PluginContext
+  ) => void | Promise<void>;
 }
 
 /**
@@ -130,13 +156,25 @@ export interface StreamPlugin {
  */
 export interface ConversationPlugin {
   /** Process conversation creation */
-  onConversationCreate?: (conversation: Conversation, context: PluginContext) => Conversation | Promise<Conversation>;
+  onConversationCreate?: (
+    conversation: Conversation,
+    context: PluginContext
+  ) => Conversation | Promise<Conversation>;
   /** Process conversation update */
-  onConversationUpdate?: (conversation: Conversation, context: PluginContext) => Conversation | Promise<Conversation>;
+  onConversationUpdate?: (
+    conversation: Conversation,
+    context: PluginContext
+  ) => Conversation | Promise<Conversation>;
   /** Process conversation deletion */
-  onConversationDelete?: (conversationId: string, context: PluginContext) => void | Promise<void>;
+  onConversationDelete?: (
+    conversationId: string,
+    context: PluginContext
+  ) => void | Promise<void>;
   /** Transform conversation messages */
-  transformMessages?: (messages: ConversationMessage[], context: PluginContext) => ConversationMessage[] | Promise<ConversationMessage[]>;
+  transformMessages?: (
+    messages: ConversationMessage[],
+    context: PluginContext
+  ) => ConversationMessage[] | Promise<ConversationMessage[]>;
 }
 
 /**
@@ -144,11 +182,21 @@ export interface ConversationPlugin {
  */
 export interface AgentPlugin {
   /** Process agent registration */
-  onAgentRegister?: (agent: AgentInfo, context: PluginContext) => AgentInfo | Promise<AgentInfo>;
+  onAgentRegister?: (
+    agent: AgentInfo,
+    context: PluginContext
+  ) => AgentInfo | Promise<AgentInfo>;
   /** Process agent selection */
-  onAgentSelect?: (agent: AgentInfo, context: PluginContext) => AgentInfo | Promise<AgentInfo>;
+  onAgentSelect?: (
+    agent: AgentInfo,
+    context: PluginContext
+  ) => AgentInfo | Promise<AgentInfo>;
   /** Handle agent response */
-  onAgentResponse?: (response: any, agent: AgentInfo, context: PluginContext) => any | Promise<any>;
+  onAgentResponse?: (
+    response: any,
+    agent: AgentInfo,
+    context: PluginContext
+  ) => any | Promise<any>;
 }
 
 /**
@@ -156,7 +204,11 @@ export interface AgentPlugin {
  */
 export interface UIPlugin {
   /** Render custom UI components */
-  renderComponent?: (componentType: string, props: any, context: PluginContext) => React.ReactNode;
+  renderComponent?: (
+    componentType: string,
+    props: any,
+    context: PluginContext
+  ) => React.ReactNode;
   /** Provide custom CSS styles */
   getStyles?: (context: PluginContext) => string | Record<string, any>;
   /** Provide custom themes */
@@ -168,11 +220,21 @@ export interface UIPlugin {
  */
 export interface AnalyticsPlugin {
   /** Track custom events */
-  trackEvent?: (event: AnalyticsEvent, context: PluginContext) => void | Promise<void>;
+  trackEvent?: (
+    event: AnalyticsEvent,
+    context: PluginContext
+  ) => void | Promise<void>;
   /** Process analytics data */
-  processAnalytics?: (data: AnalyticsData, context: PluginContext) => AnalyticsData | Promise<AnalyticsData>;
+  processAnalytics?: (
+    data: AnalyticsData,
+    context: PluginContext
+  ) => AnalyticsData | Promise<AnalyticsData>;
   /** Generate custom reports */
-  generateReport?: (type: string, options: any, context: PluginContext) => any | Promise<any>;
+  generateReport?: (
+    type: string,
+    options: any,
+    context: PluginContext
+  ) => any | Promise<any>;
 }
 
 // ==========================================
@@ -239,7 +301,10 @@ export interface PluginUtils {
   /** Throttle function */
   throttle: <T extends (...args: any[]) => any>(fn: T, delay: number) => T;
   /** Validate schema */
-  validateSchema: (data: any, schema: any) => { valid: boolean; errors?: string[] };
+  validateSchema: (
+    data: any,
+    schema: any
+  ) => { valid: boolean; errors?: string[] };
 }
 
 // ==========================================
@@ -249,14 +314,14 @@ export interface PluginUtils {
 /**
  * Complete plugin definition
  */
-export interface Plugin extends 
-  PluginLifecycle,
-  Partial<MessagePlugin>,
-  Partial<StreamPlugin>,
-  Partial<ConversationPlugin>,
-  Partial<AgentPlugin>,
-  Partial<UIPlugin>,
-  Partial<AnalyticsPlugin> {
+export interface Plugin
+  extends PluginLifecycle,
+    Partial<MessagePlugin>,
+    Partial<StreamPlugin>,
+    Partial<ConversationPlugin>,
+    Partial<AgentPlugin>,
+    Partial<UIPlugin>,
+    Partial<AnalyticsPlugin> {
   /** Plugin metadata */
   metadata: PluginMetadata;
   /** Default plugin configuration */
@@ -290,7 +355,10 @@ export interface PluginManager {
   /** Check if plugin is enabled */
   isEnabled: (pluginId: string) => boolean;
   /** Update plugin configuration */
-  updateConfig: (pluginId: string, config: Partial<PluginConfig>) => Promise<void>;
+  updateConfig: (
+    pluginId: string,
+    config: Partial<PluginConfig>
+  ) => Promise<void>;
   /** Get plugin configuration */
   getConfig: (pluginId: string) => PluginConfig | null;
 }
@@ -360,7 +428,10 @@ export interface PluginRegistryEntry {
  */
 export interface PluginRegistry {
   /** Search plugins */
-  search: (query: string, options?: PluginSearchOptions) => Promise<PluginRegistryEntry[]>;
+  search: (
+    query: string,
+    options?: PluginSearchOptions
+  ) => Promise<PluginRegistryEntry[]>;
   /** Get plugin details */
   getPlugin: (pluginId: string) => Promise<PluginRegistryEntry | null>;
   /** Download plugin */
@@ -406,9 +477,15 @@ export interface PluginDevTools {
   /** Build plugin */
   build: (pluginPath: string, options?: PluginBuildOptions) => Promise<void>;
   /** Test plugin */
-  test: (pluginPath: string, options?: PluginTestOptions) => Promise<PluginTestResult>;
+  test: (
+    pluginPath: string,
+    options?: PluginTestOptions
+  ) => Promise<PluginTestResult>;
   /** Package plugin */
-  package: (pluginPath: string, options?: PluginPackageOptions) => Promise<string>;
+  package: (
+    pluginPath: string,
+    options?: PluginPackageOptions
+  ) => Promise<string>;
 }
 
 /**
@@ -418,7 +495,14 @@ export interface PluginTemplateOptions {
   /** Plugin name */
   name: string;
   /** Plugin type */
-  type: 'message' | 'stream' | 'conversation' | 'agent' | 'ui' | 'analytics' | 'full';
+  type:
+    | 'message'
+    | 'stream'
+    | 'conversation'
+    | 'agent'
+    | 'ui'
+    | 'analytics'
+    | 'full';
   /** Output directory */
   outputDir: string;
   /** Author information */
@@ -523,7 +607,7 @@ export type {
   PluginLifecycle,
   PluginContext,
   Plugin,
-  
+
   // Extension points
   MessagePlugin,
   StreamPlugin,
@@ -531,25 +615,25 @@ export type {
   AgentPlugin,
   UIPlugin,
   AnalyticsPlugin,
-  
+
   // Utilities
   PluginLogger,
   PluginStorage,
   PluginEventEmitter,
   PluginUtils,
-  
+
   // Manager
   PluginManager,
-  
+
   // Analytics
   AnalyticsEvent,
   AnalyticsData,
-  
+
   // Registry
   PluginRegistry,
   PluginRegistryEntry,
   PluginSearchOptions,
-  
+
   // Development
   PluginDevTools,
   PluginTemplateOptions,
@@ -558,4 +642,4 @@ export type {
   PluginTestOptions,
   PluginTestResult,
   PluginPackageOptions,
-}; 
+};

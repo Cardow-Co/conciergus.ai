@@ -574,7 +574,8 @@ export function useConciergusDebug(config?: Partial<DebugConfig>) {
     clearLogs: debugUtils.clearLogs.bind(debugUtils),
     clearMetrics: debugUtils.clearPerformanceMetrics.bind(debugUtils),
     exportLogs: debugUtils.exportLogs.bind(debugUtils),
-    exportPerformanceMetrics: debugUtils.exportPerformanceMetrics.bind(debugUtils),
+    exportPerformanceMetrics:
+      debugUtils.exportPerformanceMetrics.bind(debugUtils),
     config: debugUtils.getConfig(),
   };
 }

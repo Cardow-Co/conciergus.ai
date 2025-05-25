@@ -9,7 +9,9 @@ import { EnhancedConciergusContext } from '../context/EnhancedConciergusContext'
 import { GatewayProvider, useGateway } from '../context/GatewayProvider';
 import type { GatewayConfig } from '../context/GatewayConfig';
 import { ErrorBoundary } from '../errors';
-import ConciergusErrorBoundary, { ErrorCategory } from './ConciergusErrorBoundary';
+import ConciergusErrorBoundary, {
+  ErrorCategory,
+} from './ConciergusErrorBoundary';
 import ConciergusMetadataDisplay from './ConciergusMetadataDisplay';
 import ConciergusModelSwitcher from './ConciergusModelSwitcher';
 import type { TelemetryEvent } from './ConciergusMetadataDisplay';
@@ -227,10 +229,7 @@ const GatewayErrorHandler: React.FC<GatewayErrorHandlerProps> = ({
           onGatewayFallback(currentModel, fallbackModel, error.message);
         }
 
-        if (
-          error.message.includes('unauthorized') &&
-          onGatewayAuthFailure
-        ) {
+        if (error.message.includes('unauthorized') && onGatewayAuthFailure) {
           onGatewayAuthFailure(error);
         }
 
@@ -316,11 +315,7 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
 
   // Enhanced error handling
   enableEnhancedErrorHandling = true,
-  autoHandleErrorCategories = [
-    'network',
-    'system',
-    'authorization',
-  ],
+  autoHandleErrorCategories = ['network', 'system', 'authorization'],
   errorReportingEndpoint,
   enableErrorTelemetry = true,
 

@@ -1,6 +1,6 @@
 /**
  * Type Tests for Utility Types
- * 
+ *
  * These tests validate that our utility types work correctly at compile time.
  * They use TypeScript's type system to ensure type safety and correctness.
  */
@@ -14,61 +14,61 @@ import type {
   OmitByType,
   Paths,
   PathValue,
-  
+
   // Message utilities
   MessageByRole,
   CustomMessage,
   MessageWithMetadata,
   StreamingMessage,
   CompletedMessage,
-  
+
   // Stream part utilities
   StreamPartByType,
   TextDeltaStreamPart,
   ToolCallStreamPart,
   ReasoningStreamPart,
-  
+
   // Conversation utilities
   ConversationWithAgents,
   MessageWithAgent,
   TypedConversation,
-  
+
   // Component utilities
   ComponentProps,
   RequireProps,
   OptionalProps,
   OverrideProps,
-  
+
   // Event handlers
   EventHandler,
   AsyncEventHandler,
   MessageEventHandlers,
-  
+
   // Configuration
   EnvironmentConfig,
   FeatureFlags,
   ProviderConfig,
-  
+
   // Validation
   ValidationResult,
   ValidationError,
   SchemaValidator,
-  
+
   // Async utilities
   AsyncResult,
   RetryConfig,
-  
+
   // Branded types
   Brand,
   MessageId,
   ConversationId,
   AgentId,
-  
+
   // Advanced patterns
   TypedEventEmitter,
   StateMachine,
   Builder,
-  
+
   // Core types for testing
   EnhancedUIMessage,
   EnhancedStreamPart,
@@ -112,9 +112,9 @@ expectAssignable<RequiredTestObject>({
   b: {
     c: 1,
     d: {
-      e: true
-    }
-  }
+      e: true,
+    },
+  },
 });
 
 // Test PickByType
@@ -137,7 +137,12 @@ expectType<FunctionProps>({ func: () => {} });
 // Test OmitByType
 type NonStringProps = OmitByType<MixedTypes, string>;
 
-expectAssignable<NonStringProps>({ num: 42, bool: true, func: () => {}, obj: {} });
+expectAssignable<NonStringProps>({
+  num: 42,
+  bool: true,
+  func: () => {},
+  obj: {},
+});
 expectNotAssignable<NonStringProps>({ str: 'test' });
 
 // Test Paths
@@ -179,13 +184,13 @@ type UserMessage = MessageByRole<'user'>;
 const assistantMsg: AssistantMessage = {
   id: '1',
   role: 'assistant',
-  content: 'Hello'
+  content: 'Hello',
 };
 
 const userMsg: UserMessage = {
   id: '2',
   role: 'user',
-  content: 'Hi'
+  content: 'Hi',
 };
 
 expectType<AssistantMessage>(assistantMsg);
@@ -206,8 +211,8 @@ const sentimentMsg: SentimentMessage = {
   metadata: {
     duration: 1000,
     sentiment: 'positive',
-    score: 0.9
-  }
+    score: 0.9,
+  },
 };
 
 expectType<SentimentMessage>(sentimentMsg);
@@ -220,8 +225,8 @@ const msgWithDuration: MessageWithDuration = {
   role: 'assistant',
   content: 'Test',
   metadata: {
-    duration: 1500 // Required
-  }
+    duration: 1500, // Required
+  },
 };
 
 expectType<MessageWithDuration>(msgWithDuration);
@@ -233,8 +238,8 @@ const streamingMsg: StreamingMessage = {
   content: 'Streaming...',
   metadata: {
     isStreaming: true,
-    streamId: 'stream-123'
-  }
+    streamId: 'stream-123',
+  },
 };
 
 expectType<StreamingMessage>(streamingMsg);
@@ -247,8 +252,8 @@ const completedMsg: CompletedMessage = {
   metadata: {
     duration: 2000,
     totalTokens: 50,
-    finishReason: 'stop'
-  }
+    finishReason: 'stop',
+  },
 };
 
 expectType<CompletedMessage>(completedMsg);
@@ -263,14 +268,14 @@ type ToolCall = StreamPartByType<'tool-call'>;
 
 const textDelta: TextDelta = {
   type: 'text-delta',
-  textDelta: 'Hello'
+  textDelta: 'Hello',
 };
 
 const toolCall: ToolCall = {
   type: 'tool-call',
   toolCallId: 'tool-1',
   toolName: 'search',
-  args: { query: 'test' }
+  args: { query: 'test' },
 };
 
 expectType<TextDeltaStreamPart>(textDelta);
@@ -300,22 +305,25 @@ const customConv: CustomConversation = {
       name: 'Custom Agent',
       type: 'custom',
       capabilities: ['test'],
-      specialization: 'testing'
-    }
+      specialization: 'testing',
+    },
   ],
   metadata: {
-    messageCount: 0
-  }
+    messageCount: 0,
+  },
 };
 
 expectType<CustomConversation>(customConv);
 
 // Test TypedConversation
-type FullTypedConversation = TypedConversation<ConversationMessage, CustomAgent>;
+type FullTypedConversation = TypedConversation<
+  ConversationMessage,
+  CustomAgent
+>;
 
 const typedConv: FullTypedConversation = {
   ...customConv,
-  messages: []
+  messages: [],
 };
 
 expectType<FullTypedConversation>(typedConv);
@@ -334,7 +342,7 @@ interface BaseProps {
 type RequiredOnClick = RequireProps<BaseProps, 'onClick'>;
 
 const requiredProps: RequiredOnClick = {
-  onClick: () => {} // Required
+  onClick: () => {}, // Required
 };
 
 expectType<RequiredOnClick>(requiredProps);
@@ -346,14 +354,17 @@ expectAssignable<OptionalChildren>({});
 expectAssignable<OptionalChildren>({ children: 'test' });
 
 // Test OverrideProps
-type OverriddenProps = OverrideProps<BaseProps, {
-  onClick: (event: MouseEvent) => void;
-  newProp: string;
-}>;
+type OverriddenProps = OverrideProps<
+  BaseProps,
+  {
+    onClick: (event: MouseEvent) => void;
+    newProp: string;
+  }
+>;
 
 const overriddenProps: OverriddenProps = {
   onClick: (event: MouseEvent) => {},
-  newProp: 'test'
+  newProp: 'test',
 };
 
 expectType<OverriddenProps>(overriddenProps);
@@ -384,7 +395,7 @@ const messageHandlers: MessageEventHandlers = {
   onStreamStart: ({ messageId, streamId }) => {
     expectType<string>(messageId);
     expectType<string>(streamId);
-  }
+  },
 };
 
 expectType<MessageEventHandlers>(messageHandlers);
@@ -396,7 +407,7 @@ expectType<MessageEventHandlers>(messageHandlers);
 // Test FeatureFlags
 const features: FeatureFlags = {
   enableStreaming: true,
-  enableReasoningTraces: false
+  enableReasoningTraces: false,
 };
 
 expectType<FeatureFlags>(features);
@@ -406,7 +417,7 @@ const config: ProviderConfig = {
   apiKey: 'test',
   features,
   environment: 'development',
-  debug: true
+  debug: true,
 };
 
 expectType<ProviderConfig>(config);
@@ -415,11 +426,11 @@ expectType<ProviderConfig>(config);
 const envConfig: EnvironmentConfig<typeof config> = {
   ...config,
   development: {
-    debug: true
+    debug: true,
   },
   production: {
-    debug: false
-  }
+    debug: false,
+  },
 };
 
 expectType<EnvironmentConfig<typeof config>>(envConfig);
@@ -431,7 +442,7 @@ expectType<EnvironmentConfig<typeof config>>(envConfig);
 // Test ValidationResult
 const validResult: ValidationResult<string> = {
   isValid: true,
-  data: 'test'
+  data: 'test',
 };
 
 const invalidResult: ValidationResult<string> = {
@@ -440,9 +451,9 @@ const invalidResult: ValidationResult<string> = {
     {
       field: 'test',
       message: 'Invalid',
-      code: 'INVALID'
-    }
-  ]
+      code: 'INVALID',
+    },
+  ],
 };
 
 expectType<ValidationResult<string>>(validResult);
@@ -455,7 +466,7 @@ const validator: SchemaValidator<string> = (data: unknown) => {
   }
   return {
     isValid: false,
-    errors: [{ field: 'root', message: 'Must be string' }]
+    errors: [{ field: 'root', message: 'Must be string' }],
   };
 };
 
@@ -477,14 +488,14 @@ const asyncResult: AsyncResult<string> = {
   success: true,
   data: 'result',
   duration: 1000,
-  timestamp: new Date()
+  timestamp: new Date(),
 };
 
 const asyncError: AsyncResult<string, CustomError> = {
   success: false,
   error: new CustomError('Failed'),
   duration: 500,
-  timestamp: new Date()
+  timestamp: new Date(),
 };
 
 expectType<AsyncResult<string>>(asyncResult);
@@ -495,7 +506,7 @@ const retryConfig: RetryConfig = {
   maxAttempts: 3,
   delay: 1000,
   backoff: 'exponential',
-  maxDelay: 10000
+  maxDelay: 10000,
 };
 
 expectType<RetryConfig>(retryConfig);
@@ -537,7 +548,7 @@ interface TestEvents {
 const emitter: TypedEventEmitter<TestEvents> = {
   on: (event, listener) => {},
   off: (event, listener) => {},
-  emit: (event, ...args) => {}
+  emit: (event, ...args) => {},
 };
 
 expectType<TypedEventEmitter<TestEvents>>(emitter);
@@ -550,7 +561,7 @@ const stateMachine: StateMachine<TestState, TestEvent> = {
   currentState: 'idle',
   transition: (event) => 'idle',
   canTransition: (event) => true,
-  getValidTransitions: () => []
+  getValidTransitions: () => [],
 };
 
 expectType<StateMachine<TestState, TestEvent>>(stateMachine);
@@ -566,7 +577,7 @@ const builder: Builder<BuilderTest> = {
   setName: (value) => builder,
   setValue: (value) => builder,
   setEnabled: (value) => builder,
-  build: () => ({ name: 'test', value: 42, enabled: true })
+  build: () => ({ name: 'test', value: 42, enabled: true }),
 };
 
 expectType<Builder<BuilderTest>>(builder);
@@ -605,7 +616,7 @@ const mockIsStreamPartType = <T extends EnhancedStreamPart['type']>(
 const testMessage: EnhancedUIMessage = {
   id: 'test',
   role: 'assistant',
-  content: 'test'
+  content: 'test',
 };
 
 if (mockHasMetadata(testMessage, 'duration')) {
@@ -615,7 +626,7 @@ if (mockHasMetadata(testMessage, 'duration')) {
 
 const testStreamPart: EnhancedStreamPart = {
   type: 'text-delta',
-  textDelta: 'test'
+  textDelta: 'test',
 };
 
 if (mockIsStreamPartType(testStreamPart, 'text-delta')) {
@@ -629,4 +640,4 @@ describe('TypeScript Utilities Type Definitions', () => {
     // This test passes if the TypeScript compilation above succeeds
     expect(true).toBe(true);
   });
-}); 
+});

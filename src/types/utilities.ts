@@ -1,13 +1,13 @@
 /**
  * TypeScript Utility Types for Conciergus Chat
- * 
+ *
  * This file provides utility types, generic helpers, and conditional types
  * to enhance the developer experience and enable advanced type customization.
  */
 
-import type { 
-  EnhancedUIMessage, 
-  EnhancedStreamPart, 
+import type {
+  EnhancedUIMessage,
+  EnhancedStreamPart,
   MessageMetadata,
   Source,
   ReasoningStep,
@@ -15,14 +15,14 @@ import type {
   StreamPartType,
   TelemetryData,
   PerformanceMetrics,
-  CostMetrics
+  CostMetrics,
 } from './ai-sdk-5';
 
 import type {
   Conversation,
   ConversationMessage,
   AgentInfo,
-  ConversationAttachment
+  ConversationAttachment,
 } from './conversation';
 
 // ==========================================
@@ -87,15 +87,18 @@ export type Paths<T> = T extends object
 /**
  * Get the type at a specific path in an object
  */
-export type PathValue<T, P extends Paths<T>> = P extends `${infer K}.${infer Rest}`
+export type PathValue<
+  T,
+  P extends Paths<T>,
+> = P extends `${infer K}.${infer Rest}`
   ? K extends keyof T
     ? Rest extends Paths<T[K]>
       ? PathValue<T[K], Rest>
       : never
     : never
   : P extends keyof T
-  ? T[P]
-  : never;
+    ? T[P]
+    : never;
 
 // ==========================================
 // MESSAGE TYPE UTILITIES
@@ -122,9 +125,10 @@ export type CustomMessage<TMetadata = Record<string, any>> = Omit<
 /**
  * Message with required metadata fields
  */
-export type MessageWithMetadata<T extends keyof MessageMetadata> = EnhancedUIMessage & {
-  metadata: Required<Pick<MessageMetadata, T>> & Omit<MessageMetadata, T>;
-};
+export type MessageWithMetadata<T extends keyof MessageMetadata> =
+  EnhancedUIMessage & {
+    metadata: Required<Pick<MessageMetadata, T>> & Omit<MessageMetadata, T>;
+  };
 
 /**
  * Streaming message type
@@ -140,7 +144,9 @@ export type StreamingMessage = EnhancedUIMessage & {
  * Completed message type
  */
 export type CompletedMessage = EnhancedUIMessage & {
-  metadata: Required<Pick<MessageMetadata, 'duration' | 'totalTokens' | 'finishReason'>>;
+  metadata: Required<
+    Pick<MessageMetadata, 'duration' | 'totalTokens' | 'finishReason'>
+  >;
 };
 
 // ==========================================
@@ -190,7 +196,7 @@ export type ErrorStreamPart = StreamPartByType<'error'>;
  */
 export type CustomStreamPart<
   TType extends string,
-  TData = Record<string, any>
+  TData = Record<string, any>,
 > = {
   type: TType;
 } & TData;
@@ -212,16 +218,17 @@ export type ConversationWithAgents<TAgent extends AgentInfo = AgentInfo> = Omit<
 /**
  * Message with specific agent type
  */
-export type MessageWithAgent<TAgent extends AgentInfo = AgentInfo> = ConversationMessage & {
-  agentInfo?: TAgent;
-};
+export type MessageWithAgent<TAgent extends AgentInfo = AgentInfo> =
+  ConversationMessage & {
+    agentInfo?: TAgent;
+  };
 
 /**
  * Conversation with typed messages
  */
 export type TypedConversation<
   TMessage extends ConversationMessage = ConversationMessage,
-  TAgent extends AgentInfo = AgentInfo
+  TAgent extends AgentInfo = AgentInfo,
 > = ConversationWithAgents<TAgent> & {
   messages: TMessage[];
 };
@@ -233,7 +240,8 @@ export type TypedConversation<
 /**
  * Extract component props from a component type
  */
-export type ComponentProps<T> = T extends React.ComponentType<infer P> ? P : never;
+export type ComponentProps<T> =
+  T extends React.ComponentType<infer P> ? P : never;
 
 /**
  * Make specific props required in a component props type
@@ -243,7 +251,8 @@ export type RequireProps<T, K extends keyof T> = T & Required<Pick<T, K>>;
 /**
  * Make specific props optional in a component props type
  */
-export type OptionalProps<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type OptionalProps<T, K extends keyof T> = Omit<T, K> &
+  Partial<Pick<T, K>>;
 
 /**
  * Override specific props in a component props type
@@ -277,7 +286,10 @@ export type MessageEventHandlers = {
   onMessageReceived?: EventHandler<EnhancedUIMessage>;
   onMessageError?: EventHandler<Error>;
   onStreamStart?: EventHandler<{ messageId: string; streamId: string }>;
-  onStreamComplete?: EventHandler<{ messageId: string; message: EnhancedUIMessage }>;
+  onStreamComplete?: EventHandler<{
+    messageId: string;
+    message: EnhancedUIMessage;
+  }>;
   onStreamError?: EventHandler<{ messageId: string; error: Error }>;
 };
 
@@ -402,7 +414,9 @@ export type IsPromise<T> = T extends Promise<any> ? true : false;
 /**
  * Check if a type is optional
  */
-export type IsOptional<T, K extends keyof T> = undefined extends T[K] ? true : false;
+export type IsOptional<T, K extends keyof T> = undefined extends T[K]
+  ? true
+  : false;
 
 /**
  * Get required keys from a type
@@ -445,8 +459,14 @@ export type SessionId = Brand<string, 'SessionId'>;
  * Create a type-safe event emitter interface
  */
 export type TypedEventEmitter<TEvents extends Record<string, any[]>> = {
-  on<K extends keyof TEvents>(event: K, listener: (...args: TEvents[K]) => void): void;
-  off<K extends keyof TEvents>(event: K, listener: (...args: TEvents[K]) => void): void;
+  on<K extends keyof TEvents>(
+    event: K,
+    listener: (...args: TEvents[K]) => void
+  ): void;
+  off<K extends keyof TEvents>(
+    event: K,
+    listener: (...args: TEvents[K]) => void
+  ): void;
   emit<K extends keyof TEvents>(event: K, ...args: TEvents[K]): void;
 };
 
@@ -481,22 +501,22 @@ export type Builder<T> = {
 /**
  * Type assertion helpers
  */
-export const isMessageId = (value: string): value is MessageId => 
+export const isMessageId = (value: string): value is MessageId =>
   typeof value === 'string' && value.length > 0;
 
-export const isConversationId = (value: string): value is ConversationId => 
+export const isConversationId = (value: string): value is ConversationId =>
   typeof value === 'string' && value.length > 0;
 
-export const isAgentId = (value: string): value is AgentId => 
+export const isAgentId = (value: string): value is AgentId =>
   typeof value === 'string' && value.length > 0;
 
-export const isStreamId = (value: string): value is StreamId => 
+export const isStreamId = (value: string): value is StreamId =>
   typeof value === 'string' && value.length > 0;
 
-export const isUserId = (value: string): value is UserId => 
+export const isUserId = (value: string): value is UserId =>
   typeof value === 'string' && value.length > 0;
 
-export const isSessionId = (value: string): value is SessionId => 
+export const isSessionId = (value: string): value is SessionId =>
   typeof value === 'string' && value.length > 0;
 
 /**
@@ -526,4 +546,4 @@ export const hasMessages = (
   conversation: any
 ): conversation is TypedConversation => {
   return Array.isArray(conversation.messages);
-}; 
+};

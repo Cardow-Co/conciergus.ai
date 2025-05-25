@@ -7,8 +7,22 @@ import React, {
   useCallback,
 } from 'react';
 // Enhanced error types for enterprise error handling
-export type ErrorCategory = 'network' | 'validation' | 'authorization' | 'system' | 'ai_provider' | 'rate_limit' | 'unknown';
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical' | 'error' | 'warning' | 'info';
+export type ErrorCategory =
+  | 'network'
+  | 'validation'
+  | 'authorization'
+  | 'system'
+  | 'ai_provider'
+  | 'rate_limit'
+  | 'unknown';
+export type ErrorSeverity =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'critical'
+  | 'error'
+  | 'warning'
+  | 'info';
 
 export interface ConciergusError extends Error {
   category?: ErrorCategory;

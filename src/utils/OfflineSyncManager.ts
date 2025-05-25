@@ -8,10 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
-import type {
-  QueuedMessage,
-  ConnectionState,
-} from '../store/chatStore';
+import type { QueuedMessage, ConnectionState } from '../store/chatStore';
 
 /**
  * Sync operation types

@@ -1,6 +1,6 @@
 /**
  * Plugin System Index for Conciergus Chat
- * 
+ *
  * This file exports all plugin-related functionality including types,
  * the plugin manager, example plugins, and utilities.
  */
@@ -18,12 +18,21 @@ export {
 } from './PluginManager';
 
 // Example plugins
-export { default as MessageTransformPlugin, createMessageTransformPlugin } from './examples/MessageTransformPlugin';
-export { default as AnalyticsPlugin, createAnalyticsPlugin } from './examples/AnalyticsPlugin';
+export {
+  default as MessageTransformPlugin,
+  createMessageTransformPlugin,
+} from './examples/MessageTransformPlugin';
+export {
+  default as AnalyticsPlugin,
+  createAnalyticsPlugin,
+} from './examples/AnalyticsPlugin';
 
 // Plugin configuration types
 export type { MessageTransformConfig } from './examples/MessageTransformPlugin';
-export type { AnalyticsConfig, AnalyticsMetrics } from './examples/AnalyticsPlugin';
+export type {
+  AnalyticsConfig,
+  AnalyticsMetrics,
+} from './examples/AnalyticsPlugin';
 
 // Re-export commonly used types for convenience
 export type {
@@ -32,7 +41,7 @@ export type {
   PluginConfig,
   PluginMetadata,
   PluginManager as IPluginManager,
-  
+
   // Extension point interfaces
   MessagePlugin,
   StreamPlugin,
@@ -40,17 +49,17 @@ export type {
   AgentPlugin,
   UIPlugin,
   AnalyticsPlugin as IAnalyticsPlugin,
-  
+
   // Utility interfaces
   PluginLogger,
   PluginStorage,
   PluginEventEmitter,
   PluginUtils,
-  
+
   // Analytics types
   AnalyticsEvent,
   AnalyticsData,
-  
+
   // Development types
   PluginDevTools,
   PluginTemplateOptions,
@@ -66,7 +75,7 @@ export const createPlugin = {
 // Plugin registry for built-in plugins
 export const builtInPlugins = {
   'message-transform': createMessageTransformPlugin,
-  'analytics': createAnalyticsPlugin,
+  analytics: createAnalyticsPlugin,
 };
 
 /**
@@ -84,4 +93,4 @@ export const PLUGIN_SYSTEM_VERSION = '1.0.0';
 /**
  * Supported plugin API version
  */
-export const PLUGIN_API_VERSION = '1.0.0'; 
+export const PLUGIN_API_VERSION = '1.0.0';

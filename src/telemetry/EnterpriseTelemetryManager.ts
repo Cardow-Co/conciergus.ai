@@ -13,10 +13,7 @@ import {
   securityHeadersMiddleware,
   corsMiddleware,
 } from '../middleware/MiddlewarePipeline';
-import {
-  ErrorBoundary,
-  ErrorUtils,
-} from '../errors';
+import { ErrorBoundary, ErrorUtils } from '../errors';
 import {
   PerformanceMonitor,
   MemoryMonitor,
@@ -472,10 +469,7 @@ export class EnterpriseTelemetryManager {
   /**
    * Report a custom error
    */
-  reportError(
-    error: Error,
-    context?: Record<string, any>
-  ): void {
+  reportError(error: Error, context?: Record<string, any>): void {
     const enhancedError = error;
     const errorCategory = ErrorUtils.categorizeError(error);
 

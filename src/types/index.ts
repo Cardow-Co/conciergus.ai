@@ -23,7 +23,7 @@ export type {
   SourceType,
   ToolCallState,
   TelemetryEventType,
-  
+
   // Additional AI SDK 5 types
   AISDKProvider,
   AISDKModel,
@@ -59,7 +59,6 @@ export type {
   AIMetrics,
   AILogs,
   AIEvents,
-  
 } from './ai-sdk-5';
 
 // Export conversation types
