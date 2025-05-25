@@ -38,6 +38,7 @@ export {
   getRetryDelay,
   getHttpStatusFromErrorType,
   SecureErrorHandler,
+  ErrorType,
 } from './SecureErrorHandler';
 
 // Rate limiting engine and advanced features
@@ -73,7 +74,7 @@ export {
 // Input validation engine
 export {
   ValidationEngine,
-  ValidationDataType,
+  DataType as ValidationDataType,
   ValidationSeverity,
   SchemaRegistry,
 } from './ValidationEngine';
@@ -81,8 +82,8 @@ export {
 export type {
   ValidationRule,
   ValidationResult,
-  SchemaConfig,
-  SecurityThreat,
+  ValidationSchema as SchemaConfig,
+  ValidationError as SecurityThreat,
 } from './ValidationEngine';
 
 // AI vulnerability protection

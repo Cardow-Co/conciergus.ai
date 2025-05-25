@@ -13,7 +13,7 @@
     "lastUpdated": "2025-05-25T00:00:00.000Z",
     "fileName": "getting-started",
     "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/getting-started.mdx",
-    "compiledAt": "2025-05-25T16:31:45.090Z",
+    "compiledAt": "2025-05-25T16:45:50.462Z",
     "wordCount": 784,
     "readingTime": 4
   },
@@ -31,7 +31,7 @@
     "lastUpdated": "2025-05-25T00:00:00.000Z",
     "fileName": "multi-agent-conversations",
     "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/multi-agent-conversations.mdx",
-    "compiledAt": "2025-05-25T16:31:45.098Z",
+    "compiledAt": "2025-05-25T16:45:50.474Z",
     "wordCount": 1316,
     "readingTime": 7
   },
@@ -40,7 +40,7 @@
     "description": "Complete guide to contributing to Conciergus Chat with automated tools and validation",
     "fileName": "contribution-workflow",
     "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/contribution-workflow.mdx",
-    "compiledAt": "2025-05-25T16:31:45.080Z",
+    "compiledAt": "2025-05-25T16:45:50.454Z",
     "wordCount": 1053,
     "readingTime": 6
   },
@@ -56,7 +56,7 @@
     ],
     "fileName": "plugin-development",
     "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/plugin-development.mdx",
-    "compiledAt": "2025-05-25T16:31:45.110Z",
+    "compiledAt": "2025-05-25T16:45:50.482Z",
     "wordCount": 1903,
     "readingTime": 10
   },
@@ -72,7 +72,7 @@
     ],
     "fileName": "typescript-types",
     "filePath": "/Users/rowan/github/Cardow & Co/conciergus.ai/docs/guides/typescript-types.mdx",
-    "compiledAt": "2025-05-25T16:31:45.116Z",
+    "compiledAt": "2025-05-25T16:45:50.488Z",
     "wordCount": 1632,
     "readingTime": 9
   }

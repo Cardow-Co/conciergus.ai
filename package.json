@@ -121,6 +121,11 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
+  "peerDependenciesMeta": {
+    "@datadog/browser-rum": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@ai-sdk/openai": "2.0.0-canary.20",
     "@ai-sdk/provider-utils": "canary",
@@ -150,7 +155,8 @@
     "react-markdown": "^8.0.0",
     "react-textarea-autosize": "^8.0.0",
     "redis": "^4.7.0",
-    "rehype-sanitize": "^5.0.1"
+    "rehype-sanitize": "^5.0.1",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^10.1.1",

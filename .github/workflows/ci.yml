@@ -43,8 +43,8 @@ jobs:
       # - name: Check Prettier formatting
       #   run: pnpm run format
 
-      # - name: Build package
-      #   run: pnpm run build
+      - name: Build package (documentation only)
+        run: pnpm run docs:build
 
       - name: Run tests
         run: pnpm run test:coverage

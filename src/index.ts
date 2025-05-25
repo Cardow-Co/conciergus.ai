@@ -64,9 +64,6 @@ export {
   lenientRateLimit,
   createSecurityAwareMiddleware,
   createBasicRateLimitMiddleware,
-  type MiddlewareFunction,
-  type MiddlewareContext,
-  type EnhancedRateLimitOptions,
 } from './middleware';
 
 // Enterprise Examples (lightweight demo)
