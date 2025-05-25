@@ -12,11 +12,20 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const yaml = require('js-yaml');
-const { compile } = require('@mdx-js/mdx');
 // Skip importing remark-gfm for now due to module issues
 // const remarkGfm = require('remark-gfm');
 const rehypeSlug = require('rehype-slug');
 const rehypeAutolinkHeadings = require('rehype-autolink-headings');
+
+// Dynamic import for ESM-only modules
+let compile;
+async function loadMdxCompiler() {
+  if (!compile) {
+    const mdxModule = await import('@mdx-js/mdx');
+    compile = mdxModule.compile;
+  }
+  return compile;
+}
 
 // Configuration
 const config = {
@@ -84,8 +93,11 @@ async function processMDXFile(filePath, outputDir) {
     const content = fs.readFileSync(filePath, 'utf8');
     const { frontmatter, content: markdownContent } = extractFrontmatter(content);
     
+    // Ensure MDX compiler is loaded
+    const compilerFunction = await loadMdxCompiler();
+    
     // Compile MDX to JavaScript (simplified for compatibility)
-    const compiled = await compile(markdownContent, {
+    const compiled = await compilerFunction(markdownContent, {
       development: false
     });
     
