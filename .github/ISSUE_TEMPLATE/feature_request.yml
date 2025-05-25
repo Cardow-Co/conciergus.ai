@@ -1,0 +1,160 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please fill out the information below to help us understand your request.
+
+  - type: checkboxes
+    attributes:
+      label: Pre-flight Checklist
+      description: Please ensure you've completed these steps before submitting a feature request
+      options:
+        - label: I have searched existing issues and discussions to ensure this feature hasn't been requested already
+          required: true
+        - label: I have checked the roadmap to see if this feature is already planned
+          required: true
+        - label: I have read the [Contributing Guidelines](../../CONTRIBUTING.md)
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What is the use case?
+      placeholder: |
+        I'm trying to do [specific task] but I can't because [explanation of limitation/problem].
+        This affects [users/scenarios] and would help with [benefits].
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: What would you like to see implemented? Be as detailed as possible.
+      placeholder: |
+        I would like to see [specific feature/enhancement] that would allow me to [capabilities].
+        
+        The feature should:
+        - [Requirement 1]
+        - [Requirement 2]
+        - [Requirement 3]
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions or workarounds have you considered?
+      placeholder: |
+        I considered:
+        1. [Alternative 1] - but this doesn't work because [reason]
+        2. [Alternative 2] - but this has limitations [limitations]
+        3. [Current workaround] - but it's not ideal because [issues]
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (blocking my use of the library)
+        - High (significantly improves my workflow)
+        - Medium (nice to have, would improve experience)
+        - Low (minor improvement)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area of the library does this feature relate to?
+      options:
+        - Core Chat Components
+        - AI Gateway & Providers
+        - Hooks & State Management
+        - Security & Authentication
+        - Enterprise Features
+        - Documentation
+        - Developer Experience
+        - Performance
+        - Accessibility
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: API Design (Optional)
+      description: If you have ideas about how the API should look, please share them
+      render: typescript
+      placeholder: |
+        // Example API design
+        interface NewFeatureProps {
+          // Your API ideas here
+        }
+        
+        // Usage example
+        const MyComponent = () => {
+          const { newFeature } = useNewFeature(options);
+          
+          return <div>{/* Implementation */}</div>;
+        };
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Provide concrete examples of how this feature would be used
+      placeholder: |
+        Example 1: [Scenario description]
+        ```typescript
+        // Code example showing usage
+        ```
+        
+        Example 2: [Another scenario]
+        ```typescript
+        // Another code example
+        ```
+
+  - type: checkboxes
+    attributes:
+      label: Breaking Changes
+      description: Would this feature require breaking changes?
+      options:
+        - label: This feature would require breaking changes to existing APIs
+          required: false
+        - label: This feature can be implemented without breaking existing functionality
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, screenshots, or references that would help explain this feature
+      placeholder: |
+        - Links to relevant documentation or examples
+        - Screenshots or mockups
+        - References to similar features in other libraries
+        - Any other helpful context
+
+  - type: checkboxes
+    attributes:
+      label: Contributing
+      description: Are you interested in contributing this feature?
+      options:
+        - label: I would like to work on implementing this feature
+          required: false
+        - label: I would like to help with design and planning
+          required: false
+        - label: I would like to help with testing and feedback
+          required: false 

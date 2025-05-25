@@ -314,15 +314,49 @@ pnpm test:coverage
 
 ## 📚 Documentation
 
-- [API Reference](./docs/api.md)
-- [Migration Guide](./docs/migration.md)
-- [Enterprise Features](./docs/enterprise.md)
-- [Examples](./examples/)
-- [Storybook](./storybook-static/index.html)
+### User Documentation
+- [API Reference](https://conciergus-chat-docs.vercel.app) - Complete API reference
+- [CDN Usage Guide](./docs/cdn-usage.md) - Using via CDN (unpkg, jsDelivr)
+- [Migration Guide](./docs/migration.md) - Upgrading from AI SDK 4.x
+- [Examples](./examples/) - Integration examples
+- [Storybook](./docs/storybook/) - Interactive component documentation
+
+### Developer Documentation  
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- [Development Setup](./docs/DEVELOPMENT.md) - Environment setup
+- [Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
+- [Security Policy](./SECURITY.md) - Security practices
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+We welcome contributions! Here are some resources to get you started:
+
+- **[Contributing Guide](./CONTRIBUTING.md)** - Complete guide to contributing
+- **[Development Setup](./docs/DEVELOPMENT.md)** - Setting up your development environment  
+- **[Code of Conduct](./CODE_OF_CONDUCT.md)** - Our community guidelines
+- **[Security Policy](./SECURITY.md)** - How to report security vulnerabilities
+
+### Quick Start for Contributors
+
+```bash
+# 1. Fork and clone the repository
+git clone https://github.com/your-username/conciergus.ai.git
+cd conciergus.ai
+
+# 2. Install dependencies
+pnpm install
+
+# 3. Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# 4. Build and test
+pnpm run build
+pnpm test
+
+# 5. Start development
+pnpm run dev
+```
 
 ## 📄 License
 

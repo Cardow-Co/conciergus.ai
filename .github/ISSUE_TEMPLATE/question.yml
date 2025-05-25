@@ -1,0 +1,142 @@
+name: ❓ Question / Discussion
+description: Ask a question or start a discussion
+title: "[Question]: "
+labels: ["question", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for your question! We're here to help. Please provide as much detail as possible so we can give you the best assistance.
+
+  - type: checkboxes
+    attributes:
+      label: Pre-flight Checklist
+      description: Please ensure you've completed these steps before asking a question
+      options:
+        - label: I have searched existing issues and discussions for similar questions
+          required: true
+        - label: I have checked the documentation and examples
+          required: true
+        - label: I have read the [Contributing Guidelines](../../CONTRIBUTING.md)
+          required: true
+
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: Question Type
+      description: What type of question or discussion is this?
+      options:
+        - General Usage Question
+        - Best Practices / Architecture
+        - Integration Help
+        - Performance Question
+        - Security Question
+        - TypeScript Types Help
+        - Troubleshooting
+        - Feature Discussion
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know? Be as specific as possible.
+      placeholder: |
+        Please describe your question in detail. Include:
+        - What you're trying to accomplish
+        - What you've tried so far
+        - Where you're getting stuck
+        - Any specific requirements or constraints
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & Background
+      description: Provide context about your project and use case
+      placeholder: |
+        - What type of application are you building?
+        - What are your specific requirements?
+        - Are there any constraints or special considerations?
+        - What's your experience level with React/AI libraries?
+
+  - type: textarea
+    id: current-approach
+    attributes:
+      label: Current Approach (if any)
+      description: What have you tried so far? Include any code examples.
+      render: typescript
+      placeholder: |
+        // What you've tried so far
+        import { ConciergusProvider } from '@conciergus/chat';
+        
+        // Your current implementation
+
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected Outcome
+      description: What would you like to achieve? What should the end result look like?
+      placeholder: |
+        Describe your ideal outcome or solution. Include:
+        - What behavior you expect
+        - What the user experience should be
+        - Any specific functionality needed
+
+  - type: dropdown
+    id: package-version
+    attributes:
+      label: Package Version
+      description: What version of @conciergus/chat are you using?
+      options:
+        - 0.2.0 (latest)
+        - 0.1.0
+        - Not using yet (planning/evaluating)
+        - Other (please specify below)
+
+  - type: dropdown
+    id: react-version
+    attributes:
+      label: React Version
+      description: What version of React are you using?
+      options:
+        - 19.x
+        - 18.x
+        - Not applicable
+        - Other (please specify below)
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details (if relevant)
+      description: Provide details about your development environment if relevant to your question
+      placeholder: |
+        - Framework: (Next.js, Vite, Create React App, etc.)
+        - Bundler: (Webpack, Rollup, etc.)
+        - TypeScript version:
+        - Other relevant tools or constraints:
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other information that might be helpful
+      placeholder: |
+        - Links to relevant documentation you've consulted
+        - Related resources or examples you've found
+        - Any other context that might be helpful
+
+  - type: checkboxes
+    attributes:
+      label: Community
+      description: Help us build a better community
+      options:
+        - label: I'd be willing to help answer similar questions from other users
+          required: false
+        - label: I'd be interested in contributing documentation improvements based on this discussion
+          required: false 
