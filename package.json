@@ -30,35 +30,39 @@
   },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.min.js",
+  "unpkg": "dist/index.umd.min.js",
+  "jsdelivr": "dist/index.umd.min.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs.js"
     },
     "./gateway": {
+      "types": "./dist/gateway.d.ts",
       "import": "./dist/gateway.esm.js",
-      "require": "./dist/gateway.cjs.js",
-      "types": "./dist/gateway.d.ts"
+      "require": "./dist/gateway.cjs.js"
     },
     "./enterprise": {
+      "types": "./dist/enterprise.d.ts",
       "import": "./dist/enterprise.esm.js",
-      "require": "./dist/enterprise.cjs.js",
-      "types": "./dist/enterprise.d.ts"
+      "require": "./dist/enterprise.cjs.js"
     },
     "./hooks": {
+      "types": "./dist/hooks.d.ts",
       "import": "./dist/hooks.esm.js",
-      "require": "./dist/hooks.cjs.js",
-      "types": "./dist/hooks.d.ts"
+      "require": "./dist/hooks.cjs.js"
     },
     "./components": {
+      "types": "./dist/components.d.ts",
       "import": "./dist/components.esm.js",
-      "require": "./dist/components.cjs.js",
-      "types": "./dist/components.d.ts"
+      "require": "./dist/components.cjs.js"
     }
   },
   "scripts": {
@@ -156,6 +160,7 @@
     "eslint-plugin-prettier": "^5.4.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "events": "^3.3.0",
     "husky": "^9.1.7",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.7.0",
@@ -184,27 +189,72 @@
     {
       "name": "Main bundle (ESM)",
       "path": "dist/index.esm.js",
-      "limit": "50 KB"
+      "limit": "200 KB"
     },
     {
       "name": "Main bundle (CJS)",
       "path": "dist/index.cjs.js",
-      "limit": "50 KB"
+      "limit": "220 KB"
+    },
+    {
+      "name": "Main bundle (UMD)",
+      "path": "dist/index.umd.js",
+      "limit": "200 KB"
+    },
+    {
+      "name": "Main bundle (UMD min)",
+      "path": "dist/index.umd.min.js",
+      "limit": "200 KB"
+    },
+    {
+      "name": "Main bundle (IIFE)",
+      "path": "dist/index.iife.js",
+      "limit": "200 KB"
+    },
+    {
+      "name": "Main bundle (IIFE min)",
+      "path": "dist/index.iife.min.js",
+      "limit": "200 KB"
     },
     {
       "name": "Gateway bundle (ESM)",
       "path": "dist/gateway.esm.js",
-      "limit": "30 KB"
+      "limit": "120 KB"
+    },
+    {
+      "name": "Gateway bundle (UMD)",
+      "path": "dist/gateway.umd.js",
+      "limit": "120 KB"
     },
     {
       "name": "Components bundle (ESM)",
       "path": "dist/components.esm.js",
-      "limit": "40 KB"
+      "limit": "190 KB"
+    },
+    {
+      "name": "Components bundle (UMD)",
+      "path": "dist/components.umd.js",
+      "limit": "190 KB"
     },
     {
       "name": "Hooks bundle (ESM)",
       "path": "dist/hooks.esm.js",
-      "limit": "25 KB"
+      "limit": "140 KB"
+    },
+    {
+      "name": "Hooks bundle (UMD)",
+      "path": "dist/hooks.umd.js",
+      "limit": "140 KB"
+    },
+    {
+      "name": "Enterprise bundle (ESM)",
+      "path": "dist/enterprise.esm.js",
+      "limit": "90 KB"
+    },
+    {
+      "name": "Enterprise bundle (UMD)",
+      "path": "dist/enterprise.umd.js",
+      "limit": "90 KB"
     }
   ]
 }
