@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { z } from 'zod';
 import { useConciergus } from '../context/useConciergus';
-import type { 
+import type {
   EnhancedUIMessage,
   MessageMetadata,
-  PerformanceMetrics 
+  PerformanceMetrics,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -15,7 +21,7 @@ import type {
 /**
  * Form field type definitions for dynamic rendering
  */
-export type FormFieldType = 
+export type FormFieldType =
   | 'text'
   | 'email'
   | 'password'
@@ -219,93 +225,93 @@ export interface FormSubmissionData {
 export interface ConciergusFormRendererProps {
   /** Prompt for AI form generation */
   prompt: string;
-  
+
   /** Form submission handler */
   onSubmit: (submission: FormSubmissionData) => void | Promise<void>;
-  
+
   /** Form generation options */
   generationOptions?: FormGenerationOptions;
-  
+
   /** Form rendering options */
   renderOptions?: FormRenderOptions;
-  
+
   /** Additional CSS classes */
   className?: string;
-  
+
   /** Form loading component */
   loadingComponent?: React.ComponentType;
-  
+
   /** Form error component */
   errorComponent?: React.ComponentType<{ error: Error; retry: () => void }>;
-  
+
   /** Custom field renderer */
   fieldRenderer?: React.ComponentType<FormFieldRendererProps>;
-  
+
   // === Display Options ===
   /** Show generation progress */
   showProgress?: boolean;
-  
+
   /** Show schema information */
   showSchema?: boolean;
-  
+
   /** Show performance metrics */
   showMetrics?: boolean;
-  
+
   /** Compact display mode */
   compact?: boolean;
-  
+
   // === Events ===
   /** Form generation start handler */
   onGenerationStart?: () => void;
-  
+
   /** Form generation complete handler */
   onGenerationComplete?: (schema: FormSchema) => void;
-  
+
   /** Form generation error handler */
   onGenerationError?: (error: Error) => void;
-  
+
   /** Field value change handler */
   onFieldChange?: (fieldName: string, value: any) => void;
-  
+
   /** Form validation change handler */
   onValidationChange?: (validation: FormValidationState) => void;
-  
+
   // === API Configuration ===
   /** Custom API endpoint for form generation */
   api?: string;
-  
+
   /** Custom headers for API requests */
   headers?: Record<string, string>;
-  
+
   /** API request credentials */
   credentials?: RequestCredentials;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
-  
+
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Advanced Options ===
   /** Debounce delay for field updates (ms) */
   debounceDelay?: number;
-  
+
   /** Enable debug mode */
   debug?: boolean;
-  
+
   /** Form schema validation */
   schemaValidation?: z.ZodSchema<any>;
-  
+
   /** Enable retry on error */
   enableRetry?: boolean;
-  
+
   /** Maximum retry attempts */
   maxRetries?: number;
-  
+
   /** Custom form data processor */
   dataProcessor?: (data: Record<string, any>) => Record<string, any>;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -355,7 +361,10 @@ const DefaultLoadingComponent: React.FC = () => (
 /**
  * Default error component
  */
-const DefaultErrorComponent: React.FC<{ error: Error; retry: () => void }> = ({ error, retry }) => (
+const DefaultErrorComponent: React.FC<{ error: Error; retry: () => void }> = ({
+  error,
+  retry,
+}) => (
   <div className="conciergus-form-error">
     <div className="error-icon">⚠️</div>
     <div className="error-content">
@@ -381,59 +390,59 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
   disabled = false,
   isSubmitting = false,
   renderOptions = {},
-  className = ''
+  className = '',
 }) => {
   const {
     showDescriptions = true,
     showRequired = true,
-    validationMode = 'onSubmit'
+    validationMode = 'onSubmit',
   } = renderOptions;
 
-  const showError = error && (
-    validationMode === 'immediate' ||
-    (validationMode === 'onBlur' && touched) ||
-    (validationMode === 'onSubmit' && touched)
-  );
+  const showError =
+    error &&
+    (validationMode === 'immediate' ||
+      (validationMode === 'onBlur' && touched) ||
+      (validationMode === 'onSubmit' && touched));
 
   const fieldClasses = [
     'conciergus-form-field',
     `field-type-${field.type}`,
     showError ? 'field-error' : '',
     disabled ? 'field-disabled' : '',
-    className
-  ].filter(Boolean).join(' ');
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const renderInput = () => {
     const baseProps = {
       id: field.id,
       name: field.name,
       value: value || '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => 
-        onChange(e.target.value),
+      onChange: (
+        e: React.ChangeEvent<
+          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >
+      ) => onChange(e.target.value),
       onBlur,
       disabled: disabled || isSubmitting,
       placeholder: field.placeholder,
       className: 'field-input',
       'aria-invalid': showError,
-      'aria-describedby': error ? `${field.id}-error` : undefined
+      'aria-describedby': error ? `${field.id}-error` : undefined,
     };
 
     switch (field.type) {
       case 'textarea':
-        return (
-          <textarea
-            {...baseProps}
-            rows={4}
-          />
-        );
+        return <textarea {...baseProps} rows={4} />;
 
       case 'select':
         return (
           <select {...baseProps} value={value || ''}>
             <option value="">Select an option...</option>
             {field.options?.map((option) => (
-              <option 
-                key={option.value} 
+              <option
+                key={option.value}
                 value={option.value}
                 disabled={option.disabled}
               >
@@ -494,7 +503,9 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
               value={value || field.validation?.min || 0}
               onChange={(e) => onChange(Number(e.target.value))}
             />
-            <span className="range-value">{value || field.validation?.min || 0}</span>
+            <span className="range-value">
+              {value || field.validation?.min || 0}
+            </span>
           </div>
         );
 
@@ -519,20 +530,24 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
       <label htmlFor={field.id} className="field-label">
         {field.label}
         {showRequired && field.validation?.required && (
-          <span className="required-indicator" aria-label="required">*</span>
+          <span className="required-indicator" aria-label="required">
+            *
+          </span>
         )}
       </label>
-      
+
       {showDescriptions && field.description && (
         <div className="field-description">{field.description}</div>
       )}
-      
-      <div className="field-input-wrapper">
-        {renderInput()}
-      </div>
-      
+
+      <div className="field-input-wrapper">{renderInput()}</div>
+
       {showError && (
-        <div id={`${field.id}-error`} className="field-error-message" role="alert">
+        <div
+          id={`${field.id}-error`}
+          className="field-error-message"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -546,11 +561,11 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
 
 /**
  * ConciergusFormRenderer Component
- * 
+ *
  * A dynamic form generation component that leverages AI SDK 5's useObject hook
  * to create forms based on natural language prompts. Supports progressive
  * rendering, real-time validation, and comprehensive customization.
- * 
+ *
  * @example Basic usage:
  * ```tsx
  * <ConciergusFormRenderer
@@ -558,7 +573,7 @@ const DefaultFieldRenderer: React.FC<FormFieldRendererProps> = ({
  *   onSubmit={(submission) => console.log('Form submitted:', submission)}
  * />
  * ```
- * 
+ *
  * @example Advanced usage:
  * ```tsx
  * <ConciergusFormRenderer
@@ -587,29 +602,29 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
   loadingComponent: LoadingComponent = DefaultLoadingComponent,
   errorComponent: ErrorComponent = DefaultErrorComponent,
   fieldRenderer: FieldRenderer = DefaultFieldRenderer,
-  
+
   // Display options
   showProgress = true,
   showSchema = false,
   showMetrics = false,
   compact = false,
-  
+
   // Events
   onGenerationStart,
   onGenerationComplete,
   onGenerationError,
   onFieldChange,
   onValidationChange,
-  
+
   // API Configuration
   api = '/api/generate-form',
   headers = {},
   credentials = 'same-origin',
-  
+
   // Accessibility
   ariaLabel = 'Dynamic AI-generated form',
   ariaDescription,
-  
+
   // Advanced options
   debounceDelay = 300,
   debug = false,
@@ -617,72 +632,104 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
   enableRetry = true,
   maxRetries = 3,
   dataProcessor,
-  
+
   ...rest
 }) => {
   // Context integration
   const { config, isEnhanced, hasFeature } = useConciergus();
-  
+
   // Form generation state
   const [retryCount, setRetryCount] = useState(0);
-  const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
-  
+  const [generationStartTime, setGenerationStartTime] = useState<number | null>(
+    null
+  );
+
   // Form state
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [validationState, setValidationState] = useState<FormValidationState>({
     fieldErrors: {},
     formErrors: [],
     isValid: false,
-    touchedFields: new Set()
+    touchedFields: new Set(),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Refs
   const formRef = useRef<HTMLFormElement>(null);
   const submitTimeRef = useRef<number | null>(null);
 
   // Create schema for form generation
   const formGenerationSchema = useMemo(() => {
-    return schemaValidation || z.object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      fields: z.array(z.object({
-        id: z.string(),
-        name: z.string(),
-        type: z.enum([
-          'text', 'email', 'password', 'number', 'tel', 'url', 'search',
-          'textarea', 'select', 'checkbox', 'radio', 'date', 'time',
-          'datetime-local', 'file', 'range', 'color', 'hidden'
-        ]),
-        label: z.string(),
+    return (
+      schemaValidation ||
+      z.object({
+        title: z.string().optional(),
         description: z.string().optional(),
-        placeholder: z.string().optional(),
-        defaultValue: z.any().optional(),
-        validation: z.object({
-          required: z.boolean().optional(),
-          minLength: z.number().optional(),
-          maxLength: z.number().optional(),
-          min: z.number().optional(),
-          max: z.number().optional(),
-          pattern: z.string().optional(),
-          errorMessage: z.string().optional()
-        }).optional(),
-        options: z.array(z.object({
-          value: z.union([z.string(), z.number()]),
-          label: z.string(),
-          disabled: z.boolean().optional()
-        })).optional(),
-        conditional: z.object({
-          dependsOn: z.string(),
-          showWhen: z.any()
-        }).optional()
-      })),
-      submitButton: z.object({
-        text: z.string().optional(),
-        style: z.any().optional(),
-        className: z.string().optional()
-      }).optional()
-    });
+        fields: z.array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            type: z.enum([
+              'text',
+              'email',
+              'password',
+              'number',
+              'tel',
+              'url',
+              'search',
+              'textarea',
+              'select',
+              'checkbox',
+              'radio',
+              'date',
+              'time',
+              'datetime-local',
+              'file',
+              'range',
+              'color',
+              'hidden',
+            ]),
+            label: z.string(),
+            description: z.string().optional(),
+            placeholder: z.string().optional(),
+            defaultValue: z.any().optional(),
+            validation: z
+              .object({
+                required: z.boolean().optional(),
+                minLength: z.number().optional(),
+                maxLength: z.number().optional(),
+                min: z.number().optional(),
+                max: z.number().optional(),
+                pattern: z.string().optional(),
+                errorMessage: z.string().optional(),
+              })
+              .optional(),
+            options: z
+              .array(
+                z.object({
+                  value: z.union([z.string(), z.number()]),
+                  label: z.string(),
+                  disabled: z.boolean().optional(),
+                })
+              )
+              .optional(),
+            conditional: z
+              .object({
+                dependsOn: z.string(),
+                showWhen: z.any(),
+              })
+              .optional(),
+          })
+        ),
+        submitButton: z
+          .object({
+            text: z.string().optional(),
+            style: z.any().optional(),
+            className: z.string().optional(),
+          })
+          .optional(),
+      })
+    );
   }, [schemaValidation]);
 
   // AI form generation
@@ -691,23 +738,23 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
     submit: generateForm,
     isLoading: isGenerating,
     error: generationError,
-    stop: stopGeneration
+    stop: stopGeneration,
   } = useObject({
     api,
     schema: formGenerationSchema,
     headers: {
       'Content-Type': 'application/json',
-      ...headers
+      ...headers,
     },
     credentials,
     onFinish: ({ object, error }) => {
       if (debug) {
         console.log('Form generation completed:', { object, error });
       }
-      
+
       if (object && !error) {
         onGenerationComplete?.(object as FormSchema);
-        
+
         // Set default values
         const defaultData: Record<string, any> = {};
         object.fields?.forEach((field: FormField) => {
@@ -719,7 +766,7 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
           }
         });
         setFormData(defaultData);
-        
+
         // Track generation time
         if (generationStartTime) {
           const generationTime = Date.now() - generationStartTime;
@@ -728,7 +775,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
           }
         }
       } else if (error) {
-        onGenerationError?.(new Error(error.message || 'Schema validation failed'));
+        onGenerationError?.(
+          new Error(error.message || 'Schema validation failed')
+        );
       }
     },
     onError: (error) => {
@@ -736,42 +785,42 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
         console.error('Form generation error:', error);
       }
       onGenerationError?.(error);
-    }
+    },
   });
 
   // Enhanced prompt with generation options
   const enhancedPrompt = useMemo(() => {
     const options = generationOptions;
     let prompt_text = prompt;
-    
+
     if (options.complexity) {
       prompt_text += `\n\nComplexity level: ${options.complexity}/10`;
     }
-    
+
     if (options.maxFields) {
       prompt_text += `\nMaximum fields: ${options.maxFields}`;
     }
-    
+
     if (options.preferredTypes?.length) {
       prompt_text += `\nPreferred field types: ${options.preferredTypes.join(', ')}`;
     }
-    
+
     if (options.theme) {
       prompt_text += `\nForm theme: ${options.theme}`;
     }
-    
+
     if (options.locale) {
       prompt_text += `\nLanguage/locale: ${options.locale}`;
     }
-    
+
     if (options.includeConditional) {
       prompt_text += '\nInclude conditional/dependent fields where appropriate';
     }
-    
+
     if (options.context) {
       prompt_text += `\nAdditional context: ${JSON.stringify(options.context)}`;
     }
-    
+
     return prompt_text;
   }, [prompt, generationOptions]);
 
@@ -782,211 +831,263 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
       onGenerationStart?.();
       generateForm(enhancedPrompt);
     }
-  }, [prompt, enhancedPrompt, generatedSchema, isGenerating, generationError, generateForm, onGenerationStart]);
+  }, [
+    prompt,
+    enhancedPrompt,
+    generatedSchema,
+    isGenerating,
+    generationError,
+    generateForm,
+    onGenerationStart,
+  ]);
 
   // Form validation
-  const validateField = useCallback((field: FormField, value: any): string | null => {
-    const validation = field.validation;
-    if (!validation) return null;
+  const validateField = useCallback(
+    (field: FormField, value: any): string | null => {
+      const validation = field.validation;
+      if (!validation) return null;
 
-    // Required validation
-    if (validation.required && (!value || (typeof value === 'string' && !value.trim()))) {
-      return validation.errorMessage || `${field.label} is required`;
-    }
-
-    // Skip other validations if field is empty and not required
-    if (!value && !validation.required) return null;
-
-    // Type-specific validations
-    if (typeof value === 'string') {
-      if (validation.minLength && value.length < validation.minLength) {
-        return `${field.label} must be at least ${validation.minLength} characters`;
+      // Required validation
+      if (
+        validation.required &&
+        (!value || (typeof value === 'string' && !value.trim()))
+      ) {
+        return validation.errorMessage || `${field.label} is required`;
       }
-      if (validation.maxLength && value.length > validation.maxLength) {
-        return `${field.label} must be no more than ${validation.maxLength} characters`;
-      }
-      if (validation.pattern && !new RegExp(validation.pattern).test(value)) {
-        return validation.errorMessage || `${field.label} format is invalid`;
-      }
-    }
 
-    if (typeof value === 'number') {
-      if (validation.min !== undefined && value < validation.min) {
-        return `${field.label} must be at least ${validation.min}`;
-      }
-      if (validation.max !== undefined && value > validation.max) {
-        return `${field.label} must be no more than ${validation.max}`;
-      }
-    }
+      // Skip other validations if field is empty and not required
+      if (!value && !validation.required) return null;
 
-    // Custom validation
-    if (validation.validator) {
-      return validation.validator(value);
-    }
+      // Type-specific validations
+      if (typeof value === 'string') {
+        if (validation.minLength && value.length < validation.minLength) {
+          return `${field.label} must be at least ${validation.minLength} characters`;
+        }
+        if (validation.maxLength && value.length > validation.maxLength) {
+          return `${field.label} must be no more than ${validation.maxLength} characters`;
+        }
+        if (validation.pattern && !new RegExp(validation.pattern).test(value)) {
+          return validation.errorMessage || `${field.label} format is invalid`;
+        }
+      }
 
-    return null;
-  }, []);
+      if (typeof value === 'number') {
+        if (validation.min !== undefined && value < validation.min) {
+          return `${field.label} must be at least ${validation.min}`;
+        }
+        if (validation.max !== undefined && value > validation.max) {
+          return `${field.label} must be no more than ${validation.max}`;
+        }
+      }
+
+      // Custom validation
+      if (validation.validator) {
+        return validation.validator(value);
+      }
+
+      return null;
+    },
+    []
+  );
 
   // Validate entire form
-  const validateForm = useCallback((data: Record<string, any>, schema: FormSchema): FormValidationState => {
-    const fieldErrors: Record<string, string> = {};
-    const formErrors: string[] = [];
+  const validateForm = useCallback(
+    (data: Record<string, any>, schema: FormSchema): FormValidationState => {
+      const fieldErrors: Record<string, string> = {};
+      const formErrors: string[] = [];
 
-    // Validate each field
-    schema.fields?.forEach(field => {
-      const error = validateField(field, data[field.name]);
-      if (error) {
-        fieldErrors[field.name] = error;
-      }
-    });
-
-    // Form-level validation
-    if (schema.validation?.validator) {
-      const formLevelErrors = schema.validation.validator(data);
-      if (formLevelErrors) {
-        Object.entries(formLevelErrors).forEach(([field, error]) => {
-          if (typeof error === 'string') {
-            if (field === '_form') {
-              formErrors.push(error);
-            } else {
-              fieldErrors[field] = error;
-            }
-          }
-        });
-      }
-    }
-
-    return {
-      fieldErrors,
-      formErrors,
-      isValid: Object.keys(fieldErrors).length === 0 && formErrors.length === 0,
-      touchedFields: validationState.touchedFields
-    };
-  }, [validateField, validationState.touchedFields]);
-
-  // Handle field changes
-  const handleFieldChange = useCallback((fieldName: string, value: any) => {
-    const processedValue = dataProcessor ? dataProcessor({ [fieldName]: value })[fieldName] : value;
-    
-    setFormData(prev => ({ ...prev, [fieldName]: processedValue }));
-    onFieldChange?.(fieldName, processedValue);
-
-    // Real-time validation for immediate mode
-    if (renderOptions.validationMode === 'immediate' && generatedSchema) {
-      const field = generatedSchema.fields?.find(f => f.name === fieldName);
-      if (field) {
-        const error = validateField(field, processedValue);
-        setValidationState(prev => {
-          const newState = {
-            ...prev,
-            fieldErrors: { ...prev.fieldErrors, [fieldName]: error || '' }
-          };
-          if (!error) {
-            delete newState.fieldErrors[fieldName];
-          }
-          return newState;
-        });
-      }
-    }
-  }, [dataProcessor, onFieldChange, renderOptions.validationMode, generatedSchema, validateField]);
-
-  // Handle field blur
-  const handleFieldBlur = useCallback((fieldName: string) => {
-    setValidationState(prev => ({
-      ...prev,
-      touchedFields: new Set([...prev.touchedFields, fieldName])
-    }));
-
-    // Validate on blur
-    if (renderOptions.validationMode === 'onBlur' && generatedSchema) {
-      const field = generatedSchema.fields?.find(f => f.name === fieldName);
-      if (field) {
-        const error = validateField(field, formData[fieldName]);
-        setValidationState(prev => {
-          const newState = {
-            ...prev,
-            fieldErrors: { ...prev.fieldErrors, [fieldName]: error || '' }
-          };
-          if (!error) {
-            delete newState.fieldErrors[fieldName];
-          }
-          return newState;
-        });
-      }
-    }
-  }, [renderOptions.validationMode, generatedSchema, validateField, formData]);
-
-  // Handle form submission
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!generatedSchema || isSubmitting) return;
-
-    setIsSubmitting(true);
-    submitTimeRef.current = Date.now();
-
-    // Validate form
-    const validation = validateForm(formData, generatedSchema);
-    
-    // Mark all fields as touched to show validation errors
-    const allFieldNames = generatedSchema.fields?.map(f => f.name) || [];
-    const newTouchedFields = new Set([...validation.touchedFields, ...allFieldNames]);
-    const updatedValidation = {
-      ...validation,
-      touchedFields: newTouchedFields
-    };
-    
-    setValidationState(updatedValidation);
-    onValidationChange?.(updatedValidation);
-
-    if (!validation.isValid) {
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      // Ensure all fields have values in the submission data
-      const completeFormData = { ...formData };
-      visibleFields.forEach(field => {
-        if (!(field.name in completeFormData)) {
-          if (field.type === 'checkbox') {
-            completeFormData[field.name] = false;
-          } else if (field.defaultValue !== undefined) {
-            completeFormData[field.name] = field.defaultValue;
-          }
+      // Validate each field
+      schema.fields?.forEach((field) => {
+        const error = validateField(field, data[field.name]);
+        if (error) {
+          fieldErrors[field.name] = error;
         }
       });
 
-      const submission: FormSubmissionData = {
-        data: completeFormData,
-        schema: generatedSchema,
-        metadata: {
-          timestamp: new Date(),
-          completionTime: submitTimeRef.current ? Date.now() - submitTimeRef.current : 0,
-          errorCount: Object.keys(validation.fieldErrors).length,
-          generationMetrics: generationStartTime ? {
-            startTime: generationStartTime,
-            endTime: Date.now(),
-            duration: Date.now() - generationStartTime
-          } as PerformanceMetrics : undefined
+      // Form-level validation
+      if (schema.validation?.validator) {
+        const formLevelErrors = schema.validation.validator(data);
+        if (formLevelErrors) {
+          Object.entries(formLevelErrors).forEach(([field, error]) => {
+            if (typeof error === 'string') {
+              if (field === '_form') {
+                formErrors.push(error);
+              } else {
+                fieldErrors[field] = error;
+              }
+            }
+          });
         }
+      }
+
+      return {
+        fieldErrors,
+        formErrors,
+        isValid:
+          Object.keys(fieldErrors).length === 0 && formErrors.length === 0,
+        touchedFields: validationState.touchedFields,
+      };
+    },
+    [validateField, validationState.touchedFields]
+  );
+
+  // Handle field changes
+  const handleFieldChange = useCallback(
+    (fieldName: string, value: any) => {
+      const processedValue = dataProcessor
+        ? dataProcessor({ [fieldName]: value })[fieldName]
+        : value;
+
+      setFormData((prev) => ({ ...prev, [fieldName]: processedValue }));
+      onFieldChange?.(fieldName, processedValue);
+
+      // Real-time validation for immediate mode
+      if (renderOptions.validationMode === 'immediate' && generatedSchema) {
+        const field = generatedSchema.fields?.find((f) => f.name === fieldName);
+        if (field) {
+          const error = validateField(field, processedValue);
+          setValidationState((prev) => {
+            const newState = {
+              ...prev,
+              fieldErrors: { ...prev.fieldErrors, [fieldName]: error || '' },
+            };
+            if (!error) {
+              delete newState.fieldErrors[fieldName];
+            }
+            return newState;
+          });
+        }
+      }
+    },
+    [
+      dataProcessor,
+      onFieldChange,
+      renderOptions.validationMode,
+      generatedSchema,
+      validateField,
+    ]
+  );
+
+  // Handle field blur
+  const handleFieldBlur = useCallback(
+    (fieldName: string) => {
+      setValidationState((prev) => ({
+        ...prev,
+        touchedFields: new Set([...prev.touchedFields, fieldName]),
+      }));
+
+      // Validate on blur
+      if (renderOptions.validationMode === 'onBlur' && generatedSchema) {
+        const field = generatedSchema.fields?.find((f) => f.name === fieldName);
+        if (field) {
+          const error = validateField(field, formData[fieldName]);
+          setValidationState((prev) => {
+            const newState = {
+              ...prev,
+              fieldErrors: { ...prev.fieldErrors, [fieldName]: error || '' },
+            };
+            if (!error) {
+              delete newState.fieldErrors[fieldName];
+            }
+            return newState;
+          });
+        }
+      }
+    },
+    [renderOptions.validationMode, generatedSchema, validateField, formData]
+  );
+
+  // Handle form submission
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!generatedSchema || isSubmitting) return;
+
+      setIsSubmitting(true);
+      submitTimeRef.current = Date.now();
+
+      // Validate form
+      const validation = validateForm(formData, generatedSchema);
+
+      // Mark all fields as touched to show validation errors
+      const allFieldNames = generatedSchema.fields?.map((f) => f.name) || [];
+      const newTouchedFields = new Set([
+        ...validation.touchedFields,
+        ...allFieldNames,
+      ]);
+      const updatedValidation = {
+        ...validation,
+        touchedFields: newTouchedFields,
       };
 
-      await onSubmit(submission);
-    } catch (error) {
-      console.error('Form submission error:', error);
-      setValidationState(prev => ({
-        ...prev,
-        formErrors: [`Submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
-      }));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [generatedSchema, isSubmitting, formData, validateForm, onValidationChange, onSubmit, generationStartTime]);
+      setValidationState(updatedValidation);
+      onValidationChange?.(updatedValidation);
+
+      if (!validation.isValid) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        // Ensure all fields have values in the submission data
+        const completeFormData = { ...formData };
+        visibleFields.forEach((field) => {
+          if (!(field.name in completeFormData)) {
+            if (field.type === 'checkbox') {
+              completeFormData[field.name] = false;
+            } else if (field.defaultValue !== undefined) {
+              completeFormData[field.name] = field.defaultValue;
+            }
+          }
+        });
+
+        const submission: FormSubmissionData = {
+          data: completeFormData,
+          schema: generatedSchema,
+          metadata: {
+            timestamp: new Date(),
+            completionTime: submitTimeRef.current
+              ? Date.now() - submitTimeRef.current
+              : 0,
+            errorCount: Object.keys(validation.fieldErrors).length,
+            generationMetrics: generationStartTime
+              ? ({
+                  startTime: generationStartTime,
+                  endTime: Date.now(),
+                  duration: Date.now() - generationStartTime,
+                } as PerformanceMetrics)
+              : undefined,
+          },
+        };
+
+        await onSubmit(submission);
+      } catch (error) {
+        console.error('Form submission error:', error);
+        setValidationState((prev) => ({
+          ...prev,
+          formErrors: [
+            `Submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ],
+        }));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      generatedSchema,
+      isSubmitting,
+      formData,
+      validateForm,
+      onValidationChange,
+      onSubmit,
+      generationStartTime,
+    ]
+  );
 
   // Retry generation
   const handleRetry = useCallback(() => {
     if (retryCount < maxRetries) {
-      setRetryCount(prev => prev + 1);
+      setRetryCount((prev) => prev + 1);
       setGenerationStartTime(Date.now());
       onGenerationStart?.();
       generateForm(enhancedPrompt);
@@ -997,9 +1098,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
   const visibleFields = useMemo(() => {
     if (!generatedSchema?.fields) return [];
 
-    return generatedSchema.fields.filter(field => {
+    return generatedSchema.fields.filter((field) => {
       if (!field.conditional) return true;
-      
+
       const dependentValue = formData[field.conditional.dependsOn];
       return dependentValue === field.conditional.showWhen;
     });
@@ -1010,9 +1111,13 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
     'conciergus-form-renderer',
     compact ? 'compact' : '',
     renderOptions.layout ? `layout-${renderOptions.layout}` : 'layout-vertical',
-    renderOptions.fieldSpacing ? `spacing-${renderOptions.fieldSpacing}` : 'spacing-normal',
-    className
-  ].filter(Boolean).join(' ');
+    renderOptions.fieldSpacing
+      ? `spacing-${renderOptions.fieldSpacing}`
+      : 'spacing-normal',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // Render loading state
   if (isGenerating && !generatedSchema) {
@@ -1021,7 +1126,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
         <LoadingComponent />
         {showProgress && (
           <div className="generation-progress">
-            <div className="progress-text">Analyzing prompt and generating form structure...</div>
+            <div className="progress-text">
+              Analyzing prompt and generating form structure...
+            </div>
           </div>
         )}
       </div>
@@ -1032,9 +1139,11 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
   if (generationError && !generatedSchema) {
     return (
       <div className={componentClasses} {...rest}>
-        <ErrorComponent 
-          error={generationError} 
-          retry={enableRetry && retryCount < maxRetries ? handleRetry : () => {}} 
+        <ErrorComponent
+          error={generationError}
+          retry={
+            enableRetry && retryCount < maxRetries ? handleRetry : () => {}
+          }
         />
       </div>
     );
@@ -1062,7 +1171,7 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
           {generatedSchema.title && (
             <h2 className="form-title">{generatedSchema.title}</h2>
           )}
-          
+
           {generatedSchema.description && (
             <p id="form-description" className="form-description">
               {generatedSchema.description}
@@ -1079,11 +1188,15 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
             </div>
           )}
 
-          <div 
+          <div
             className={`form-fields ${renderOptions.layout === 'grid' ? 'form-grid' : ''}`}
-            style={renderOptions.layout === 'grid' ? {
-              gridTemplateColumns: `repeat(${renderOptions.gridColumns || 2}, 1fr)`
-            } : undefined}
+            style={
+              renderOptions.layout === 'grid'
+                ? {
+                    gridTemplateColumns: `repeat(${renderOptions.gridColumns || 2}, 1fr)`,
+                  }
+                : undefined
+            }
           >
             {visibleFields.map((field, index) => (
               <FieldRenderer
@@ -1097,7 +1210,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
                 disabled={isSubmitting}
                 isSubmitting={isSubmitting}
                 renderOptions={renderOptions}
-                className={renderOptions.animateFields ? `animate-field-${index}` : ''}
+                className={
+                  renderOptions.animateFields ? `animate-field-${index}` : ''
+                }
               />
             ))}
           </div>
@@ -1109,7 +1224,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
               className={`submit-button ${generatedSchema.submitButton?.className || ''}`}
               style={generatedSchema.submitButton?.style}
             >
-              {isSubmitting ? 'Submitting...' : (generatedSchema.submitButton?.text || 'Submit')}
+              {isSubmitting
+                ? 'Submitting...'
+                : generatedSchema.submitButton?.text || 'Submit'}
             </button>
           </div>
         </form>
@@ -1119,7 +1236,9 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
             <h4>Generation Metrics</h4>
             <div className="metrics">
               <span>Generation Time: {Date.now() - generationStartTime}ms</span>
-              <span>Fields Generated: {generatedSchema.fields?.length || 0}</span>
+              <span>
+                Fields Generated: {generatedSchema.fields?.length || 0}
+              </span>
               <span>Retry Count: {retryCount}</span>
             </div>
           </div>
@@ -1138,4 +1257,4 @@ export const ConciergusFormRenderer: React.FC<ConciergusFormRendererProps> = ({
   );
 };
 
-export default ConciergusFormRenderer; 
+export default ConciergusFormRenderer;

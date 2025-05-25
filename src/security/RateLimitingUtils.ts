@@ -3,14 +3,14 @@
  * Easy-to-use utilities for implementing rate limiting in applications
  */
 
-import { 
-  RateLimitingEngine, 
-  RateLimitConfig, 
+import {
+  RateLimitingEngine,
+  RateLimitConfig,
   RateLimitInfo,
   RateLimitAlgorithm,
   RateLimitStrategy,
   DDoSProtectionLevel,
-  createSecureRateLimitingEngine
+  createSecureRateLimitingEngine,
 } from './RateLimitingEngine';
 import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
 
@@ -28,15 +28,15 @@ export class SimpleRateLimiter {
   ) {
     this.engine = createSecureRateLimitingEngine();
     this.configName = `simple-${Date.now()}`;
-    
+
     const config: RateLimitConfig = {
       algorithm,
       strategy: RateLimitStrategy.IP_BASED,
       windowMs,
       maxRequests,
-      ddosProtection: DDoSProtectionLevel.BASIC
+      ddosProtection: DDoSProtectionLevel.BASIC,
     };
-    
+
     this.engine.registerConfig(this.configName, config);
   }
 
@@ -51,12 +51,12 @@ export class SimpleRateLimiter {
   }> {
     const context = { request: { ip: identifier } };
     const result = await this.engine.checkRateLimit(this.configName, context);
-    
+
     return {
       allowed: !result.blocked,
       remaining: result.remaining,
       resetTime: result.resetTime,
-      retryAfter: result.retryAfter
+      retryAfter: result.retryAfter,
     };
   }
 
@@ -82,34 +82,37 @@ export class TokenBucketLimiter {
   ) {
     this.engine = createSecureRateLimitingEngine();
     this.configName = `bucket-${identifier}`;
-    
+
     const config: RateLimitConfig = {
       algorithm: RateLimitAlgorithm.TOKEN_BUCKET,
       strategy: RateLimitStrategy.IP_BASED,
       windowMs: 60000,
       maxRequests: bucketSize,
       burstLimit: bucketSize,
-      refillRate
+      refillRate,
     };
-    
+
     this.engine.registerConfig(this.configName, config);
   }
 
   /**
    * Consume tokens
    */
-  async consumeTokens(identifier: string, tokens: number = 1): Promise<{
+  async consumeTokens(
+    identifier: string,
+    tokens: number = 1
+  ): Promise<{
     success: boolean;
     tokensRemaining: number;
     retryAfter: number;
   }> {
     const context = { request: { ip: identifier } };
     const result = await this.engine.checkRateLimit(this.configName, context);
-    
+
     return {
       success: !result.blocked,
       tokensRemaining: result.remaining,
-      retryAfter: result.retryAfter
+      retryAfter: result.retryAfter,
     };
   }
 }
@@ -143,7 +146,7 @@ export class AdvancedRateLimiter {
   ): void {
     const configName = `advanced-${name}`;
     this.configs.set(name, configName);
-    
+
     const rateLimitConfig: RateLimitConfig = {
       algorithm: config.algorithm || RateLimitAlgorithm.SLIDING_WINDOW,
       strategy: config.strategy || RateLimitStrategy.IP_BASED,
@@ -152,11 +155,11 @@ export class AdvancedRateLimiter {
       ddosProtection: config.ddosProtection || DDoSProtectionLevel.BASIC,
       whitelist: config.whitelist,
       blacklist: config.blacklist,
-      onLimitReached: config.onLimitReached ? 
-        (context, info) => config.onLimitReached!(info.identifier, info) : 
-        undefined
+      onLimitReached: config.onLimitReached
+        ? (context, info) => config.onLimitReached!(info.identifier, info)
+        : undefined,
     };
-    
+
     this.engine.registerConfig(configName, rateLimitConfig);
   }
 
@@ -175,7 +178,7 @@ export class AdvancedRateLimiter {
 
     const context = {
       request: { ip: identifier },
-      user: userInfo
+      user: userInfo,
     };
 
     return await this.engine.checkRateLimit(configName, context);
@@ -204,20 +207,22 @@ export class RetryAfterUtils {
     const baseDelay = rateLimitInfo.retryAfter;
     const jitter = Math.random() * 0.1; // 10% jitter
     const backoff = Math.min(baseDelay * Math.pow(1.5, attempt - 1), maxDelay);
-    
+
     return Math.floor(backoff * (1 + jitter));
   }
 
   /**
    * Create retry-after headers
    */
-  static createRetryHeaders(rateLimitInfo: RateLimitInfo): Record<string, string> {
+  static createRetryHeaders(
+    rateLimitInfo: RateLimitInfo
+  ): Record<string, string> {
     return {
       'Retry-After': rateLimitInfo.retryAfter.toString(),
       'X-RateLimit-Limit': rateLimitInfo.limit.toString(),
       'X-RateLimit-Remaining': rateLimitInfo.remaining.toString(),
       'X-RateLimit-Reset': Math.ceil(rateLimitInfo.resetTime / 1000).toString(),
-      'X-RateLimit-Reset-After': rateLimitInfo.retryAfter.toString()
+      'X-RateLimit-Reset-After': rateLimitInfo.retryAfter.toString(),
     };
   }
 
@@ -226,7 +231,7 @@ export class RetryAfterUtils {
    */
   static formatRetryMessage(rateLimitInfo: RateLimitInfo): string {
     const retryAfter = rateLimitInfo.retryAfter;
-    
+
     if (retryAfter < 60) {
       return `Rate limit exceeded. Please try again in ${retryAfter} seconds.`;
     } else if (retryAfter < 3600) {
@@ -247,7 +252,8 @@ export class GracefulDegradationUtils {
   private fallbackUntil = 0;
   private readonly fallbackDuration: number;
 
-  constructor(fallbackDurationMs: number = 300000) { // 5 minutes default
+  constructor(fallbackDurationMs: number = 300000) {
+    // 5 minutes default
     this.fallbackDuration = fallbackDurationMs;
   }
 
@@ -268,7 +274,7 @@ export class GracefulDegradationUtils {
   activateFallback(reason: string = 'high_load'): void {
     this.fallbackMode = true;
     this.fallbackUntil = Date.now() + this.fallbackDuration;
-    
+
     ConciergusOpenTelemetry.createSpan(
       'conciergus-security',
       'fallback-activated',
@@ -276,7 +282,7 @@ export class GracefulDegradationUtils {
         span?.setAttributes({
           'fallback.reason': reason,
           'fallback.duration_ms': this.fallbackDuration,
-          'fallback.until': this.fallbackUntil
+          'fallback.until': this.fallbackUntil,
         });
       }
     );
@@ -288,13 +294,14 @@ export class GracefulDegradationUtils {
   deactivateFallback(): void {
     this.fallbackMode = false;
     this.fallbackUntil = 0;
-    
+
     ConciergusOpenTelemetry.createSpan(
       'conciergus-security',
       'fallback-deactivated',
       (span) => {
         span?.setAttributes({
-          'fallback.duration_actual': Date.now() - (this.fallbackUntil - this.fallbackDuration)
+          'fallback.duration_actual':
+            Date.now() - (this.fallbackUntil - this.fallbackDuration),
         });
       }
     );
@@ -311,7 +318,9 @@ export class GracefulDegradationUtils {
     const now = Date.now();
     return {
       enabled: this.fallbackMode,
-      remainingMs: this.fallbackMode ? Math.max(0, this.fallbackUntil - now) : 0
+      remainingMs: this.fallbackMode
+        ? Math.max(0, this.fallbackUntil - now)
+        : 0,
     };
   }
 }
@@ -326,7 +335,7 @@ export class LoadBalancedRateLimiter {
   constructor(
     instances: Array<{ id: string; maxRequests: number; windowMs?: number }>
   ) {
-    instances.forEach(instance => {
+    instances.forEach((instance) => {
       this.limiters.set(
         instance.id,
         new SimpleRateLimiter(instance.maxRequests, instance.windowMs)
@@ -345,36 +354,36 @@ export class LoadBalancedRateLimiter {
   }> {
     const instances = Array.from(this.limiters.keys());
     const startIndex = this.currentIndex;
-    
+
     do {
       const instanceId = instances[this.currentIndex];
       const limiter = this.limiters.get(instanceId)!;
-      
+
       const result = await limiter.checkLimit(identifier);
       this.currentIndex = (this.currentIndex + 1) % instances.length;
-      
+
       if (result.allowed) {
         return {
           instanceId,
           allowed: true,
           remaining: result.remaining,
-          retryAfter: 0
+          retryAfter: 0,
         };
       }
-      
+
       // Try next instance if current is rate limited
     } while (this.currentIndex !== startIndex);
-    
+
     // All instances are rate limited
     const instanceId = instances[0];
     const limiter = this.limiters.get(instanceId)!;
     const result = await limiter.checkLimit(identifier);
-    
+
     return {
       instanceId,
       allowed: false,
       remaining: 0,
-      retryAfter: result.retryAfter
+      retryAfter: result.retryAfter,
     };
   }
 }
@@ -400,23 +409,25 @@ export class RateLimitMiddlewareFactory {
     );
 
     return async (req: any, res: any, next: any) => {
-      const identifier = options.keyGenerator ? 
-        options.keyGenerator(req) : 
-        req.ip || req.connection.remoteAddress;
+      const identifier = options.keyGenerator
+        ? options.keyGenerator(req)
+        : req.ip || req.connection.remoteAddress;
 
       const result = await limiter.checkLimit(identifier);
 
       // Add rate limit headers
-      res.set(RetryAfterUtils.createRetryHeaders({
-        limit: options.maxRequests,
-        remaining: result.remaining,
-        resetTime: result.resetTime,
-        retryAfter: result.retryAfter,
-        algorithm: options.algorithm || RateLimitAlgorithm.SLIDING_WINDOW,
-        strategy: RateLimitStrategy.IP_BASED,
-        identifier,
-        blocked: !result.allowed
-      }));
+      res.set(
+        RetryAfterUtils.createRetryHeaders({
+          limit: options.maxRequests,
+          remaining: result.remaining,
+          resetTime: result.resetTime,
+          retryAfter: result.retryAfter,
+          algorithm: options.algorithm || RateLimitAlgorithm.SLIDING_WINDOW,
+          strategy: RateLimitStrategy.IP_BASED,
+          identifier,
+          blocked: !result.allowed,
+        })
+      );
 
       if (!result.allowed) {
         if (options.onLimitReached) {
@@ -432,8 +443,8 @@ export class RateLimitMiddlewareFactory {
               algorithm: options.algorithm || RateLimitAlgorithm.SLIDING_WINDOW,
               strategy: RateLimitStrategy.IP_BASED,
               identifier,
-              blocked: true
-            })
+              blocked: true,
+            }),
           });
         }
         return;
@@ -472,9 +483,9 @@ export class RateLimitMiddlewareFactory {
           algorithm: options.algorithm || RateLimitAlgorithm.SLIDING_WINDOW,
           strategy: RateLimitStrategy.IP_BASED,
           identifier,
-          blocked: true
+          blocked: true,
         };
-        
+
         options.onLimitExceeded(request, rateLimitInfo);
         return;
       }
@@ -495,7 +506,7 @@ export const RateLimitingProfiles = {
     maxRequests: 1000,
     windowMs: 3600000, // 1 hour
     algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
-    ddosProtection: DDoSProtectionLevel.BASIC
+    ddosProtection: DDoSProtectionLevel.BASIC,
   },
 
   /**
@@ -505,7 +516,7 @@ export const RateLimitingProfiles = {
     maxRequests: 5,
     windowMs: 900000, // 15 minutes
     algorithm: RateLimitAlgorithm.TOKEN_BUCKET,
-    ddosProtection: DDoSProtectionLevel.ADVANCED
+    ddosProtection: DDoSProtectionLevel.ADVANCED,
   },
 
   /**
@@ -515,7 +526,7 @@ export const RateLimitingProfiles = {
     maxRequests: 100,
     windowMs: 60000, // 1 minute
     algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
-    ddosProtection: DDoSProtectionLevel.BASIC
+    ddosProtection: DDoSProtectionLevel.BASIC,
   },
 
   /**
@@ -525,7 +536,7 @@ export const RateLimitingProfiles = {
     maxRequests: 10,
     windowMs: 300000, // 5 minutes
     algorithm: RateLimitAlgorithm.TOKEN_BUCKET,
-    ddosProtection: DDoSProtectionLevel.ENTERPRISE
+    ddosProtection: DDoSProtectionLevel.ENTERPRISE,
   },
 
   /**
@@ -535,8 +546,8 @@ export const RateLimitingProfiles = {
     maxRequests: 10000,
     windowMs: 60000, // 1 minute
     algorithm: RateLimitAlgorithm.FIXED_WINDOW,
-    ddosProtection: DDoSProtectionLevel.NONE
-  }
+    ddosProtection: DDoSProtectionLevel.NONE,
+  },
 };
 
 /**
@@ -546,7 +557,9 @@ export const RateLimitingHelpers = {
   /**
    * Create rate limiter from profile
    */
-  fromProfile(profile: typeof RateLimitingProfiles.PUBLIC_API): SimpleRateLimiter {
+  fromProfile(
+    profile: typeof RateLimitingProfiles.PUBLIC_API
+  ): SimpleRateLimiter {
     return new SimpleRateLimiter(
       profile.maxRequests,
       profile.windowMs,
@@ -566,22 +579,22 @@ export const RateLimitingHelpers = {
     return {
       async checkAllLimits(identifier: string) {
         const results = await Promise.all(
-          limiters.map(limiter => limiter.checkLimit(identifier))
+          limiters.map((limiter) => limiter.checkLimit(identifier))
         );
-        
-        const allowed = results.every(result => result.allowed);
-        const mostRestrictive = results.reduce((min, current) => 
+
+        const allowed = results.every((result) => result.allowed);
+        const mostRestrictive = results.reduce((min, current) =>
           current.retryAfter > min.retryAfter ? current : min
         );
-        
+
         return {
           allowed,
           mostRestrictive: {
             remaining: mostRestrictive.remaining,
-            retryAfter: mostRestrictive.retryAfter
-          }
+            retryAfter: mostRestrictive.retryAfter,
+          },
         };
-      }
+      },
     };
   },
 
@@ -597,5 +610,5 @@ export const RateLimitingHelpers = {
     // Distribute the rate limit across nodes
     const nodeLimit = Math.ceil(config.maxRequests / config.totalNodes);
     return new SimpleRateLimiter(nodeLimit, config.windowMs);
-  }
-}; 
+  },
+};

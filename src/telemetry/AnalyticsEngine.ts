@@ -1,7 +1,13 @@
 import { EventEmitter } from 'events';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';
-import { AISDKTelemetryIntegration, type AIOperationTelemetry } from './AISDKTelemetryIntegration';
-import { AIDistributedTracing, type AITraceContext } from './AIDistributedTracing';
+import {
+  AISDKTelemetryIntegration,
+  type AIOperationTelemetry,
+} from './AISDKTelemetryIntegration';
+import {
+  AIDistributedTracing,
+  type AITraceContext,
+} from './AIDistributedTracing';
 import {
   type UsageMetrics,
   type ModelUsageStats,
@@ -13,7 +19,7 @@ import {
   type AnalyticsAlert,
   type AnalyticsEvent,
   type AnalyticsFilter,
-  type AnalyticsTimeRange
+  type AnalyticsTimeRange,
 } from './AnalyticsDataModels';
 
 /**
@@ -76,7 +82,7 @@ export class AnalyticsEngine extends EventEmitter {
       userProfiles: new Map(),
       alerts: new Map(),
       events: [],
-      lastProcessed: new Date()
+      lastProcessed: new Date(),
     };
 
     this.initializeIntegrations();
@@ -124,7 +130,7 @@ export class AnalyticsEngine extends EventEmitter {
    */
   private setupDefaultThresholds(): void {
     if (this.config.alerting.enabled) {
-      this.config.alerting.defaultThresholds.forEach(threshold => {
+      this.config.alerting.defaultThresholds.forEach((threshold) => {
         this.addAlertThreshold(threshold);
       });
     }
@@ -143,20 +149,26 @@ export class AnalyticsEngine extends EventEmitter {
 
     // Start optimization insights generation
     if (this.config.optimization.enableInsights) {
-      this.insightTimer = setInterval(() => {
-        this.generateOptimizationInsights();
-      }, this.config.optimization.insightRefreshInterval * 60 * 1000);
+      this.insightTimer = setInterval(
+        () => {
+          this.generateOptimizationInsights();
+        },
+        this.config.optimization.insightRefreshInterval * 60 * 1000
+      );
     }
   }
 
   /**
    * Record an AI operation for analytics
    */
-  recordOperation(operation: AIOperationTelemetry, context?: {
-    userId?: string;
-    sessionId?: string;
-    conversationId?: string;
-  }): void {
+  recordOperation(
+    operation: AIOperationTelemetry,
+    context?: {
+      userId?: string;
+      sessionId?: string;
+      conversationId?: string;
+    }
+  ): void {
     if (!this.config.enabled) return;
 
     // Store the operation
@@ -185,10 +197,10 @@ export class AnalyticsEngine extends EventEmitter {
         tokens: operation.tokenUsage?.total,
         success: operation.success,
         error: operation.error,
-        context
+        context,
       },
       severity: operation.success ? 'info' : 'warning',
-      processed: false
+      processed: false,
     };
 
     this.dataStore.events.push(event);
@@ -219,14 +231,14 @@ export class AnalyticsEngine extends EventEmitter {
         averageLatency: 0,
         successRate: 0,
         errorRate: 0,
-        averageTokensPerSecond: 0
+        averageTokensPerSecond: 0,
       },
       usage: {
         firstUsed: new Date(),
         lastUsed: new Date(),
         peakUsageHour: 0,
-        totalSessions: 0
-      }
+        totalSessions: 0,
+      },
     };
 
     // Update counts
@@ -242,20 +254,27 @@ export class AnalyticsEngine extends EventEmitter {
 
     // Update performance metrics
     if (operation.duration) {
-      existing.performance.averageLatency = 
-        (existing.performance.averageLatency * (existing.requests - 1) + operation.duration) / existing.requests;
+      existing.performance.averageLatency =
+        (existing.performance.averageLatency * (existing.requests - 1) +
+          operation.duration) /
+        existing.requests;
     }
 
-    const successCount = existing.requests * existing.performance.successRate + (operation.success ? 1 : 0);
+    const successCount =
+      existing.requests * existing.performance.successRate +
+      (operation.success ? 1 : 0);
     existing.performance.successRate = successCount / existing.requests;
     existing.performance.errorRate = 1 - existing.performance.successRate;
 
     // Update usage info
     existing.usage.lastUsed = new Date();
     if (operation.duration && operation.tokenUsage?.total) {
-      const tokensPerSecond = operation.tokenUsage.total / (operation.duration / 1000);
+      const tokensPerSecond =
+        operation.tokenUsage.total / (operation.duration / 1000);
       existing.performance.averageTokensPerSecond =
-        (existing.performance.averageTokensPerSecond * (existing.requests - 1) + tokensPerSecond) / existing.requests;
+        (existing.performance.averageTokensPerSecond * (existing.requests - 1) +
+          tokensPerSecond) /
+        existing.requests;
     }
 
     this.dataStore.modelStats.set(operation.model, existing);
@@ -265,7 +284,7 @@ export class AnalyticsEngine extends EventEmitter {
    * Update user usage profile
    */
   private updateUserProfile(
-    userId: string, 
+    userId: string,
     operation: AIOperationTelemetry,
     context: { sessionId?: string; conversationId?: string }
   ): void {
@@ -274,17 +293,17 @@ export class AnalyticsEngine extends EventEmitter {
       sessions: { total: 0, averageDuration: 0, totalDuration: 0 },
       requests: { total: 0, averagePerSession: 0, peakPerHour: 0 },
       tokens: { total: 0, input: 0, output: 0, averagePerRequest: 0 },
-      cost: { 
-        total: 0, 
-        averagePerSession: 0, 
+      cost: {
+        total: 0,
+        averagePerSession: 0,
         averagePerRequest: 0,
-        monthlyTrend: []
+        monthlyTrend: [],
       },
       preferences: {
         favoriteModels: [],
         operationTypes: [],
-        averageComplexity: 0
-      }
+        averageComplexity: 0,
+      },
     };
 
     // Update request counts
@@ -293,13 +312,15 @@ export class AnalyticsEngine extends EventEmitter {
       existing.tokens.input += operation.tokenUsage.input;
       existing.tokens.output += operation.tokenUsage.output;
       existing.tokens.total += operation.tokenUsage.total;
-      existing.tokens.averagePerRequest = existing.tokens.total / existing.requests.total;
+      existing.tokens.averagePerRequest =
+        existing.tokens.total / existing.requests.total;
     }
 
     // Update costs
     if (operation.cost) {
       existing.cost.total += operation.cost;
-      existing.cost.averagePerRequest = existing.cost.total / existing.requests.total;
+      existing.cost.averagePerRequest =
+        existing.cost.total / existing.requests.total;
     }
 
     // Update preferences
@@ -311,25 +332,38 @@ export class AnalyticsEngine extends EventEmitter {
   /**
    * Update user preferences based on usage
    */
-  private updateUserPreferences(profile: UserUsageProfile, operation: AIOperationTelemetry): void {
+  private updateUserPreferences(
+    profile: UserUsageProfile,
+    operation: AIOperationTelemetry
+  ): void {
     // Update favorite models
-    const modelIndex = profile.preferences.favoriteModels.indexOf(operation.model);
+    const modelIndex = profile.preferences.favoriteModels.indexOf(
+      operation.model
+    );
     if (modelIndex === -1) {
       profile.preferences.favoriteModels.push(operation.model);
     }
 
     // Update operation types
     const operationType = operation.metadata.operationType;
-    const typeIndex = profile.preferences.operationTypes.findIndex(ot => ot.type === operationType);
+    const typeIndex = profile.preferences.operationTypes.findIndex(
+      (ot) => ot.type === operationType
+    );
     if (typeIndex === -1) {
-      profile.preferences.operationTypes.push({ type: operationType, frequency: 1 });
+      profile.preferences.operationTypes.push({
+        type: operationType,
+        frequency: 1,
+      });
     } else {
       profile.preferences.operationTypes[typeIndex].frequency++;
     }
 
     // Sort by frequency
-    profile.preferences.operationTypes.sort((a, b) => b.frequency - a.frequency);
-    profile.preferences.favoriteModels = profile.preferences.favoriteModels.slice(0, 5); // Keep top 5
+    profile.preferences.operationTypes.sort(
+      (a, b) => b.frequency - a.frequency
+    );
+    profile.preferences.favoriteModels =
+      profile.preferences.favoriteModels.slice(0, 5); // Keep top 5
   }
 
   /**
@@ -338,7 +372,7 @@ export class AnalyticsEngine extends EventEmitter {
   private checkAlerts(operation: AIOperationTelemetry, context?: any): void {
     if (!this.config.alerting.enabled) return;
 
-    this.alertThresholds.forEach(threshold => {
+    this.alertThresholds.forEach((threshold) => {
       if (!threshold.enabled) return;
 
       let currentValue = 0;
@@ -348,13 +382,21 @@ export class AnalyticsEngine extends EventEmitter {
         case 'cost':
           if (threshold.metric === 'operation_cost' && operation.cost) {
             currentValue = operation.cost;
-            shouldAlert = this.evaluateThreshold(currentValue, threshold.operator, threshold.threshold);
+            shouldAlert = this.evaluateThreshold(
+              currentValue,
+              threshold.operator,
+              threshold.threshold
+            );
           }
           break;
         case 'performance':
           if (threshold.metric === 'operation_latency' && operation.duration) {
             currentValue = operation.duration;
-            shouldAlert = this.evaluateThreshold(currentValue, threshold.operator, threshold.threshold);
+            shouldAlert = this.evaluateThreshold(
+              currentValue,
+              threshold.operator,
+              threshold.threshold
+            );
           }
           break;
         case 'error_rate':
@@ -373,15 +415,26 @@ export class AnalyticsEngine extends EventEmitter {
   /**
    * Evaluate threshold condition
    */
-  private evaluateThreshold(value: number, operator: string, threshold: number): boolean {
+  private evaluateThreshold(
+    value: number,
+    operator: string,
+    threshold: number
+  ): boolean {
     switch (operator) {
-      case '>': return value > threshold;
-      case '<': return value < threshold;
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '=': return value === threshold;
-      case '!=': return value !== threshold;
-      default: return false;
+      case '>':
+        return value > threshold;
+      case '<':
+        return value < threshold;
+      case '>=':
+        return value >= threshold;
+      case '<=':
+        return value <= threshold;
+      case '=':
+        return value === threshold;
+      case '!=':
+        return value !== threshold;
+      default:
+        return false;
     }
   }
 
@@ -407,17 +460,17 @@ export class AnalyticsEngine extends EventEmitter {
         userId: context?.userId,
         modelId: operation.model,
         operationType: operation.metadata.operationType,
-        sessionId: context?.sessionId
+        sessionId: context?.sessionId,
       },
       acknowledged: false,
-      resolved: false
+      resolved: false,
     };
 
     this.dataStore.alerts.set(alert.id, alert);
     this.emit('alert_triggered', alert);
 
     // Execute alert actions
-    threshold.actions.forEach(action => {
+    threshold.actions.forEach((action) => {
       this.executeAlertAction(action, alert);
     });
   }
@@ -443,15 +496,26 @@ export class AnalyticsEngine extends EventEmitter {
    */
   getUsageMetrics(filter?: AnalyticsFilter): UsageMetrics {
     const operations = this.getFilteredOperations(filter);
-    
+
     const totalRequests = operations.length;
-    const totalTokens = operations.reduce((sum, op) => sum + (op.tokenUsage?.total || 0), 0);
-    const inputTokens = operations.reduce((sum, op) => sum + (op.tokenUsage?.input || 0), 0);
-    const outputTokens = operations.reduce((sum, op) => sum + (op.tokenUsage?.output || 0), 0);
+    const totalTokens = operations.reduce(
+      (sum, op) => sum + (op.tokenUsage?.total || 0),
+      0
+    );
+    const inputTokens = operations.reduce(
+      (sum, op) => sum + (op.tokenUsage?.input || 0),
+      0
+    );
+    const outputTokens = operations.reduce(
+      (sum, op) => sum + (op.tokenUsage?.output || 0),
+      0
+    );
     const totalCost = operations.reduce((sum, op) => sum + (op.cost || 0), 0);
-    const averageLatency = operations.reduce((sum, op) => sum + (op.duration || 0), 0) / totalRequests;
-    const successfulOps = operations.filter(op => op.success).length;
-    const failedOps = operations.filter(op => !op.success).length;
+    const averageLatency =
+      operations.reduce((sum, op) => sum + (op.duration || 0), 0) /
+      totalRequests;
+    const successfulOps = operations.filter((op) => op.success).length;
+    const failedOps = operations.filter((op) => !op.success).length;
 
     return {
       totalRequests,
@@ -463,7 +527,7 @@ export class AnalyticsEngine extends EventEmitter {
       successRate: successfulOps / totalRequests,
       errorRate: failedOps / totalRequests,
       retryRate: 0, // Would need to track retries
-      fallbackRate: 0 // Would need to track fallbacks
+      fallbackRate: 0, // Would need to track fallbacks
     };
   }
 
@@ -486,15 +550,22 @@ export class AnalyticsEngine extends EventEmitter {
     const timeRange = filter?.dateRange || {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
       end: new Date(),
-      granularity: 'day' as const
+      granularity: 'day' as const,
     };
 
     const total = operations.reduce((sum, op) => sum + (op.cost || 0), 0);
 
     // Cost by model
-    const modelCosts = new Map<string, { cost: number; tokens: number; requests: number }>();
-    operations.forEach(op => {
-      const existing = modelCosts.get(op.model) || { cost: 0, tokens: 0, requests: 0 };
+    const modelCosts = new Map<
+      string,
+      { cost: number; tokens: number; requests: number }
+    >();
+    operations.forEach((op) => {
+      const existing = modelCosts.get(op.model) || {
+        cost: 0,
+        tokens: 0,
+        requests: 0,
+      };
       existing.cost += op.cost || 0;
       existing.tokens += op.tokenUsage?.total || 0;
       existing.requests++;
@@ -506,7 +577,7 @@ export class AnalyticsEngine extends EventEmitter {
       cost: data.cost,
       percentage: (data.cost / total) * 100,
       tokens: data.tokens,
-      requests: data.requests
+      requests: data.requests,
     }));
 
     // Simplified implementation - in a real app you'd have more sophisticated aggregation
@@ -521,8 +592,8 @@ export class AnalyticsEngine extends EventEmitter {
       trends: {
         daily: [],
         weekly: [],
-        monthly: []
-      }
+        monthly: [],
+      },
     };
   }
 
@@ -531,15 +602,18 @@ export class AnalyticsEngine extends EventEmitter {
    */
   getPerformanceMetrics(filter?: AnalyticsFilter): PerformanceMetrics {
     const operations = this.getFilteredOperations(filter);
-    const latencies = operations.map(op => op.duration || 0).filter(d => d > 0);
-    
+    const latencies = operations
+      .map((op) => op.duration || 0)
+      .filter((d) => d > 0);
+
     latencies.sort((a, b) => a - b);
     const p50 = latencies[Math.floor(latencies.length * 0.5)] || 0;
     const p95 = latencies[Math.floor(latencies.length * 0.95)] || 0;
     const p99 = latencies[Math.floor(latencies.length * 0.99)] || 0;
 
-    const average = latencies.reduce((sum, l) => sum + l, 0) / latencies.length || 0;
-    const successCount = operations.filter(op => op.success).length;
+    const average =
+      latencies.reduce((sum, l) => sum + l, 0) / latencies.length || 0;
+    const successCount = operations.filter((op) => op.success).length;
 
     return {
       latency: {
@@ -547,25 +621,27 @@ export class AnalyticsEngine extends EventEmitter {
         p50,
         p95,
         p99,
-        distribution: [] // Simplified
+        distribution: [], // Simplified
       },
       throughput: {
         requestsPerSecond: 0, // Would need time-based calculation
         tokensPerSecond: 0,
-        averageTokensPerRequest: operations.reduce((sum, op) => sum + (op.tokenUsage?.total || 0), 0) / operations.length
+        averageTokensPerRequest:
+          operations.reduce((sum, op) => sum + (op.tokenUsage?.total || 0), 0) /
+          operations.length,
       },
       reliability: {
         uptime: 99.9, // Would track actual uptime
         successRate: successCount / operations.length,
         errorRate: (operations.length - successCount) / operations.length,
         timeoutRate: 0,
-        retrySuccessRate: 0
+        retrySuccessRate: 0,
       },
       quality: {
         averageQualityScore: 0.85, // Placeholder
         qualityDistribution: [],
-        userSatisfactionScore: 0.9
-      }
+        userSatisfactionScore: 0.9,
+      },
     };
   }
 
@@ -574,56 +650,65 @@ export class AnalyticsEngine extends EventEmitter {
    */
   private generateOptimizationInsights(): OptimizationInsights {
     const modelStats = Array.from(this.dataStore.modelStats.values());
-    
+
     // Simple cost optimization recommendations
     const recommendations = modelStats
-      .filter(stats => stats.cost.total > 100) // Only for models with significant cost
-      .map(stats => ({
+      .filter((stats) => stats.cost.total > 100) // Only for models with significant cost
+      .map((stats) => ({
         type: 'model_switch' as const,
         description: `Consider switching from ${stats.modelId} to a more cost-effective model`,
         estimatedSavings: stats.cost.total * 0.3, // 30% potential savings
         effort: 'low' as const,
-        impact: 'medium' as const
+        impact: 'medium' as const,
       }));
 
     return {
       costOptimization: {
-        potentialSavings: recommendations.reduce((sum, r) => sum + r.estimatedSavings, 0),
-        recommendations
+        potentialSavings: recommendations.reduce(
+          (sum, r) => sum + r.estimatedSavings,
+          0
+        ),
+        recommendations,
       },
       performanceOptimization: {
-        bottlenecks: []
+        bottlenecks: [],
       },
       usagePatterns: {
         peakHours: [9, 10, 11, 14, 15, 16], // Business hours
         unusedCapacity: 0.3,
-        resourceWaste: []
-      }
+        resourceWaste: [],
+      },
     };
   }
 
   /**
    * Helper methods
    */
-  private getFilteredOperations(filter?: AnalyticsFilter): AIOperationTelemetry[] {
+  private getFilteredOperations(
+    filter?: AnalyticsFilter
+  ): AIOperationTelemetry[] {
     let operations = Array.from(this.dataStore.operations.values());
 
     if (!filter) return operations;
 
     if (filter.modelId) {
-      operations = operations.filter(op => filter.modelId!.includes(op.model));
+      operations = operations.filter((op) =>
+        filter.modelId!.includes(op.model)
+      );
     }
 
     if (filter.operationType) {
-      operations = operations.filter(op => 
+      operations = operations.filter((op) =>
         filter.operationType!.includes(op.metadata.operationType)
       );
     }
 
     if (filter.dateRange) {
-      operations = operations.filter(op => {
+      operations = operations.filter((op) => {
         const opTime = new Date(op.startTime);
-        return opTime >= filter.dateRange!.start && opTime <= filter.dateRange!.end;
+        return (
+          opTime >= filter.dateRange!.start && opTime <= filter.dateRange!.end
+        );
       });
     }
 
@@ -632,8 +717,8 @@ export class AnalyticsEngine extends EventEmitter {
 
   private processAnalyticsData(): void {
     // Process unprocessed events
-    const unprocessedEvents = this.dataStore.events.filter(e => !e.processed);
-    unprocessedEvents.forEach(event => {
+    const unprocessedEvents = this.dataStore.events.filter((e) => !e.processed);
+    unprocessedEvents.forEach((event) => {
       event.processed = true;
       this.emit('event_processed', event);
     });
@@ -642,8 +727,10 @@ export class AnalyticsEngine extends EventEmitter {
   }
 
   private cleanupOldData(): void {
-    const cutoffDate = new Date(Date.now() - this.config.retentionPeriod * 24 * 60 * 60 * 1000);
-    
+    const cutoffDate = new Date(
+      Date.now() - this.config.retentionPeriod * 24 * 60 * 60 * 1000
+    );
+
     // Clean up old operations
     this.dataStore.operations.forEach((operation, id) => {
       if (new Date(operation.startTime) < cutoffDate) {
@@ -653,7 +740,7 @@ export class AnalyticsEngine extends EventEmitter {
 
     // Clean up old events
     this.dataStore.events = this.dataStore.events.filter(
-      event => event.timestamp > cutoffDate
+      (event) => event.timestamp > cutoffDate
     );
   }
 
@@ -669,7 +756,9 @@ export class AnalyticsEngine extends EventEmitter {
   }
 
   getActiveAlerts(): AnalyticsAlert[] {
-    return Array.from(this.dataStore.alerts.values()).filter(alert => !alert.resolved);
+    return Array.from(this.dataStore.alerts.values()).filter(
+      (alert) => !alert.resolved
+    );
   }
 
   acknowledgeAlert(alertId: string, userId: string): void {
@@ -716,8 +805,10 @@ export class AnalyticsEngine extends EventEmitter {
       operations: this.dataStore.operations.size,
       models: this.dataStore.modelStats.size,
       users: this.dataStore.userProfiles.size,
-      alerts: Array.from(this.dataStore.alerts.values()).filter(a => !a.resolved).length,
-      lastProcessed: this.dataStore.lastProcessed
+      alerts: Array.from(this.dataStore.alerts.values()).filter(
+        (a) => !a.resolved
+      ).length,
+      lastProcessed: this.dataStore.lastProcessed,
     };
   }
 
@@ -731,7 +822,7 @@ export class AnalyticsEngine extends EventEmitter {
     if (this.insightTimer) {
       clearInterval(this.insightTimer);
     }
-    
+
     this.removeAllListeners();
     AnalyticsEngine.instance = null;
   }
@@ -759,7 +850,7 @@ export const defaultAnalyticsConfig: AnalyticsEngineConfig = {
         timeWindow: 5,
         severity: 'warning',
         enabled: true,
-        actions: [{ type: 'log', target: 'console' }]
+        actions: [{ type: 'log', target: 'console' }],
       },
       {
         id: 'slow-operation',
@@ -771,19 +862,19 @@ export const defaultAnalyticsConfig: AnalyticsEngineConfig = {
         timeWindow: 5,
         severity: 'warning',
         enabled: true,
-        actions: [{ type: 'log', target: 'console' }]
-      }
-    ]
+        actions: [{ type: 'log', target: 'console' }],
+      },
+    ],
   },
   storage: {
     type: 'memory',
     maxEntries: 10000,
-    persistToDisk: false
+    persistToDisk: false,
   },
   optimization: {
     enableInsights: true,
-    insightRefreshInterval: 60 // 1 hour
-  }
+    insightRefreshInterval: 60, // 1 hour
+  },
 };
 
-export default AnalyticsEngine; 
+export default AnalyticsEngine;

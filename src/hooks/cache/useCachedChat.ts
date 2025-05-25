@@ -5,7 +5,12 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useChat, type UseChatOptions, type Message } from 'ai/react';
-import { CacheManager, CacheKeys, CacheTTL, type CacheResult } from '../../cache';
+import {
+  CacheManager,
+  CacheKeys,
+  CacheTTL,
+  type CacheResult,
+} from '../../cache';
 
 /**
  * Cached chat configuration
@@ -18,16 +23,16 @@ export interface UseCachedChatConfig extends Omit<UseChatOptions, 'id'> {
   messageCacheTtl?: number;
   responseCacheTtl?: number;
   maxCachedMessages?: number;
-  
+
   // Performance optimization
   enablePrefetch?: boolean;
   enableBatching?: boolean;
   debounceMs?: number;
-  
+
   // Cache invalidation
   invalidateOnError?: boolean;
   autoInvalidateAfter?: number;
-  
+
   // Cache manager
   cacheManager?: CacheManager;
 }
@@ -57,18 +62,18 @@ export interface UseCachedChatReturn extends ReturnType<typeof useChat> {
     misses: number;
     hitRate: number;
   };
-  
+
   // Session management
   session: CachedChatSession | null;
   loadSession: (sessionId: string) => Promise<boolean>;
   saveSession: () => Promise<boolean>;
   clearSession: () => Promise<boolean>;
-  
+
   // Cache control
   invalidateCache: () => Promise<void>;
   getCacheStatus: () => Promise<CacheResult<any>>;
   warmCache: (messages: Message[]) => Promise<void>;
-  
+
   // Performance metrics
   performance: {
     averageResponseTime: number;
@@ -80,7 +85,9 @@ export interface UseCachedChatReturn extends ReturnType<typeof useChat> {
 /**
  * Cache-enabled chat hook
  */
-export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn {
+export function useCachedChat(
+  config: UseCachedChatConfig
+): UseCachedChatReturn {
   const {
     sessionId,
     enableCaching = true,
@@ -98,9 +105,15 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
   } = config;
 
   // Internal state
-  const [cacheManager, setCacheManager] = useState<CacheManager | null>(externalCacheManager || null);
+  const [cacheManager, setCacheManager] = useState<CacheManager | null>(
+    externalCacheManager || null
+  );
   const [session, setSession] = useState<CachedChatSession | null>(null);
-  const [cacheStats, setCacheStats] = useState({ hits: 0, misses: 0, hitRate: 0 });
+  const [cacheStats, setCacheStats] = useState({
+    hits: 0,
+    misses: 0,
+    hitRate: 0,
+  });
   const [performance, setPerformance] = useState({
     averageResponseTime: 0,
     cacheLatency: 0,
@@ -116,13 +129,17 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
   useEffect(() => {
     if (!externalCacheManager && enableCaching) {
       // Import and initialize global cache manager
-      import('../../cache').then(({ getGlobalCacheManager, initializeGlobalCache }) => {
-        initializeGlobalCache().then((manager) => {
-          setCacheManager(manager);
-        }).catch((error) => {
-          console.warn('Failed to initialize cache manager:', error);
-        });
-      });
+      import('../../cache').then(
+        ({ getGlobalCacheManager, initializeGlobalCache }) => {
+          initializeGlobalCache()
+            .then((manager) => {
+              setCacheManager(manager);
+            })
+            .catch((error) => {
+              console.warn('Failed to initialize cache manager:', error);
+            });
+        }
+      );
     }
   }, [externalCacheManager, enableCaching]);
 
@@ -148,16 +165,18 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
   const enhancedChatOptions: UseChatOptions = {
     ...chatOptions,
     id: sessionId,
-    
+
     onResponse: async (response) => {
       const endTime = Date.now();
-      
+
       // Record response time
       if (responseTimesRef.current.length === 0) {
         responseTimesRef.current.push(endTime);
       }
-      responseTimesRef.current.push(endTime - responseTimesRef.current[responseTimesRef.current.length - 1]);
-      
+      responseTimesRef.current.push(
+        endTime - responseTimesRef.current[responseTimesRef.current.length - 1]
+      );
+
       // Limit tracking arrays
       if (responseTimesRef.current.length > 100) {
         responseTimesRef.current = responseTimesRef.current.slice(-50);
@@ -208,114 +227,135 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
   /**
    * Generate cache key for AI response
    */
-  const generateResponseCacheKey = useCallback((messages: Message[]): string => {
-    // Create a hash of the conversation context
-    const context = messages.slice(-5).map(m => `${m.role}:${m.content}`).join('|');
-    const hash = btoa(context).slice(0, 16);
-    return CacheKeys.aiResponse(hash);
-  }, []);
+  const generateResponseCacheKey = useCallback(
+    (messages: Message[]): string => {
+      // Create a hash of the conversation context
+      const context = messages
+        .slice(-5)
+        .map((m) => `${m.role}:${m.content}`)
+        .join('|');
+      const hash = btoa(context).slice(0, 16);
+      return CacheKeys.aiResponse(hash);
+    },
+    []
+  );
 
   /**
    * Cache AI response
    */
-  const cacheAIResponse = useCallback(async (message: Message): Promise<void> => {
-    if (!cacheManager || !enableResponseCaching) return;
+  const cacheAIResponse = useCallback(
+    async (message: Message): Promise<void> => {
+      if (!cacheManager || !enableResponseCaching) return;
 
-    try {
-      const cacheKey = generateResponseCacheKey([...chat.messages, message]);
-      await cacheManager.set(cacheKey, message, responseCacheTtl, {
-        sessionId,
-        timestamp: Date.now(),
-        messageId: message.id,
-      });
-    } catch (error) {
-      console.warn('Failed to cache AI response:', error);
-    }
-  }, [cacheManager, enableResponseCaching, chat.messages, sessionId, responseCacheTtl]);
+      try {
+        const cacheKey = generateResponseCacheKey([...chat.messages, message]);
+        await cacheManager.set(cacheKey, message, responseCacheTtl, {
+          sessionId,
+          timestamp: Date.now(),
+          messageId: message.id,
+        });
+      } catch (error) {
+        console.warn('Failed to cache AI response:', error);
+      }
+    },
+    [
+      cacheManager,
+      enableResponseCaching,
+      chat.messages,
+      sessionId,
+      responseCacheTtl,
+    ]
+  );
 
   /**
    * Try to get cached AI response
    */
-  const getCachedResponse = useCallback(async (messages: Message[]): Promise<Message | null> => {
-    if (!cacheManager || !enableResponseCaching) return null;
+  const getCachedResponse = useCallback(
+    async (messages: Message[]): Promise<Message | null> => {
+      if (!cacheManager || !enableResponseCaching) return null;
 
-    try {
-      const startTime = Date.now();
-      const cacheKey = generateResponseCacheKey(messages);
-      const result = await cacheManager.get<Message>(cacheKey);
-      
-      // Record cache latency
-      cacheLatenciesRef.current.push(Date.now() - startTime);
-      if (cacheLatenciesRef.current.length > 100) {
-        cacheLatenciesRef.current = cacheLatenciesRef.current.slice(-50);
+      try {
+        const startTime = Date.now();
+        const cacheKey = generateResponseCacheKey(messages);
+        const result = await cacheManager.get<Message>(cacheKey);
+
+        // Record cache latency
+        cacheLatenciesRef.current.push(Date.now() - startTime);
+        if (cacheLatenciesRef.current.length > 100) {
+          cacheLatenciesRef.current = cacheLatenciesRef.current.slice(-50);
+        }
+
+        if (result.success && result.value) {
+          // Update cache stats
+          setCacheStats((prev) => ({
+            hits: prev.hits + 1,
+            misses: prev.misses,
+            hitRate: (prev.hits + 1) / (prev.hits + prev.misses + 1),
+          }));
+
+          return result.value;
+        } else {
+          // Update cache stats
+          setCacheStats((prev) => ({
+            hits: prev.hits,
+            misses: prev.misses + 1,
+            hitRate: prev.hits / (prev.hits + prev.misses + 1),
+          }));
+        }
+      } catch (error) {
+        console.warn('Failed to get cached response:', error);
       }
 
-      if (result.success && result.value) {
-        // Update cache stats
-        setCacheStats(prev => ({
-          hits: prev.hits + 1,
-          misses: prev.misses,
-          hitRate: (prev.hits + 1) / (prev.hits + prev.misses + 1),
-        }));
-
-        return result.value;
-      } else {
-        // Update cache stats
-        setCacheStats(prev => ({
-          hits: prev.hits,
-          misses: prev.misses + 1,
-          hitRate: prev.hits / (prev.hits + prev.misses + 1),
-        }));
-      }
-    } catch (error) {
-      console.warn('Failed to get cached response:', error);
-    }
-
-    return null;
-  }, [cacheManager, enableResponseCaching]);
+      return null;
+    },
+    [cacheManager, enableResponseCaching]
+  );
 
   /**
    * Load session from cache
    */
-  const loadSession = useCallback(async (targetSessionId: string): Promise<boolean> => {
-    if (!cacheManager || !enableCaching) return false;
+  const loadSession = useCallback(
+    async (targetSessionId: string): Promise<boolean> => {
+      if (!cacheManager || !enableCaching) return false;
 
-    try {
-      const sessionKey = CacheKeys.conversation(targetSessionId);
-      const result = await cacheManager.get<CachedChatSession>(sessionKey);
+      try {
+        const sessionKey = CacheKeys.conversation(targetSessionId);
+        const result = await cacheManager.get<CachedChatSession>(sessionKey);
 
-      if (result.success && result.value) {
-        setSession(result.value);
-        
-        // Load messages into chat
-        if (result.value.messages.length > 0) {
-          // Update chat state with cached messages
-          // Note: This might require extending the base useChat hook
-          // For now, we'll store it in our session state
+        if (result.success && result.value) {
+          setSession(result.value);
+
+          // Load messages into chat
+          if (result.value.messages.length > 0) {
+            // Update chat state with cached messages
+            // Note: This might require extending the base useChat hook
+            // For now, we'll store it in our session state
+          }
+
+          return true;
         }
-
-        return true;
+      } catch (error) {
+        console.warn('Failed to load session:', error);
       }
-    } catch (error) {
-      console.warn('Failed to load session:', error);
-    }
 
-    // Create new session if not found
-    const newSession: CachedChatSession = {
-      sessionId: targetSessionId,
-      messages: [],
-      metadata: {
-        createdAt: new Date(),
-        lastActivity: new Date(),
-        messageCount: 0,
-        cacheHits: 0,
-        cacheMisses: 0,
-      },
-    };
+      // Create new session if not found
+      const newSession: CachedChatSession = {
+        sessionId: targetSessionId,
+        messages: [],
+        metadata: {
+          createdAt: new Date(),
+          lastActivity: new Date(),
+          messageCount: 0,
+          cacheHits: 0,
+          cacheMisses: 0,
+        },
+      };
 
-    setSession(newSession);
-    return false;
-  }, [cacheManager, enableCaching]);
+      setSession(newSession);
+      return false;
+    },
+    [cacheManager, enableCaching]
+  );
 
   /**
    * Save session to cache
@@ -337,7 +377,11 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
       };
 
       const sessionKey = CacheKeys.conversation(sessionId);
-      const result = await cacheManager.set(sessionKey, updatedSession, messageCacheTtl);
+      const result = await cacheManager.set(
+        sessionKey,
+        updatedSession,
+        messageCacheTtl
+      );
 
       if (result.success) {
         setSession(updatedSession);
@@ -348,7 +392,16 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
     }
 
     return false;
-  }, [cacheManager, enableCaching, session, chat.messages, maxCachedMessages, sessionId, messageCacheTtl, cacheStats]);
+  }, [
+    cacheManager,
+    enableCaching,
+    session,
+    chat.messages,
+    maxCachedMessages,
+    sessionId,
+    messageCacheTtl,
+    cacheStats,
+  ]);
 
   /**
    * Debounced save session
@@ -418,40 +471,49 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
   /**
    * Warm cache with messages
    */
-  const warmCache = useCallback(async (messages: Message[]): Promise<void> => {
-    if (!cacheManager || !enableCaching) return;
+  const warmCache = useCallback(
+    async (messages: Message[]): Promise<void> => {
+      if (!cacheManager || !enableCaching) return;
 
-    try {
-      // Cache messages in batches
-      const batchSize = enableBatching ? 10 : 1;
-      
-      for (let i = 0; i < messages.length; i += batchSize) {
-        const batch = messages.slice(i, i + batchSize);
-        
-        await Promise.all(
-          batch.map(async (message, index) => {
-            const cacheKey = CacheKeys.aiResponse(`${sessionId}-${i + index}`);
-            await cacheManager.set(cacheKey, message, responseCacheTtl);
-          })
-        );
+      try {
+        // Cache messages in batches
+        const batchSize = enableBatching ? 10 : 1;
+
+        for (let i = 0; i < messages.length; i += batchSize) {
+          const batch = messages.slice(i, i + batchSize);
+
+          await Promise.all(
+            batch.map(async (message, index) => {
+              const cacheKey = CacheKeys.aiResponse(
+                `${sessionId}-${i + index}`
+              );
+              await cacheManager.set(cacheKey, message, responseCacheTtl);
+            })
+          );
+        }
+      } catch (error) {
+        console.warn('Failed to warm cache:', error);
       }
-    } catch (error) {
-      console.warn('Failed to warm cache:', error);
-    }
-  }, [cacheManager, enableCaching, enableBatching, sessionId, responseCacheTtl]);
+    },
+    [cacheManager, enableCaching, enableBatching, sessionId, responseCacheTtl]
+  );
 
   /**
    * Update performance metrics
    */
   const updatePerformanceMetrics = useCallback(() => {
-    setPerformance(prev => {
-      const avgResponseTime = responseTimesRef.current.length > 0
-        ? responseTimesRef.current.reduce((sum, time) => sum + time, 0) / responseTimesRef.current.length
-        : 0;
+    setPerformance((prev) => {
+      const avgResponseTime =
+        responseTimesRef.current.length > 0
+          ? responseTimesRef.current.reduce((sum, time) => sum + time, 0) /
+            responseTimesRef.current.length
+          : 0;
 
-      const avgCacheLatency = cacheLatenciesRef.current.length > 0
-        ? cacheLatenciesRef.current.reduce((sum, time) => sum + time, 0) / cacheLatenciesRef.current.length
-        : 0;
+      const avgCacheLatency =
+        cacheLatenciesRef.current.length > 0
+          ? cacheLatenciesRef.current.reduce((sum, time) => sum + time, 0) /
+            cacheLatenciesRef.current.length
+          : 0;
 
       return {
         averageResponseTime: avgResponseTime,
@@ -482,4 +544,4 @@ export function useCachedChat(config: UseCachedChatConfig): UseCachedChatReturn 
     warmCache,
     performance,
   };
-} 
+}

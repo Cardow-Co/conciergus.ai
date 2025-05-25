@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
-import type { 
+import type {
   EnhancedStreamPart,
   ReasoningStep as BaseReasoningStep,
-  ReasoningType
+  ReasoningType,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -56,7 +62,12 @@ export interface EnhancedReasoningStep extends BaseReasoningStep {
 /**
  * Reasoning display mode
  */
-export type ReasoningDisplayMode = 'tree' | 'timeline' | 'graph' | 'compact' | 'debug';
+export type ReasoningDisplayMode =
+  | 'tree'
+  | 'timeline'
+  | 'graph'
+  | 'compact'
+  | 'debug';
 
 /**
  * Reasoning visualization options
@@ -133,10 +144,12 @@ export interface ConciergusReasoningDisplayProps {
   /** Reasoning steps */
   reasoning?: EnhancedReasoningStep[] | string;
   /** Stream parts for real-time updates */
-  streamParts?: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
+  streamParts?:
+    | AsyncIterable<EnhancedStreamPart>
+    | ReadableStream<EnhancedStreamPart>;
   /** Is currently streaming */
   isStreaming?: boolean;
-  
+
   // === Display Options ===
   /** Display mode */
   mode?: ReasoningDisplayMode;
@@ -154,7 +167,7 @@ export interface ConciergusReasoningDisplayProps {
   enableSearch?: boolean;
   /** Maximum steps to display */
   maxSteps?: number;
-  
+
   // === Layout Options ===
   /** Compact display */
   compact?: boolean;
@@ -164,7 +177,7 @@ export interface ConciergusReasoningDisplayProps {
   stepHeight?: number;
   /** Enable animations */
   enableAnimations?: boolean;
-  
+
   // === Custom Renderers ===
   /** Custom step renderer */
   stepRenderer?: React.ComponentType<StepRendererProps>;
@@ -172,18 +185,21 @@ export interface ConciergusReasoningDisplayProps {
   graphRenderer?: React.ComponentType<ReasoningGraphProps>;
   /** Custom header renderer */
   headerRenderer?: React.ComponentType<HeaderRendererProps>;
-  
+
   // === Styling ===
   /** Additional CSS classes */
   className?: string;
   /** Color theme */
   theme?: 'light' | 'dark' | 'auto';
-  
+
   // === Events ===
   /** Step click handler */
   onStepClick?: (step: EnhancedReasoningStep) => void;
   /** Dependency click handler */
-  onDependencyClick?: (dependencyId: string, step: EnhancedReasoningStep) => void;
+  onDependencyClick?: (
+    dependencyId: string,
+    step: EnhancedReasoningStep
+  ) => void;
   /** Source click handler */
   onSourceClick?: (sourceId: string, step: EnhancedReasoningStep) => void;
   /** Export handler */
@@ -192,17 +208,17 @@ export interface ConciergusReasoningDisplayProps {
   onStreamUpdate?: (steps: EnhancedReasoningStep[]) => void;
   /** Error handler */
   onError?: (error: Error) => void;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Debug ===
   /** Enable debug mode */
   debug?: boolean;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -241,43 +257,49 @@ export interface HeaderRendererProps {
 /**
  * Convert stream part to reasoning step
  */
-const streamPartToReasoningStep = (streamPart: EnhancedStreamPart): EnhancedReasoningStep | null => {
+const streamPartToReasoningStep = (
+  streamPart: EnhancedStreamPart
+): EnhancedReasoningStep | null => {
   if (streamPart.type !== 'reasoning') return null;
-  
+
   const reasoning = streamPart.reasoning;
   if (!reasoning) return null;
-  
+
   return {
-    id: streamPart.stepId || `reasoning-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id:
+      streamPart.stepId ||
+      `reasoning-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     content: reasoning.content || '',
     type: reasoning.type || 'thinking',
     confidence: reasoning.confidence,
     timing: {
       start: new Date(),
       end: new Date(),
-      duration: 0
+      duration: 0,
     },
     metrics: {
       confidence: reasoning.confidence || 0.5,
       complexity: 0.5,
       coherence: 0.5,
-      relevance: 0.5
+      relevance: 0.5,
     },
     validation: 'pending',
-    author: 'AI Assistant'
+    author: 'AI Assistant',
   };
 };
 
 /**
  * Build dependency graph
  */
-const buildDependencyGraph = (steps: EnhancedReasoningStep[]): Map<string, string[]> => {
+const buildDependencyGraph = (
+  steps: EnhancedReasoningStep[]
+): Map<string, string[]> => {
   const graph = new Map<string, string[]>();
-  
-  steps.forEach(step => {
+
+  steps.forEach((step) => {
     graph.set(step.id, step.dependencies || []);
   });
-  
+
   return graph;
 };
 
@@ -288,43 +310,48 @@ const findCriticalPath = (steps: EnhancedReasoningStep[]): string[] => {
   const graph = buildDependencyGraph(steps);
   const visited = new Set<string>();
   const path: string[] = [];
-  
+
   // Simple depth-first traversal for longest path
   const dfs = (stepId: string): number => {
     if (visited.has(stepId)) return 0;
     visited.add(stepId);
-    
+
     const dependencies = graph.get(stepId) || [];
     const maxDepth = dependencies.reduce((max, depId) => {
       return Math.max(max, dfs(depId));
     }, 0);
-    
+
     path.push(stepId);
     return maxDepth + 1;
   };
-  
-  steps.forEach(step => {
+
+  steps.forEach((step) => {
     if (!visited.has(step.id)) {
       dfs(step.id);
     }
   });
-  
+
   return path;
 };
 
 /**
  * Calculate step metrics
  */
-const calculateStepMetrics = (step: EnhancedReasoningStep, allSteps: EnhancedReasoningStep[]) => {
+const calculateStepMetrics = (
+  step: EnhancedReasoningStep,
+  allSteps: EnhancedReasoningStep[]
+) => {
   const complexity = Math.min(1, step.content.length / 1000);
-  const relevantSteps = allSteps.filter(s => s.related?.includes(step.id) || step.related?.includes(s.id));
-  const relevance = Math.min(1, relevantSteps.length / allSteps.length * 2);
-  
+  const relevantSteps = allSteps.filter(
+    (s) => s.related?.includes(step.id) || step.related?.includes(s.id)
+  );
+  const relevance = Math.min(1, (relevantSteps.length / allSteps.length) * 2);
+
   return {
     ...step.metrics,
     complexity,
     relevance,
-    coherence: step.metrics?.coherence || 0.7
+    coherence: step.metrics?.coherence || 0.7,
   };
 };
 
@@ -343,20 +370,24 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
   isHighlighted,
   dependencyInfo,
   visualization,
-  handlers
+  handlers,
 }) => {
   const renderDependencies = useCallback(() => {
-    if (!visualization.showDependencies || !step.dependencies?.length) return null;
-    
+    if (!visualization.showDependencies || !step.dependencies?.length)
+      return null;
+
     return (
       <div className="step-dependencies">
         <span className="dependencies-label">Depends on:</span>
-        {step.dependencies.map(depId => (
+        {step.dependencies.map((depId) => (
           <button
             key={depId}
             className={`dependency-link ${
-              dependencyInfo.satisfied.includes(depId) ? 'satisfied' : 
-              dependencyInfo.pending.includes(depId) ? 'pending' : 'missing'
+              dependencyInfo.satisfied.includes(depId)
+                ? 'satisfied'
+                : dependencyInfo.pending.includes(depId)
+                  ? 'pending'
+                  : 'missing'
             }`}
             onClick={() => handlers.onDependencyClick(depId)}
           >
@@ -365,27 +396,34 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
         ))}
       </div>
     );
-  }, [step.dependencies, dependencyInfo, visualization.showDependencies, handlers]);
-  
+  }, [
+    step.dependencies,
+    dependencyInfo,
+    visualization.showDependencies,
+    handlers,
+  ]);
+
   const renderMetrics = useCallback(() => {
     if (!visualization.showMetrics || !step.metrics) return null;
-    
+
     return (
       <div className="step-metrics">
         <div className="metric">
           <span className="metric-label">Confidence:</span>
           <div className="metric-bar">
-            <div 
+            <div
               className="metric-fill confidence"
               style={{ width: `${step.metrics.confidence * 100}%` }}
             />
           </div>
-          <span className="metric-value">{Math.round(step.metrics.confidence * 100)}%</span>
+          <span className="metric-value">
+            {Math.round(step.metrics.confidence * 100)}%
+          </span>
         </div>
         <div className="metric">
           <span className="metric-label">Complexity:</span>
           <div className="metric-bar">
-            <div 
+            <div
               className="metric-fill complexity"
               style={{ width: `${step.metrics.complexity * 100}%` }}
             />
@@ -394,7 +432,7 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
         <div className="metric">
           <span className="metric-label">Relevance:</span>
           <div className="metric-bar">
-            <div 
+            <div
               className="metric-fill relevance"
               style={{ width: `${step.metrics.relevance * 100}%` }}
             />
@@ -403,10 +441,10 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
       </div>
     );
   }, [step.metrics, visualization.showMetrics]);
-  
+
   const renderTiming = useCallback(() => {
     if (!visualization.showTiming || !step.timing) return null;
-    
+
     return (
       <div className="step-timing">
         <span className="timing-start">
@@ -420,10 +458,10 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
       </div>
     );
   }, [step.timing, visualization.showTiming]);
-  
+
   const renderSources = useCallback(() => {
     if (!step.sources?.length) return null;
-    
+
     return (
       <div className="step-sources">
         <span className="sources-label">Sources:</span>
@@ -439,9 +477,9 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
       </div>
     );
   }, [step.sources, handlers]);
-  
+
   return (
-    <div 
+    <div
       className={`reasoning-step enhanced ${step.type || 'thinking'} ${
         isExpanded ? 'expanded' : 'collapsed'
       } ${isHighlighted ? 'highlighted' : ''} ${step.validation || ''}`}
@@ -466,13 +504,11 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
               {step.validation === 'pending' && '⏳'}
             </span>
           )}
-          {step.author && (
-            <span className="step-author">{step.author}</span>
-          )}
+          {step.author && <span className="step-author">{step.author}</span>}
         </div>
         <div className="header-right">
           {renderTiming()}
-          <button 
+          <button
             className="step-toggle"
             onClick={(e) => {
               e.stopPropagation();
@@ -488,7 +524,7 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
       {isExpanded && (
         <div className="step-content">
           {renderDependencies()}
-          
+
           <div className="step-main-content">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -521,17 +557,17 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
               {step.content}
             </ReactMarkdown>
           </div>
-          
+
           {renderMetrics()}
           {renderSources()}
-          
+
           {step.error && (
             <div className="step-error">
               <span className="error-icon">❌</span>
               <span className="error-message">{step.error.message}</span>
             </div>
           )}
-          
+
           {step.rawOutput && (
             <details className="step-debug">
               <summary>Debug Information</summary>
@@ -553,7 +589,7 @@ const DefaultGraphRenderer: React.FC<ReasoningGraphProps> = ({
   highlightedPath,
   visualization,
   onStepSelect,
-  onPathHighlight
+  onPathHighlight,
 }) => {
   return (
     <div className="reasoning-graph">
@@ -567,7 +603,7 @@ const DefaultGraphRenderer: React.FC<ReasoningGraphProps> = ({
             onClick={() => onStepSelect(step.id)}
             style={{
               left: `${(index % 4) * 200}px`,
-              top: `${Math.floor(index / 4) * 150}px`
+              top: `${Math.floor(index / 4) * 150}px`,
             }}
           >
             <div className="node-header">
@@ -598,7 +634,7 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
   mode,
   visualization,
   isStreaming,
-  controls
+  controls,
 }) => {
   return (
     <div className="reasoning-header">
@@ -607,12 +643,10 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
           {filteredSteps} of {totalSteps} steps
         </span>
         {isStreaming && (
-          <span className="streaming-indicator">
-            🔄 Streaming...
-          </span>
+          <span className="streaming-indicator">🔄 Streaming...</span>
         )}
       </div>
-      
+
       <div className="header-controls">
         <input
           type="text"
@@ -621,10 +655,12 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
           onChange={(e) => controls.onSearchChange(e.target.value)}
           className="search-input"
         />
-        
+
         <select
           value={mode}
-          onChange={(e) => controls.onModeChange(e.target.value as ReasoningDisplayMode)}
+          onChange={(e) =>
+            controls.onModeChange(e.target.value as ReasoningDisplayMode)
+          }
           className="mode-select"
         >
           <option value="tree">Tree View</option>
@@ -633,11 +669,14 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
           <option value="compact">Compact</option>
           <option value="debug">Debug</option>
         </select>
-        
-        <button onClick={() => controls.onExport('json')} className="control-button">
+
+        <button
+          onClick={() => controls.onExport('json')}
+          className="control-button"
+        >
           📤 Export
         </button>
-        
+
         <button onClick={controls.onToggleAll} className="control-button">
           ⊞ Toggle All
         </button>
@@ -652,7 +691,7 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
 
 /**
  * ConciergusReasoningDisplay Component
- * 
+ *
  * Advanced reasoning chain visualization with dependency graphs, real-time streaming,
  * and interactive exploration capabilities for AI SDK 5.
  */
@@ -660,7 +699,7 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
   reasoning = [],
   streamParts,
   isStreaming = false,
-  
+
   // Display options
   mode = 'tree',
   visualization = {
@@ -670,7 +709,7 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
     showRelationships: false,
     enableInteraction: true,
     showMetrics: true,
-    highlightCriticalPath: false
+    highlightCriticalPath: false,
   },
   showStepNumbers = true,
   defaultExpanded = false,
@@ -678,22 +717,22 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
   enableExport = true,
   enableSearch = true,
   maxSteps = 100,
-  
+
   // Layout options
   compact = false,
   enableVirtualization = false,
   stepHeight = 120,
   enableAnimations = true,
-  
+
   // Custom renderers
   stepRenderer: CustomStepRenderer = DefaultStepRenderer,
   graphRenderer: CustomGraphRenderer = DefaultGraphRenderer,
   headerRenderer: CustomHeaderRenderer = DefaultHeaderRenderer,
-  
+
   // Styling
   className = '',
   theme = 'auto',
-  
+
   // Events
   onStepClick,
   onDependencyClick,
@@ -701,57 +740,62 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
   onExport,
   onStreamUpdate,
   onError,
-  
+
   // Accessibility
   ariaLabel = 'AI reasoning display',
   ariaDescription,
-  
+
   // Debug
   debug = false,
-  
+
   ...props
 }) => {
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
-  const [internalSteps, setInternalSteps] = useState<EnhancedReasoningStep[]>([]);
+
+  const [internalSteps, setInternalSteps] = useState<EnhancedReasoningStep[]>(
+    []
+  );
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [highlightedPath, setHighlightedPath] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentMode, setCurrentMode] = useState<ReasoningDisplayMode>(mode);
-  const [currentVisualization, setCurrentVisualization] = useState<ReasoningVisualization>(visualization);
+  const [currentVisualization, setCurrentVisualization] =
+    useState<ReasoningVisualization>(visualization);
   const streamRef = useRef<boolean>(false);
-  
+
   // ==========================================
   // STREAM PROCESSING
   // ==========================================
-  
+
   useEffect(() => {
     if (!streamParts || streamRef.current) return;
-    
+
     streamRef.current = true;
-    
+
     const processStream = async () => {
       try {
         if (Symbol.asyncIterator in streamParts) {
           for await (const part of streamParts as AsyncIterable<EnhancedStreamPart>) {
             const reasoningStep = streamPartToReasoningStep(part);
             if (reasoningStep) {
-              setInternalSteps(prev => [...prev, reasoningStep]);
+              setInternalSteps((prev) => [...prev, reasoningStep]);
             }
           }
         } else {
-          const reader = (streamParts as ReadableStream<EnhancedStreamPart>).getReader();
+          const reader = (
+            streamParts as ReadableStream<EnhancedStreamPart>
+          ).getReader();
           try {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              
+
               const reasoningStep = streamPartToReasoningStep(value);
               if (reasoningStep) {
-                setInternalSteps(prev => [...prev, reasoningStep]);
+                setInternalSteps((prev) => [...prev, reasoningStep]);
               }
             }
           } finally {
@@ -763,86 +807,99 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
         onError?.(error as Error);
       }
     };
-    
+
     processStream();
-    
+
     return () => {
       streamRef.current = false;
     };
   }, [streamParts, onError]);
-  
+
   // Convert string reasoning to steps
   useEffect(() => {
     if (typeof reasoning === 'string') {
-      setInternalSteps([{
-        id: 'single-step',
-        content: reasoning,
-        type: 'thinking',
-        timing: { start: new Date() },
-        metrics: {
-          confidence: 0.5,
-          complexity: 0.5,
-          coherence: 0.5,
-          relevance: 0.5
+      setInternalSteps([
+        {
+          id: 'single-step',
+          content: reasoning,
+          type: 'thinking',
+          timing: { start: new Date() },
+          metrics: {
+            confidence: 0.5,
+            complexity: 0.5,
+            coherence: 0.5,
+            relevance: 0.5,
+          },
+          validation: 'valid',
         },
-        validation: 'valid'
-      }]);
+      ]);
     } else if (Array.isArray(reasoning)) {
-      setInternalSteps(reasoning.map((step, index) => ({
-        ...step,
-        id: step.id || `step-${index}`,
-        timing: step.timing || { start: new Date() },
-        metrics: calculateStepMetrics(step, reasoning),
-        validation: step.validation || 'valid'
-      })));
+      setInternalSteps(
+        reasoning.map((step, index) => ({
+          ...step,
+          id: step.id || `step-${index}`,
+          timing: step.timing || { start: new Date() },
+          metrics: calculateStepMetrics(step, reasoning),
+          validation: step.validation || 'valid',
+        }))
+      );
     }
   }, [reasoning]);
-  
+
   // Notify of stream updates
   useEffect(() => {
     onStreamUpdate?.(internalSteps);
   }, [internalSteps, onStreamUpdate]);
-  
+
   // ==========================================
   // DATA PROCESSING
   // ==========================================
-  
+
   const processedSteps = useMemo(() => {
     let filtered = internalSteps;
-    
+
     // Apply search filter
     if (searchQuery) {
       const queryLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(step => 
-        step.content.toLowerCase().includes(queryLower) ||
-        step.type?.toLowerCase().includes(queryLower) ||
-        step.id.toLowerCase().includes(queryLower)
+      filtered = filtered.filter(
+        (step) =>
+          step.content.toLowerCase().includes(queryLower) ||
+          step.type?.toLowerCase().includes(queryLower) ||
+          step.id.toLowerCase().includes(queryLower)
       );
     }
-    
+
     // Apply limit
     filtered = filtered.slice(0, maxSteps);
-    
+
     // Calculate critical path if needed
     if (currentVisualization.highlightCriticalPath) {
       const criticalPath = findCriticalPath(filtered);
       setHighlightedPath(criticalPath);
     }
-    
+
     return filtered;
-  }, [internalSteps, searchQuery, maxSteps, currentVisualization.highlightCriticalPath]);
-  
+  }, [
+    internalSteps,
+    searchQuery,
+    maxSteps,
+    currentVisualization.highlightCriticalPath,
+  ]);
+
   // ==========================================
   // EVENT HANDLERS
   // ==========================================
-  
-  const handleStepClick = useCallback((step: EnhancedReasoningStep) => {
-    setSelectedStepId(step.id);
-    onStepClick?.(step);
-  }, [onStepClick]);
-  
+
+  const handleStepClick = useCallback(
+    (step: EnhancedReasoningStep) => {
+      setSelectedStepId(step.id);
+      onStepClick?.(step);
+    },
+    [onStepClick]
+  );
+
   const handleToggleExpansion = useCallback((stepId: string) => {
-    setExpandedSteps(prev => {
+    setExpandedSteps((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(stepId)) {
         newSet.delete(stepId);
@@ -852,87 +909,99 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
       return newSet;
     });
   }, []);
-  
+
   const handleToggleAll = useCallback(() => {
     if (expandedSteps.size === processedSteps.length) {
       setExpandedSteps(new Set());
     } else {
-      setExpandedSteps(new Set(processedSteps.map(s => s.id)));
+      setExpandedSteps(new Set(processedSteps.map((s) => s.id)));
     }
   }, [expandedSteps.size, processedSteps]);
-  
-  const handleExport = useCallback((format: 'json' | 'markdown' | 'pdf') => {
-    onExport?.(format);
-    
-    // Basic export functionality
-    if (format === 'json') {
-      const data = JSON.stringify(processedSteps, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'reasoning-trace.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  }, [processedSteps, onExport]);
-  
+
+  const handleExport = useCallback(
+    (format: 'json' | 'markdown' | 'pdf') => {
+      onExport?.(format);
+
+      // Basic export functionality
+      if (format === 'json') {
+        const data = JSON.stringify(processedSteps, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reasoning-trace.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+    [processedSteps, onExport]
+  );
+
   // ==========================================
   // RENDER HELPERS
   // ==========================================
-  
-  const renderStep = useCallback((step: EnhancedReasoningStep, index: number) => {
-    const isExpanded = expandedSteps.has(step.id);
-    const isHighlighted = highlightedPath.includes(step.id) || selectedStepId === step.id;
-    
-    const dependencyInfo = {
-      satisfied: step.dependencies?.filter(dep => 
-        internalSteps.some(s => s.id === dep && s.validation === 'valid')
-      ) || [],
-      pending: step.dependencies?.filter(dep => 
-        internalSteps.some(s => s.id === dep && s.validation === 'pending')
-      ) || [],
-      missing: step.dependencies?.filter(dep => 
-        !internalSteps.some(s => s.id === dep)
-      ) || []
-    };
-    
-    return (
-      <CustomStepRenderer
-        key={step.id}
-        step={step}
-        index={index}
-        mode={currentMode}
-        isExpanded={isExpanded}
-        isHighlighted={isHighlighted}
-        dependencyInfo={dependencyInfo}
-        visualization={currentVisualization}
-        handlers={{
-          onToggleExpansion: () => handleToggleExpansion(step.id),
-          onStepClick: () => handleStepClick(step),
-          onDependencyClick: (depId) => onDependencyClick?.(depId, step),
-          onSourceClick: (sourceId) => onSourceClick?.(sourceId, step)
-        }}
-      />
-    );
-  }, [
-    expandedSteps, 
-    highlightedPath, 
-    selectedStepId, 
-    internalSteps, 
-    currentMode, 
-    currentVisualization,
-    handleToggleExpansion,
-    handleStepClick,
-    onDependencyClick,
-    onSourceClick,
-    CustomStepRenderer
-  ]);
-  
+
+  const renderStep = useCallback(
+    (step: EnhancedReasoningStep, index: number) => {
+      const isExpanded = expandedSteps.has(step.id);
+      const isHighlighted =
+        highlightedPath.includes(step.id) || selectedStepId === step.id;
+
+      const dependencyInfo = {
+        satisfied:
+          step.dependencies?.filter((dep) =>
+            internalSteps.some((s) => s.id === dep && s.validation === 'valid')
+          ) || [],
+        pending:
+          step.dependencies?.filter((dep) =>
+            internalSteps.some(
+              (s) => s.id === dep && s.validation === 'pending'
+            )
+          ) || [],
+        missing:
+          step.dependencies?.filter(
+            (dep) => !internalSteps.some((s) => s.id === dep)
+          ) || [],
+      };
+
+      return (
+        <CustomStepRenderer
+          key={step.id}
+          step={step}
+          index={index}
+          mode={currentMode}
+          isExpanded={isExpanded}
+          isHighlighted={isHighlighted}
+          dependencyInfo={dependencyInfo}
+          visualization={currentVisualization}
+          handlers={{
+            onToggleExpansion: () => handleToggleExpansion(step.id),
+            onStepClick: () => handleStepClick(step),
+            onDependencyClick: (depId) => onDependencyClick?.(depId, step),
+            onSourceClick: (sourceId) => onSourceClick?.(sourceId, step),
+          }}
+        />
+      );
+    },
+    [
+      expandedSteps,
+      highlightedPath,
+      selectedStepId,
+      internalSteps,
+      currentMode,
+      currentVisualization,
+      handleToggleExpansion,
+      handleStepClick,
+      onDependencyClick,
+      onSourceClick,
+      CustomStepRenderer,
+    ]
+  );
+
   // ==========================================
   // CSS CLASSES
   // ==========================================
-  
+
   const containerClasses = [
     'conciergus-reasoning-display',
     `mode-${currentMode}`,
@@ -940,13 +1009,15 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
     compact && 'compact',
     enableAnimations && 'animated',
     isStreaming && 'streaming',
-    className
-  ].filter(Boolean).join(' ');
-  
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   // ==========================================
   // RENDER
   // ==========================================
-  
+
   return (
     <div
       className={containerClasses}
@@ -966,12 +1037,13 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
         controls={{
           onSearchChange: setSearchQuery,
           onModeChange: setCurrentMode,
-          onVisualizationChange: (opts) => setCurrentVisualization(prev => ({ ...prev, ...opts })),
+          onVisualizationChange: (opts) =>
+            setCurrentVisualization((prev) => ({ ...prev, ...opts })),
           onExport: handleExport,
-          onToggleAll: handleToggleAll
+          onToggleAll: handleToggleAll,
         }}
       />
-      
+
       {/* Main content */}
       <div className="reasoning-content">
         {currentMode === 'graph' ? (
@@ -1003,23 +1075,27 @@ const ConciergusReasoningDisplay: React.FC<ConciergusReasoningDisplayProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Debug information */}
       {debug && (
         <details className="debug-info">
           <summary>Debug Information</summary>
           <pre className="debug-content">
-            {JSON.stringify({
-              totalSteps: internalSteps.length,
-              filteredSteps: processedSteps.length,
-              isStreaming,
-              searchQuery,
-              mode: currentMode,
-              visualization: currentVisualization,
-              expandedSteps: Array.from(expandedSteps),
-              selectedStepId,
-              highlightedPath
-            }, null, 2)}
+            {JSON.stringify(
+              {
+                totalSteps: internalSteps.length,
+                filteredSteps: processedSteps.length,
+                isStreaming,
+                searchQuery,
+                mode: currentMode,
+                visualization: currentVisualization,
+                expandedSteps: Array.from(expandedSteps),
+                selectedStepId,
+                highlightedPath,
+              },
+              null,
+              2
+            )}
           </pre>
         </details>
       )}
@@ -1039,5 +1115,5 @@ export type {
   ReasoningVisualization,
   StepRendererProps,
   ReasoningGraphProps,
-  HeaderRendererProps
-}; 
+  HeaderRendererProps,
+};

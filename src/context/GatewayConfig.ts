@@ -29,7 +29,7 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     id: 'xai/grok-3-beta',
     provider: 'xai',
     name: 'Grok 3 Beta',
-    description: 'XAI\'s flagship reasoning model',
+    description: "XAI's flagship reasoning model",
     costTier: 'high',
     capabilities: {
       text: true,
@@ -39,12 +39,12 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     },
     maxTokens: 128000,
   },
-  
+
   'openai/gpt-4o': {
     id: 'openai/gpt-4o',
     provider: 'openai',
     name: 'GPT-4o',
-    description: 'OpenAI\'s multimodal flagship model',
+    description: "OpenAI's multimodal flagship model",
     costTier: 'high',
     capabilities: {
       text: true,
@@ -54,12 +54,12 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     },
     maxTokens: 128000,
   },
-  
+
   'anthropic/claude-3-7-sonnet-20250219': {
     id: 'anthropic/claude-3-7-sonnet-20250219',
     provider: 'anthropic',
     name: 'Claude 3.7 Sonnet',
-    description: 'Anthropic\'s latest balanced model',
+    description: "Anthropic's latest balanced model",
     costTier: 'high',
     capabilities: {
       text: true,
@@ -69,13 +69,13 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     },
     maxTokens: 200000,
   },
-  
+
   // Balanced performance models
   'openai/gpt-4o-mini': {
     id: 'openai/gpt-4o-mini',
-    provider: 'openai', 
+    provider: 'openai',
     name: 'GPT-4o Mini',
-    description: 'OpenAI\'s cost-effective model',
+    description: "OpenAI's cost-effective model",
     costTier: 'medium',
     capabilities: {
       text: true,
@@ -85,12 +85,12 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     },
     maxTokens: 128000,
   },
-  
+
   'anthropic/claude-3-5-haiku-20241022': {
     id: 'anthropic/claude-3-5-haiku-20241022',
     provider: 'anthropic',
     name: 'Claude 3.5 Haiku',
-    description: 'Anthropic\'s fastest model',
+    description: "Anthropic's fastest model",
     costTier: 'medium',
     capabilities: {
       text: true,
@@ -100,7 +100,7 @@ export const GATEWAY_MODELS: Record<string, GatewayModelConfig> = {
     },
     maxTokens: 200000,
   },
-  
+
   // Budget-friendly models
   'deepseek/deepseek-r1': {
     id: 'deepseek/deepseek-r1',
@@ -141,7 +141,7 @@ export const FALLBACK_CHAINS: Record<string, FallbackChainConfig> = {
     ],
     useCase: 'general',
   },
-  
+
   reasoning: {
     name: 'Reasoning Chain',
     description: 'Optimized for complex reasoning tasks',
@@ -153,9 +153,9 @@ export const FALLBACK_CHAINS: Record<string, FallbackChainConfig> = {
     ],
     useCase: 'reasoning',
   },
-  
+
   vision: {
-    name: 'Vision Chain', 
+    name: 'Vision Chain',
     description: 'For multimodal tasks with images',
     models: [
       'anthropic/claude-3-7-sonnet-20250219',
@@ -164,7 +164,7 @@ export const FALLBACK_CHAINS: Record<string, FallbackChainConfig> = {
     ],
     useCase: 'vision',
   },
-  
+
   budget: {
     name: 'Budget Chain',
     description: 'Cost-optimized model selection',
@@ -195,13 +195,16 @@ export interface GatewayConfig {
  * @param config Optional configuration
  * @returns Configured gateway model
  */
-export function createGatewayModel(modelId: string, config?: GatewayConfig): any {
+export function createGatewayModel(
+  modelId: string,
+  config?: GatewayConfig
+): any {
   const modelConfig = GATEWAY_MODELS[modelId];
-  
+
   if (!modelConfig) {
     console.warn(`Model ${modelId} not found in configuration. Using as-is.`);
   }
-  
+
   return gateway(modelId);
 }
 
@@ -212,14 +215,14 @@ export function createGatewayModel(modelId: string, config?: GatewayConfig): any
  * @returns Array of gateway models for fallback
  */
 export function createFallbackChain(
-  chainName: string | string[], 
+  chainName: string | string[],
   config?: GatewayConfig
 ): any[] {
-  const modelIds = Array.isArray(chainName) 
-    ? chainName 
-    : FALLBACK_CHAINS[chainName]?.models ?? [chainName];
-    
-  return modelIds.map(modelId => createGatewayModel(modelId, config));
+  const modelIds = Array.isArray(chainName)
+    ? chainName
+    : (FALLBACK_CHAINS[chainName]?.models ?? [chainName]);
+
+  return modelIds.map((modelId) => createGatewayModel(modelId, config));
 }
 
 /**
@@ -260,40 +263,41 @@ export function selectOptimalModel(requirements: {
   provider?: string;
 }): string {
   let candidates = Object.entries(GATEWAY_MODELS);
-  
+
   // Filter by capabilities
   if (requirements.capabilities) {
     candidates = candidates.filter(([_, config]) =>
-      requirements.capabilities!.every(cap => config.capabilities[cap])
+      requirements.capabilities!.every((cap) => config.capabilities[cap])
     );
   }
-  
+
   // Filter by cost tier
   if (requirements.costTier) {
-    candidates = candidates.filter(([_, config]) => 
-      config.costTier === requirements.costTier
+    candidates = candidates.filter(
+      ([_, config]) => config.costTier === requirements.costTier
     );
   }
-  
+
   // Filter by token limit
   if (requirements.maxTokens) {
-    candidates = candidates.filter(([_, config]) =>
-      !config.maxTokens || config.maxTokens >= requirements.maxTokens!
+    candidates = candidates.filter(
+      ([_, config]) =>
+        !config.maxTokens || config.maxTokens >= requirements.maxTokens!
     );
   }
-  
+
   // Filter by provider
   if (requirements.provider) {
-    candidates = candidates.filter(([_, config]) =>
-      config.provider === requirements.provider
+    candidates = candidates.filter(
+      ([_, config]) => config.provider === requirements.provider
     );
   }
-  
+
   if (candidates.length === 0) {
     console.warn('No models match requirements, falling back to default');
     return 'openai/gpt-4o-mini';
   }
-  
+
   // Return the first match (could implement more sophisticated ranking)
   return candidates[0]?.[0] ?? 'openai/gpt-4o-mini';
 }
@@ -306,11 +310,13 @@ export class GatewayAuth {
    * Check if running in development environment with Vercel CLI
    */
   static isDevelopment(): boolean {
-    return process.env.NODE_ENV === 'development' || 
-           process.env.VERCEL_ENV === 'preview' ||
-           !!process.env.VERCEL_CLI_DEV;
+    return (
+      process.env.NODE_ENV === 'development' ||
+      process.env.VERCEL_ENV === 'preview' ||
+      !!process.env.VERCEL_CLI_DEV
+    );
   }
-  
+
   /**
    * Check if proper authentication is available
    */
@@ -319,11 +325,11 @@ export class GatewayAuth {
     if (this.isDevelopment() && process.env.VERCEL_CLI_DEV) {
       return true;
     }
-    
+
     // In production, check for proper Vercel deployment context
     return !!(process.env.VERCEL && process.env.VERCEL_ENV);
   }
-  
+
   /**
    * Get authentication guidance for current environment
    */
@@ -331,28 +337,31 @@ export class GatewayAuth {
     if (this.hasValidAuth()) {
       return 'AI Gateway authentication is properly configured.';
     }
-    
+
     if (this.isDevelopment()) {
       return 'For local development, run `vc dev` to enable AI Gateway authentication.';
     }
-    
+
     return 'Deploy to Vercel to enable AI Gateway authentication in production.';
   }
-  
+
   /**
    * Validate gateway configuration
    */
-  static validateConfig(config?: GatewayConfig): { valid: boolean; message: string } {
+  static validateConfig(config?: GatewayConfig): {
+    valid: boolean;
+    message: string;
+  } {
     if (!this.hasValidAuth()) {
       return {
         valid: false,
-        message: this.getAuthGuidance()
+        message: this.getAuthGuidance(),
       };
     }
-    
+
     return {
       valid: true,
-      message: 'AI Gateway configuration is valid.'
+      message: 'AI Gateway configuration is valid.',
     };
   }
 }
@@ -369,15 +378,19 @@ export class CostOptimizer {
   static estimateCost(modelId: string): number {
     const config = GATEWAY_MODELS[modelId];
     if (!config) return 5; // Default to medium cost
-    
+
     switch (config.costTier) {
-      case 'low': return 2;
-      case 'medium': return 5;
-      case 'high': return 8;
-      default: return 5;
+      case 'low':
+        return 2;
+      case 'medium':
+        return 5;
+      case 'high':
+        return 8;
+      default:
+        return 5;
     }
   }
-  
+
   /**
    * Recommend cost-optimized model for a task
    * @param requirements Task requirements
@@ -388,20 +401,24 @@ export class CostOptimizer {
     maxTokens?: number;
   }): string {
     // Start with budget models and work up
-    const costTiers: GatewayModelConfig['costTier'][] = ['low', 'medium', 'high'];
-    
+    const costTiers: GatewayModelConfig['costTier'][] = [
+      'low',
+      'medium',
+      'high',
+    ];
+
     for (const tier of costTiers) {
       const model = selectOptimalModel({
         ...requirements,
         costTier: tier,
       });
-      
+
       // If we found a model in this tier, use it
       if (GATEWAY_MODELS[model]?.costTier === tier) {
         return model;
       }
     }
-    
+
     // Fallback to default
     return 'openai/gpt-4o-mini';
   }
@@ -418,4 +435,4 @@ export default {
   selectModel: selectOptimalModel,
   auth: GatewayAuth,
   optimizer: CostOptimizer,
-}; 
+};

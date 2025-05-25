@@ -2,8 +2,14 @@
 const React = require('react');
 
 // Generic component factory
-const createMockComponent = (name) => ({ children, ...props }) => 
-  React.createElement('div', { 'data-testid': `radix-${name}`, ...props }, children);
+const createMockComponent =
+  (name) =>
+  ({ children, ...props }) =>
+    React.createElement(
+      'div',
+      { 'data-testid': `radix-${name}`, ...props },
+      children
+    );
 
 // Common Radix UI component patterns
 const mockComponents = {
@@ -29,6 +35,6 @@ const mockComponents = {
 
 // Export all common patterns
 module.exports = mockComponents;
-Object.keys(mockComponents).forEach(key => {
+Object.keys(mockComponents).forEach((key) => {
   module.exports[key] = mockComponents[key];
-}); 
+});

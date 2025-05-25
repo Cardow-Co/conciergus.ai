@@ -29,15 +29,18 @@ export type { ConciergusAIGatewayProps } from './components/ConciergusAIGateway'
 export type { CostAnalyticsDashboardProps } from './components/CostAnalyticsDashboard';
 export type { PerformanceComparisonDashboardProps } from './components/PerformanceComparisonDashboard';
 export type { AdminDashboardProps } from './components/AdminDashboard';
-export type { ConciergusObjectStreamProps, ObjectRendererProps } from './components/ConciergusObjectStream';
-export type { 
-  ConciergusAgentControlsProps, 
-  StepRendererProps, 
+export type {
+  ConciergusObjectStreamProps,
+  ObjectRendererProps,
+} from './components/ConciergusObjectStream';
+export type {
+  ConciergusAgentControlsProps,
+  StepRendererProps,
   ControlRendererProps,
   AgentStep,
   AgentCondition,
   AgentStepStatus,
-  AgentExecutionMode
+  AgentExecutionMode,
 } from './components/ConciergusAgentControls';
 export type {
   ConciergusMetadataDisplayProps,
@@ -46,7 +49,7 @@ export type {
   PerformanceRendererProps,
   TelemetryRendererProps,
   MetadataDisplayMode,
-  MetricCategory
+  MetricCategory,
 } from './components/ConciergusMetadataDisplay';
 export type {
   ConciergusDataPartsRendererProps,
@@ -56,7 +59,7 @@ export type {
   HeaderRendererProps,
   DataPart,
   DataPartDisplayMode,
-  DataPartCategory
+  DataPartCategory,
 } from './components/ConciergusDataPartsRenderer';
 export type {
   ConciergusReasoningDisplayProps,
@@ -65,7 +68,7 @@ export type {
   ReasoningVisualization,
   StepRendererProps,
   ReasoningGraphProps,
-  HeaderRendererProps as ReasoningHeaderRendererProps
+  HeaderRendererProps as ReasoningHeaderRendererProps,
 } from './components/ConciergusReasoningDisplay';
 export type {
   ConciergusErrorBoundaryProps,
@@ -74,7 +77,7 @@ export type {
   EnhancedError,
   ErrorRecoveryAction,
   FallbackComponentProps,
-  FallbackMode
+  FallbackMode,
 } from './components/ConciergusErrorBoundary';
 export type {
   ConciergusSourcesDisplayProps,
@@ -86,16 +89,16 @@ export type {
   SourceSortOrder,
   CitationFormat,
   SourceRendererProps as SourcesRendererProps,
-  ClusterRendererProps
+  ClusterRendererProps,
 } from './components/ConciergusSourcesDisplay';
-export type { 
-  ConciergusChatWidgetProps, 
-  ChatStore, 
-  GenerativeUIConfig, 
-  AgentWorkflowConfig, 
-  RAGConfig, 
+export type {
+  ConciergusChatWidgetProps,
+  ChatStore,
+  GenerativeUIConfig,
+  AgentWorkflowConfig,
+  RAGConfig,
   RateLimitingConfig,
-  AccessibilityConfig 
+  AccessibilityConfig,
 } from './components/ConciergusChatWidget';
 
 // Message metadata and reasoning display components
@@ -108,26 +111,45 @@ export { default as MessageStreamRenderer } from './components/MessageStreamRend
 export { useStreamingManager } from './components/useStreamingManager';
 
 export type { MessageMetadataProps } from './components/MessageMetadata';
-export type { ReasoningTraceProps, ReasoningStep } from './components/ReasoningTrace';
+export type {
+  ReasoningTraceProps,
+  ReasoningStep,
+} from './components/ReasoningTrace';
 export type { SourcesDisplayProps, Source } from './components/SourcesDisplay';
 export type { StreamingIndicatorProps } from './components/StreamingIndicator';
-export type { 
-  MessageStreamRendererProps, 
-  TextStreamPart, 
-  StreamingState 
+export type {
+  MessageStreamRendererProps,
+  TextStreamPart,
+  StreamingState,
 } from './components/MessageStreamRenderer';
-export type { 
-  StreamingManagerHook, 
-  StreamingManagerState, 
-  StreamingManagerConfig, 
-  StreamingConnection 
+export type {
+  StreamingManagerHook,
+  StreamingManagerState,
+  StreamingManagerConfig,
+  StreamingConnection,
 } from './components/useStreamingManager';
-export type { ConciergusMetadataDisplayProps, TelemetryEvent, UsageStats, ModelMetrics } from './components/ConciergusMetadataDisplay';
-export type { ConciergusModelSwitcherProps, ModelInfo } from './components/ConciergusModelSwitcher';
+export type {
+  ConciergusMetadataDisplayProps,
+  TelemetryEvent,
+  UsageStats,
+  ModelMetrics,
+} from './components/ConciergusMetadataDisplay';
+export type {
+  ConciergusModelSwitcherProps,
+  ModelInfo,
+} from './components/ConciergusModelSwitcher';
 
 // Gateway and Error Handling Types
-export type { GatewayConfig, GatewayModelConfig, FallbackChainConfig } from './context/GatewayConfig';
-export type { ErrorCategory, ErrorSeverity, ConciergusError } from './errors/ErrorBoundary';
+export type {
+  GatewayConfig,
+  GatewayModelConfig,
+  FallbackChainConfig,
+} from './context/GatewayConfig';
+export type {
+  ErrorCategory,
+  ErrorSeverity,
+  ConciergusError,
+} from './errors/ErrorBoundary';
 
 // Fallback Management and Performance Monitoring
 export {
@@ -140,7 +162,7 @@ export {
   type ModelPerformanceMetrics,
   type FallbackResult,
   type FallbackTrigger,
-  type FallbackAttempt
+  type FallbackAttempt,
 } from './context/FallbackHooks';
 
 // ==========================================
@@ -152,29 +174,29 @@ export type {
   // Core Enhanced Interfaces
   EnhancedUIMessage,
   MessageMetadata,
-  
+
   // Streaming Interfaces
   StreamPartType,
   EnhancedStreamPart,
   TokenUsage,
   StreamingType,
-  
+
   // Reasoning and Explainability
   ReasoningStep as EnhancedReasoningStep,
   ReasoningType,
-  
+
   // Source Citations and RAG
   Source as EnhancedSource,
   SourceType,
-  
+
   // Tool Calls and Function Execution
   ToolCall,
   ToolCallState,
-  
+
   // Structured Objects
   StructuredObject,
   StructuredObjectState,
-  
+
   // Performance and Telemetry
   PerformanceMetrics,
   MemoryUsage,
@@ -182,7 +204,7 @@ export type {
   TelemetryData,
   TelemetryEventType,
   GeoLocation,
-  
+
   // Enhanced Component Props
   EnhancedMessageListProps,
   EnhancedMessageItemProps,
@@ -191,28 +213,40 @@ export type {
   SourcesDisplayProps as EnhancedSourcesDisplayProps,
   StreamingIndicatorProps as EnhancedStreamingIndicatorProps,
   VirtualizationProps,
-  
+
   // Backward Compatibility Aliases
   UIMessageWithMetadata,
   StreamPart,
   MessageListProps,
   MessageItemProps,
-  
+
   // Event Types
   AISDKEvent,
-  
+
   // Type Guards
   isTextDelta,
   isToolCall,
   isReasoning,
   isSource,
   isFinish,
-  isError
+  isError,
 } from './types/ai-sdk-5';
 
 // Context and Configuration Types
-export type { ConciergusConfig, AIGatewayConfig, ChatStoreConfig, TelemetryConfig, RateLimitConfig, MiddlewareFunction, MiddlewareArray } from './context/ConciergusContext';
+export type {
+  ConciergusConfig,
+  AIGatewayConfig,
+  ChatStoreConfig,
+  TelemetryConfig,
+  RateLimitConfig,
+  MiddlewareFunction,
+  MiddlewareArray,
+} from './context/ConciergusContext';
 export type { EnhancedConciergusContextValue } from './context/EnhancedConciergusContext';
 
 // Debug and Development Types
-export type { DebugLevel, PerformanceMetrics as DebugPerformanceMetrics, AISDKEvent as DebugAISDKEvent } from './debug/ai-sdk-debug'; 
+export type {
+  DebugLevel,
+  PerformanceMetrics as DebugPerformanceMetrics,
+  AISDKEvent as DebugAISDKEvent,
+} from './debug/ai-sdk-debug';

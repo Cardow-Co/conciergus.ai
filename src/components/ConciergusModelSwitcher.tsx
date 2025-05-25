@@ -69,12 +69,12 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
     // Extract human-readable name from model ID
     const parts = modelId.split('/');
     const modelName = parts[parts.length - 1];
-    
+
     if (!modelName) return modelId;
-    
+
     return modelName
       .replace(/-/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   }, []);
 
   // Extract provider from model ID
@@ -84,20 +84,20 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
     if (modelId.includes('google')) return 'Google';
     if (modelId.includes('meta')) return 'Meta';
     if (modelId.includes('mistral')) return 'Mistral';
-    
+
     const parts = modelId.split('/');
-    return parts.length > 1 ? (parts[0] || 'Unknown') : 'Unknown';
+    return parts.length > 1 ? parts[0] || 'Unknown' : 'Unknown';
   }, []);
 
   // Get model capabilities
   const getModelCapabilities = useCallback((modelId: string): string[] => {
     const capabilities: string[] = [];
-    
+
     if (modelId.includes('vision')) capabilities.push('Vision');
     if (modelId.includes('code')) capabilities.push('Code');
     if (modelId.includes('function')) capabilities.push('Functions');
     if (modelId.includes('chat')) capabilities.push('Chat');
-    
+
     return capabilities;
   }, []);
 
@@ -112,11 +112,12 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
       if (modelManager) {
         // Get models from model manager
         const availableModelIds = modelManager.getAvailableModels();
-        
+
         modelList = await Promise.all(
           availableModelIds.map(async (modelId): Promise<ModelInfo> => {
-            const isAvailable = await modelManager.checkModelAvailability?.(modelId) ?? true;
-            
+            const isAvailable =
+              (await modelManager.checkModelAvailability?.(modelId)) ?? true;
+
             // Get performance data if available
             let performance;
             if (showPerformanceIndicators) {
@@ -125,7 +126,7 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
                 performance = {
                   averageLatency: Math.random() * 2000 + 500, // Mock data
                   successRate: 0.95 + Math.random() * 0.05,
-                  cost: Math.random() * 0.01 + 0.001
+                  cost: Math.random() * 0.01 + 0.001,
                 };
               } catch {
                 performance = undefined;
@@ -138,19 +139,21 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
               provider: extractProvider(modelId),
               isAvailable,
               ...(performance ? { performance } : {}),
-              capabilities: getModelCapabilities(modelId)
+              capabilities: getModelCapabilities(modelId),
             };
           })
         );
       } else {
         // Fallback to simple model list
-        modelList = availableModels.map((modelId): ModelInfo => ({
-          id: modelId,
-          name: formatModelName(modelId),
-          provider: extractProvider(modelId),
-          isAvailable: true,
-          capabilities: getModelCapabilities(modelId)
-        }));
+        modelList = availableModels.map(
+          (modelId): ModelInfo => ({
+            id: modelId,
+            name: formatModelName(modelId),
+            provider: extractProvider(modelId),
+            isAvailable: true,
+            capabilities: getModelCapabilities(modelId),
+          })
+        );
       }
 
       setModels(modelList);
@@ -159,7 +162,14 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
       setError(err instanceof Error ? err.message : 'Failed to load models');
       setIsLoading(false);
     }
-  }, [modelManager, availableModels, showPerformanceIndicators, formatModelName, extractProvider, getModelCapabilities]);
+  }, [
+    modelManager,
+    availableModels,
+    showPerformanceIndicators,
+    formatModelName,
+    extractProvider,
+    getModelCapabilities,
+  ]);
 
   useEffect(() => {
     loadModels();
@@ -173,7 +183,7 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
       if (modelManager) {
         await modelManager.switchModel(modelId);
       }
-      
+
       onModelChange?.(modelId);
       setIsDropdownOpen(false);
     } catch (err) {
@@ -183,27 +193,32 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
 
   // Get current model info
   const getCurrentModelInfo = (): ModelInfo | undefined => {
-    return models.find(model => model.id === currentModel);
+    return models.find((model) => model.id === currentModel);
   };
 
   // Format performance indicator
   const formatPerformance = (performance: ModelInfo['performance']): string => {
     if (!performance) return '';
-    
+
     const latency = `${performance.averageLatency.toFixed(0)}ms`;
     const success = `${(performance.successRate * 100).toFixed(1)}%`;
     const cost = `$${performance.cost.toFixed(4)}`;
-    
+
     return `${latency} • ${success} • ${cost}`;
   };
 
   // Get performance indicator color
-  const getPerformanceColor = (performance: ModelInfo['performance']): string => {
+  const getPerformanceColor = (
+    performance: ModelInfo['performance']
+  ): string => {
     if (!performance) return '';
-    
+
     if (performance.averageLatency < 1000 && performance.successRate > 0.95) {
       return 'performance-good';
-    } else if (performance.averageLatency < 2000 && performance.successRate > 0.9) {
+    } else if (
+      performance.averageLatency < 2000 &&
+      performance.successRate > 0.9
+    ) {
       return 'performance-ok';
     } else {
       return 'performance-poor';
@@ -214,31 +229,25 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
 
   if (error) {
     return (
-      <div 
+      <div
         className={`conciergus-model-switcher error ${className || ''}`}
         data-compact={compact}
         {...rest}
       >
-        <div className="model-switcher-error">
-          ⚠️ {error}
-        </div>
+        <div className="model-switcher-error">⚠️ {error}</div>
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       className={`conciergus-model-switcher ${className || ''}`}
       data-compact={compact}
       data-disabled={disabled}
       data-loading={isLoading}
       {...rest}
     >
-      {!compact && (
-        <div className="model-switcher-label">
-          🤖 Model
-        </div>
-      )}
+      {!compact && <div className="model-switcher-label">🤖 Model</div>}
 
       <div className="model-selector">
         <button
@@ -252,10 +261,14 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
               <>
                 <div className="model-info">
                   <span className="model-name">{currentModelInfo.name}</span>
-                  <span className="model-provider">{currentModelInfo.provider}</span>
+                  <span className="model-provider">
+                    {currentModelInfo.provider}
+                  </span>
                 </div>
                 {showPerformanceIndicators && currentModelInfo.performance && (
-                  <div className={`model-performance ${getPerformanceColor(currentModelInfo.performance)}`}>
+                  <div
+                    className={`model-performance ${getPerformanceColor(currentModelInfo.performance)}`}
+                  >
                     {formatPerformance(currentModelInfo.performance)}
                   </div>
                 )}
@@ -264,9 +277,7 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
               <span className="model-placeholder">{placeholder}</span>
             )}
           </div>
-          <div className="model-dropdown-arrow">
-            {isLoading ? '⟳' : '▼'}
-          </div>
+          <div className="model-dropdown-arrow">{isLoading ? '⟳' : '▼'}</div>
         </button>
 
         {isDropdownOpen && !isLoading && (
@@ -285,11 +296,13 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
                       <span className="model-name">{model.name}</span>
                       <span className="model-provider">{model.provider}</span>
                     </div>
-                    
+
                     {showDescriptions && model.description && (
-                      <div className="model-description">{model.description}</div>
+                      <div className="model-description">
+                        {model.description}
+                      </div>
                     )}
-                    
+
                     {model.capabilities && model.capabilities.length > 0 && (
                       <div className="model-capabilities">
                         {model.capabilities.map((capability) => (
@@ -299,13 +312,15 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
                         ))}
                       </div>
                     )}
-                    
+
                     {showPerformanceIndicators && model.performance && (
-                      <div className={`model-performance ${getPerformanceColor(model.performance)}`}>
+                      <div
+                        className={`model-performance ${getPerformanceColor(model.performance)}`}
+                      >
                         {formatPerformance(model.performance)}
                       </div>
                     )}
-                    
+
                     {!model.isAvailable && (
                       <div className="model-unavailable">Unavailable</div>
                     )}
@@ -319,7 +334,7 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
 
       {/* Close dropdown when clicking outside */}
       {isDropdownOpen && (
-        <div 
+        <div
           className="model-dropdown-overlay"
           onClick={() => setIsDropdownOpen(false)}
         />
@@ -328,4 +343,4 @@ const ConciergusModelSwitcher: React.FC<ConciergusModelSwitcherProps> = ({
   );
 };
 
-export default ConciergusModelSwitcher; 
+export default ConciergusModelSwitcher;

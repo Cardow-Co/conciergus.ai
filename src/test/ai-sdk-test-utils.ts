@@ -1,12 +1,11 @@
 // AI SDK 5 Alpha Testing Utilities
 import { jest } from '@jest/globals';
 
-
 // AI SDK 5 Message Types
 export interface AIMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | Array<{ type: string; text?: string; }>;
+  content: string | Array<{ type: string; text?: string }>;
   createdAt?: Date;
   metadata?: Record<string, any>;
 }
@@ -33,33 +32,62 @@ export class AITestDataGenerator {
   /**
    * Generate realistic AI SDK 5 messages for testing
    */
-  static generateMessages(count: number = 3, scenario: 'conversation' | 'tool-use' | 'system' = 'conversation'): AIMessage[] {
+  static generateMessages(
+    count: number = 3,
+    scenario: 'conversation' | 'tool-use' | 'system' = 'conversation'
+  ): AIMessage[] {
     const messages: AIMessage[] = [];
 
     switch (scenario) {
       case 'conversation':
         messages.push(
-          this.createMessage('user', 'Hello, can you help me with React 19 integration?'),
-          this.createMessage('assistant', 'Absolutely! I\'d be happy to help you with React 19 integration. What specific area would you like to focus on?'),
-          this.createMessage('user', 'I\'m particularly interested in the new concurrent features.')
+          this.createMessage(
+            'user',
+            'Hello, can you help me with React 19 integration?'
+          ),
+          this.createMessage(
+            'assistant',
+            "Absolutely! I'd be happy to help you with React 19 integration. What specific area would you like to focus on?"
+          ),
+          this.createMessage(
+            'user',
+            "I'm particularly interested in the new concurrent features."
+          )
         );
         break;
 
       case 'tool-use':
         messages.push(
-          this.createMessage('user', 'What\'s the weather like in San Francisco?'),
-          this.createMessage('assistant', 'I\'ll check the weather for you.', {
-            toolCalls: [{ id: 'tool_' + this.toolCallIdCounter++, name: 'get_weather', args: { location: 'San Francisco' } }]
+          this.createMessage(
+            'user',
+            "What's the weather like in San Francisco?"
+          ),
+          this.createMessage('assistant', "I'll check the weather for you.", {
+            toolCalls: [
+              {
+                id: 'tool_' + this.toolCallIdCounter++,
+                name: 'get_weather',
+                args: { location: 'San Francisco' },
+              },
+            ],
           }),
-          this.createMessage('tool', 'Weather: 72°F, partly cloudy', { toolCallId: 'tool_1' })
+          this.createMessage('tool', 'Weather: 72°F, partly cloudy', {
+            toolCallId: 'tool_1',
+          })
         );
         break;
 
       case 'system':
         messages.push(
-          this.createMessage('system', 'You are a helpful AI assistant specializing in software development.'),
+          this.createMessage(
+            'system',
+            'You are a helpful AI assistant specializing in software development.'
+          ),
           this.createMessage('user', 'Help me optimize my React components'),
-          this.createMessage('assistant', 'I\'d be happy to help optimize your React components. Could you share the specific components you\'d like me to review?')
+          this.createMessage(
+            'assistant',
+            "I'd be happy to help optimize your React components. Could you share the specific components you'd like me to review?"
+          )
         );
         break;
     }
@@ -71,8 +99,8 @@ export class AITestDataGenerator {
    * Create a single AI SDK 5 message
    */
   static createMessage(
-    role: AIMessage['role'], 
-    content: string, 
+    role: AIMessage['role'],
+    content: string,
     metadata: Record<string, any> = {}
   ): AIMessage {
     return {
@@ -87,16 +115,18 @@ export class AITestDataGenerator {
   /**
    * Generate usage statistics for testing
    */
-  static generateUsage(scenario: 'light' | 'moderate' | 'heavy' = 'moderate'): AIUsage {
+  static generateUsage(
+    scenario: 'light' | 'moderate' | 'heavy' = 'moderate'
+  ): AIUsage {
     const baseUsage = {
       light: { prompt: 50, completion: 30 },
       moderate: { prompt: 150, completion: 100 },
-      heavy: { prompt: 500, completion: 300 }
+      heavy: { prompt: 500, completion: 300 },
     };
 
     const usage = baseUsage[scenario];
     const totalTokens = usage.prompt + usage.completion;
-    
+
     return {
       promptTokens: usage.prompt,
       completionTokens: usage.completion,
@@ -108,12 +138,15 @@ export class AITestDataGenerator {
   /**
    * Generate streaming text chunks for testing
    */
-  static async* generateStreamingChunks(text: string, delay: number = 50): AsyncIterable<string> {
+  static async *generateStreamingChunks(
+    text: string,
+    delay: number = 50
+  ): AsyncIterable<string> {
     const words = text.split(' ');
     for (const word of words) {
       yield word + ' ';
       if (delay > 0) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -121,19 +154,25 @@ export class AITestDataGenerator {
   /**
    * Generate realistic AI SDK errors for testing
    */
-  static generateAIError(type: 'rate-limit' | 'context-length' | 'api-error' | 'network' = 'api-error') {
+  static generateAIError(
+    type:
+      | 'rate-limit'
+      | 'context-length'
+      | 'api-error'
+      | 'network' = 'api-error'
+  ) {
     const errorMessages = {
       'rate-limit': 'Rate limit exceeded. Please try again later.',
       'context-length': 'Context length exceeded maximum allowed tokens.',
       'api-error': 'API request failed with status 500',
-      'network': 'Network connection failed'
+      network: 'Network connection failed',
     };
 
     const statusCodes = {
       'rate-limit': 429,
       'context-length': 400,
       'api-error': 500,
-      'network': 0
+      network: 0,
     };
 
     const error = new Error(errorMessages[type]) as AIError;
@@ -148,7 +187,9 @@ export class AITestHelpers {
   /**
    * Mock AI SDK useChat hook with realistic behavior
    */
-  static mockUseChat(scenario: 'loading' | 'success' | 'error' | 'streaming' = 'success') {
+  static mockUseChat(
+    scenario: 'loading' | 'success' | 'error' | 'streaming' = 'success'
+  ) {
     const baseState = {
       input: '',
       isLoading: false,
@@ -168,7 +209,7 @@ export class AITestHelpers {
           messages: AITestDataGenerator.generateMessages(2),
           isLoading: true,
           append: jest.fn().mockImplementation(async () => {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }),
         };
 
@@ -177,7 +218,11 @@ export class AITestHelpers {
           ...baseState,
           messages: AITestDataGenerator.generateMessages(1),
           error: AITestDataGenerator.generateAIError('api-error'),
-          append: jest.fn().mockRejectedValue(AITestDataGenerator.generateAIError('api-error')),
+          append: jest
+            .fn()
+            .mockRejectedValue(
+              AITestDataGenerator.generateAIError('api-error')
+            ),
         };
 
       case 'streaming':
@@ -191,7 +236,7 @@ export class AITestHelpers {
               'This is a streaming response from the AI assistant.',
               10
             );
-            
+
             for await (const chunk of chunks) {
               // Simulate chunk processing
             }
@@ -210,18 +255,22 @@ export class AITestHelpers {
   /**
    * Mock AI SDK generateText function
    */
-  static mockGenerateText(scenario: 'success' | 'error' | 'partial' = 'success') {
+  static mockGenerateText(
+    scenario: 'success' | 'error' | 'partial' = 'success'
+  ) {
     switch (scenario) {
       case 'error':
-        return jest.fn().mockRejectedValue(AITestDataGenerator.generateAIError());
-      
+        return jest
+          .fn()
+          .mockRejectedValue(AITestDataGenerator.generateAIError());
+
       case 'partial':
         return jest.fn().mockResolvedValue({
           text: 'This is a partial response that was cut off due to',
           usage: AITestDataGenerator.generateUsage('light'),
           finishReason: 'length',
         });
-      
+
       default: // success
         return jest.fn().mockResolvedValue({
           text: 'This is a complete AI-generated response for testing purposes.',
@@ -254,20 +303,22 @@ export class AITestHelpers {
    */
   static createMockChatStore() {
     const messages = AITestDataGenerator.generateMessages(3);
-    
+
     return {
       messages,
       addMessage: jest.fn().mockImplementation((msg: AIMessage) => {
         messages.push(msg);
       }),
       removeMessage: jest.fn().mockImplementation((id: string) => {
-        const index = messages.findIndex(m => m.id === id);
+        const index = messages.findIndex((m) => m.id === id);
         if (index > -1) messages.splice(index, 1);
       }),
-      updateMessage: jest.fn().mockImplementation((id: string, updates: Partial<AIMessage>) => {
-        const message = messages.find(m => m.id === id);
-        if (message) Object.assign(message, updates);
-      }),
+      updateMessage: jest
+        .fn()
+        .mockImplementation((id: string, updates: Partial<AIMessage>) => {
+          const message = messages.find((m) => m.id === id);
+          if (message) Object.assign(message, updates);
+        }),
       clearMessages: jest.fn().mockImplementation(() => {
         messages.length = 0;
       }),
@@ -363,7 +414,9 @@ export const AITestScenarios = {
     usage: AITestDataGenerator.generateUsage('moderate'),
     isLoading: true,
     error: undefined,
-    textStream: AITestDataGenerator.generateStreamingChunks('Streaming AI response'),
+    textStream: AITestDataGenerator.generateStreamingChunks(
+      'Streaming AI response'
+    ),
   }),
 
   /**
@@ -382,4 +435,4 @@ export default {
   AITestDataGenerator,
   AITestHelpers,
   AITestScenarios,
-}; 
+};

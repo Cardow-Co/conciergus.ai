@@ -38,7 +38,11 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
 
   // Calculate cost warning if threshold is exceeded
   React.useEffect(() => {
-    if (metadata.cost && metadata.cost > costWarningThreshold && onCostThreshold) {
+    if (
+      metadata.cost &&
+      metadata.cost > costWarningThreshold &&
+      onCostThreshold
+    ) {
       onCostThreshold(metadata.cost, costWarningThreshold);
     }
   }, [metadata.cost, costWarningThreshold, onCostThreshold]);
@@ -83,7 +87,7 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
             </span>
           )}
           {metadata.cost && (
-            <span 
+            <span
               className={`metadata-compact-item ${metadata.cost > costWarningThreshold ? 'cost-warning' : ''}`}
               title="Cost"
             >
@@ -107,7 +111,7 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
           </span>
         )}
       </div>
-      
+
       <div className="metadata-content">
         {/* Model Information */}
         {metadata.model && (
@@ -117,9 +121,15 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
               <span className="metadata-label">AI Model:</span>
               <span className="metadata-value model-value">
                 {metadata.model}
-                {metadata.model.includes('gpt') && <span className="model-provider">OpenAI</span>}
-                {metadata.model.includes('claude') && <span className="model-provider">Anthropic</span>}
-                {metadata.model.includes('gemini') && <span className="model-provider">Google</span>}
+                {metadata.model.includes('gpt') && (
+                  <span className="model-provider">OpenAI</span>
+                )}
+                {metadata.model.includes('claude') && (
+                  <span className="model-provider">Anthropic</span>
+                )}
+                {metadata.model.includes('gemini') && (
+                  <span className="model-provider">Google</span>
+                )}
               </span>
             </div>
           </div>
@@ -131,7 +141,9 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
           {metadata.duration && (
             <div className="metadata-item">
               <span className="metadata-label">Response Time:</span>
-              <span className={`metadata-value duration-value ${metadata.duration > 5000 ? 'slow' : metadata.duration > 2000 ? 'medium' : 'fast'}`}>
+              <span
+                className={`metadata-value duration-value ${metadata.duration > 5000 ? 'slow' : metadata.duration > 2000 ? 'medium' : 'fast'}`}
+              >
                 {formatDuration(metadata.duration)}
               </span>
             </div>
@@ -139,7 +151,9 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
           {metadata.finishReason && (
             <div className="metadata-item">
               <span className="metadata-label">Completion:</span>
-              <span className={`metadata-value finish-reason ${metadata.finishReason}`}>
+              <span
+                className={`metadata-value finish-reason ${metadata.finishReason}`}
+              >
                 {metadata.finishReason}
                 {metadata.finishReason === 'stop' && ' ✅'}
                 {metadata.finishReason === 'length' && ' ⚠️'}
@@ -150,7 +164,9 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
         </div>
 
         {/* Token Usage */}
-        {(metadata.totalTokens || metadata.inputTokens || metadata.outputTokens) && (
+        {(metadata.totalTokens ||
+          metadata.inputTokens ||
+          metadata.outputTokens) && (
           <div className="metadata-section">
             <div className="metadata-section-title">Token Usage</div>
             {metadata.totalTokens && (
@@ -194,7 +210,9 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
             <div className="metadata-section-title">Cost</div>
             <div className="metadata-item">
               <span className="metadata-label">Estimated Cost:</span>
-              <span className={`metadata-value cost-value ${metadata.cost > costWarningThreshold ? 'cost-warning' : ''}`}>
+              <span
+                className={`metadata-value cost-value ${metadata.cost > costWarningThreshold ? 'cost-warning' : ''}`}
+              >
                 {formatCost(metadata.cost)}
               </span>
             </div>
@@ -244,4 +262,4 @@ export const MessageMetadata: FC<MessageMetadataProps> = ({
   );
 };
 
-export default MessageMetadata; 
+export default MessageMetadata;

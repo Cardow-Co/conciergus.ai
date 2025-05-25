@@ -2,14 +2,14 @@ import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
 import { SecureErrorHandler } from '../security/SecureErrorHandler';
 import { SecurityUtils } from '../security/SecurityUtils';
 import { getSecurityCore } from '../security/SecurityCore';
-import { 
+import {
   createEnhancedRateLimitingMiddleware,
   createEndpointRateLimitMiddleware,
   createAdaptiveRateLimitMiddleware,
   standardApiRateLimit,
   strictRateLimit,
   lenientRateLimit,
-  type EnhancedRateLimitOptions
+  type EnhancedRateLimitOptions,
 } from './EnhancedRateLimitingMiddleware';
 
 /**
@@ -76,24 +76,27 @@ export interface MiddlewareConfig {
  * Enterprise middleware pipeline for request/response processing
  */
 export class ConciergusMiddlewarePipeline {
-   private middlewares: Map<string, { fn: MiddlewareFunction; config: MiddlewareConfig }> = new Map();
-   private static instance: ConciergusMiddlewarePipeline | null = null;
-   private securityEnabled: boolean;
+  private middlewares: Map<
+    string,
+    { fn: MiddlewareFunction; config: MiddlewareConfig }
+  > = new Map();
+  private static instance: ConciergusMiddlewarePipeline | null = null;
+  private securityEnabled: boolean;
 
-   constructor() {
-     const securityCore = getSecurityCore();
-     this.securityEnabled = securityCore.getConfig().level !== 'relaxed';
-   }
+  constructor() {
+    const securityCore = getSecurityCore();
+    this.securityEnabled = securityCore.getConfig().level !== 'relaxed';
+  }
 
-   /**
-    * Get singleton instance
-    */
-   static getInstance(): ConciergusMiddlewarePipeline {
-     if (!this.instance) {
-       this.instance = new ConciergusMiddlewarePipeline();
-     }
-     return this.instance;
-   }
+  /**
+   * Get singleton instance
+   */
+  static getInstance(): ConciergusMiddlewarePipeline {
+    if (!this.instance) {
+      this.instance = new ConciergusMiddlewarePipeline();
+    }
+    return this.instance;
+  }
 
   /**
    * Reset singleton instance (useful for testing)
@@ -105,7 +108,7 @@ export class ConciergusMiddlewarePipeline {
   /**
    * Register a middleware
    */
-use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
+  use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
     if (!config.name) {
       throw new Error('Middleware name is required');
     }
@@ -115,8 +118,8 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
     if (this.middlewares.has(config.name)) {
       console.warn(`Middleware "${config.name}" is being overwritten`);
     }
-     this.middlewares.set(config.name, { fn: middleware, config });
-   }
+    this.middlewares.set(config.name, { fn: middleware, config });
+  }
 
   /**
    * Remove a middleware
@@ -128,7 +131,10 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
   /**
    * Execute the middleware pipeline
    */
-  async execute(context: MiddlewareContext, handler?: () => Promise<any>): Promise<MiddlewareContext> {
+  async execute(
+    context: MiddlewareContext,
+    handler?: () => Promise<any>
+  ): Promise<MiddlewareContext> {
     return ConciergusOpenTelemetry.createSpan(
       'conciergus-middleware',
       'middleware-pipeline-execution',
@@ -138,7 +144,7 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
           'middleware.request.method': context.request.method,
           'middleware.request.id': context.request.id,
           'middleware.count': this.middlewares.size,
-          'security.enabled': this.securityEnabled
+          'security.enabled': this.securityEnabled,
         });
 
         // Sort middlewares by priority
@@ -155,9 +161,9 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
 
           const middlewareEntry = sortedMiddlewares[currentIndex++];
           if (!middlewareEntry) return;
-          
+
           const { fn: middleware, config } = middlewareEntry;
-          
+
           await ConciergusOpenTelemetry.createSpan(
             'conciergus-middleware',
             `middleware-${config.name}`,
@@ -179,7 +185,7 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
 
         try {
           await next();
-          
+
           span?.setAttributes({
             'middleware.response.status': context.response?.status || 0,
             'middleware.response.duration': context.response?.duration || 0,
@@ -199,34 +205,48 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
   /**
    * Check if middleware should execute based on conditions
    */
-  private shouldExecute(config: MiddlewareConfig, context: MiddlewareContext): boolean {
+  private shouldExecute(
+    config: MiddlewareConfig,
+    context: MiddlewareContext
+  ): boolean {
     if (!config.enabled) return false;
 
     const { conditions } = config;
     if (!conditions) return true;
 
-// Check path conditions
-     if (conditions.paths && !conditions.paths.some(path => 
-      context.request.url.includes(path) || (() => {
-        try {
-          return new RegExp(path).test(context.request.url);
-        } catch {
-          // Treat invalid regex as literal string match
-          return false;
-        }
-      })()
-     )) {
-       return false;
-     }
+    // Check path conditions
+    if (
+      conditions.paths &&
+      !conditions.paths.some(
+        (path) =>
+          context.request.url.includes(path) ||
+          (() => {
+            try {
+              return new RegExp(path).test(context.request.url);
+            } catch {
+              // Treat invalid regex as literal string match
+              return false;
+            }
+          })()
+      )
+    ) {
+      return false;
+    }
 
     // Check method conditions
-    if (conditions.methods && !conditions.methods.includes(context.request.method)) {
+    if (
+      conditions.methods &&
+      !conditions.methods.includes(context.request.method)
+    ) {
       return false;
     }
 
     // Check user role conditions
-    if (conditions.userRoles && context.user && 
-        !conditions.userRoles.some(role => context.user!.roles.includes(role))) {
+    if (
+      conditions.userRoles &&
+      context.user &&
+      !conditions.userRoles.some((role) => context.user!.roles.includes(role))
+    ) {
       return false;
     }
 
@@ -263,10 +283,10 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
         conditions: {
           paths: ['/api/*'],
           methods: ['GET', 'POST', 'PUT', 'DELETE'],
-          userRoles: ['admin']
-        }
+          userRoles: ['admin'],
+        },
       };
-      
+
       if (options) {
         config.options = options;
       }
@@ -279,7 +299,10 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
    * Add endpoint-specific rate limiting
    */
   useEndpointRateLimit(
-    endpointConfigs: Record<string, Partial<import('../security/RateLimitingEngine').RateLimitConfig>>,
+    endpointConfigs: Record<
+      string,
+      Partial<import('../security/RateLimitingEngine').RateLimitConfig>
+    >,
     globalOptions?: EnhancedRateLimitOptions
   ): void {
     if (this.securityEnabled) {
@@ -290,15 +313,18 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
         conditions: {
           paths: Object.keys(endpointConfigs),
           methods: ['GET', 'POST', 'PUT', 'DELETE'],
-          userRoles: ['admin']
-        }
+          userRoles: ['admin'],
+        },
       };
-      
+
       if (globalOptions) {
         config.options = globalOptions;
       }
 
-      this.use(config, createEndpointRateLimitMiddleware(endpointConfigs, globalOptions));
+      this.use(
+        config,
+        createEndpointRateLimitMiddleware(endpointConfigs, globalOptions)
+      );
     }
   }
 
@@ -314,10 +340,10 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
         conditions: {
           paths: ['/api/*'],
           methods: ['GET', 'POST', 'PUT', 'DELETE'],
-          userRoles: ['admin']
-        }
+          userRoles: ['admin'],
+        },
       };
-      
+
       if (options) {
         config.options = options;
       }
@@ -332,16 +358,20 @@ use(config: MiddlewareConfig, middleware: MiddlewareFunction): void {
  */
 export const loggingMiddleware: MiddlewareFunction = async (context, next) => {
   const startTime = Date.now();
-  
-  console.log(`🔄 ${context.request.method} ${context.request.url} - ${context.request.id}`);
-  
+
+  console.log(
+    `🔄 ${context.request.method} ${context.request.url} - ${context.request.id}`
+  );
+
   await next();
-  
+
   const duration = Date.now() - startTime;
   const status = context.response?.status || 'unknown';
-  
-  console.log(`✅ ${context.request.method} ${context.request.url} - ${status} (${duration}ms)`);
-  
+
+  console.log(
+    `✅ ${context.request.method} ${context.request.url} - ${status} (${duration}ms)`
+  );
+
   // Record metrics
   ConciergusOpenTelemetry.recordMetric(
     'conciergus-middleware',
@@ -364,7 +394,7 @@ export const rateLimitingMiddleware = (options: {
   keyGenerator?: (context: MiddlewareContext) => string;
 }): MiddlewareFunction => {
   const requests = new Map<string, { count: number; resetTime: number }>();
-  
+
   const cleanupInterval = setInterval(() => {
     const windowStart = Date.now() - options.windowMs;
     for (const [k, v] of requests.entries()) {
@@ -374,15 +404,20 @@ export const rateLimitingMiddleware = (options: {
     }
   }, options.windowMs);
 
-   return async (context, next) => {
-     const key = options.keyGenerator ? 
-       options.keyGenerator(context) : 
-       context.user?.id || context.request.headers['x-forwarded-for'] || 'anonymous';
-     
-     const now = Date.now();
-    
-    const current = requests.get(key) || { count: 0, resetTime: now + options.windowMs };
-    
+  return async (context, next) => {
+    const key = options.keyGenerator
+      ? options.keyGenerator(context)
+      : context.user?.id ||
+        context.request.headers['x-forwarded-for'] ||
+        'anonymous';
+
+    const now = Date.now();
+
+    const current = requests.get(key) || {
+      count: 0,
+      resetTime: now + options.windowMs,
+    };
+
     if (current.count >= options.maxRequests && current.resetTime > now) {
       context.response = {
         status: 429,
@@ -396,10 +431,10 @@ export const rateLimitingMiddleware = (options: {
       context.aborted = true;
       return;
     }
-    
+
     current.count++;
     requests.set(key, current);
-    
+
     await next();
   };
 };
@@ -409,11 +444,15 @@ export const rateLimitingMiddleware = (options: {
  */
 export const authenticationMiddleware = (options: {
   required?: boolean;
-  validateToken?: (token: string) => Promise<{ id: string; roles: string[]; permissions: string[] } | null>;
+  validateToken?: (
+    token: string
+  ) => Promise<{ id: string; roles: string[]; permissions: string[] } | null>;
 }): MiddlewareFunction => {
   return async (context, next) => {
-    const authHeader = context.request.headers.authorization || context.request.headers.Authorization;
-    
+    const authHeader =
+      context.request.headers.authorization ||
+      context.request.headers.Authorization;
+
     if (!authHeader) {
       if (options.required) {
         context.response = {
@@ -426,9 +465,9 @@ export const authenticationMiddleware = (options: {
       await next();
       return;
     }
-    
+
     const token = authHeader.replace(/^Bearer\s+/, '');
-    
+
     if (options.validateToken) {
       try {
         const user = await options.validateToken(token);
@@ -453,7 +492,7 @@ export const authenticationMiddleware = (options: {
         }
       }
     }
-    
+
     await next();
   };
 };
@@ -461,9 +500,12 @@ export const authenticationMiddleware = (options: {
 /**
  * Security headers middleware
  */
-export const securityHeadersMiddleware: MiddlewareFunction = async (context, next) => {
+export const securityHeadersMiddleware: MiddlewareFunction = async (
+  context,
+  next
+) => {
   await next();
-  
+
   if (context.response) {
     context.response.headers = {
       ...context.response.headers,
@@ -480,7 +522,10 @@ export const securityHeadersMiddleware: MiddlewareFunction = async (context, nex
 /**
  * Error handling middleware - now with secure error handling
  */
-export const errorHandlingMiddleware: MiddlewareFunction = async (context, next) => {
+export const errorHandlingMiddleware: MiddlewareFunction = async (
+  context,
+  next
+) => {
   try {
     await next();
   } catch (error) {
@@ -493,16 +538,18 @@ export const errorHandlingMiddleware: MiddlewareFunction = async (context, next)
         method: context.request.method,
         timestamp: context.timestamp,
         userAgent: context.request.headers['user-agent'],
-        clientId: context.user?.id
+        clientId: context.user?.id,
       }
     );
-    
+
     // Set secure response
     context.response = {
-      status: SecureErrorHandler.getHttpStatusFromErrorType(sanitizedError.type),
+      status: SecureErrorHandler.getHttpStatusFromErrorType(
+        sanitizedError.type
+      ),
       headers: {
         'Content-Type': 'application/json',
-        'X-Request-ID': context.request.id
+        'X-Request-ID': context.request.id,
       },
       body: sanitizedError,
     };
@@ -523,30 +570,37 @@ export const corsMiddleware = (options: {
 }): MiddlewareFunction => {
   return async (context, next) => {
     const origin = context.request.headers.origin;
-    const allowedOrigin = options.origins && origin && options.origins.includes(origin) 
-      ? origin 
-      : options.origins?.[0] || '*';
-    
+    const allowedOrigin =
+      options.origins && origin && options.origins.includes(origin)
+        ? origin
+        : options.origins?.[0] || '*';
+
     if (context.request.method === 'OPTIONS') {
       context.response = {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': allowedOrigin,
-          'Access-Control-Allow-Methods': options.methods?.join(', ') || 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': options.headers?.join(', ') || 'Content-Type, Authorization',
-          'Access-Control-Allow-Credentials': String(options.credentials || false),
+          'Access-Control-Allow-Methods':
+            options.methods?.join(', ') || 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers':
+            options.headers?.join(', ') || 'Content-Type, Authorization',
+          'Access-Control-Allow-Credentials': String(
+            options.credentials || false
+          ),
         },
       };
       return;
     }
-    
+
     await next();
-    
+
     if (context.response) {
       context.response.headers = {
         ...context.response.headers,
         'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Credentials': String(options.credentials || false),
+        'Access-Control-Allow-Credentials': String(
+          options.credentials || false
+        ),
       };
     }
   };
@@ -564,9 +618,9 @@ export const transformationMiddleware = (options: {
     if (options.transformRequest && context.request.body) {
       context.request.body = options.transformRequest(context.request.body);
     }
-    
+
     await next();
-    
+
     // Transform response
     if (options.transformResponse && context.response?.body) {
       context.response.body = options.transformResponse(context.response.body);
@@ -579,10 +633,10 @@ export const transformationMiddleware = (options: {
  */
 export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
   const pipeline = new ConciergusMiddlewarePipeline();
-  
+
   const securityCore = getSecurityCore();
   const config = securityCore.getConfig();
-  
+
   // Add rate limiting based on security level
   switch (config.level) {
     case 'enterprise':
@@ -594,8 +648,8 @@ export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
           windowMs: 60000,
           maxRequests: 20,
           burstLimit: 5,
-          ddosProtection: 'enterprise' as any
-        }
+          ddosProtection: 'enterprise' as any,
+        },
       });
       break;
     case 'strict':
@@ -606,8 +660,8 @@ export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
           strategy: 'combined' as any,
           windowMs: 60000,
           maxRequests: 50,
-          ddosProtection: 'advanced' as any
-        }
+          ddosProtection: 'advanced' as any,
+        },
       });
       break;
     case 'standard':
@@ -618,8 +672,8 @@ export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
           strategy: 'combined' as any,
           windowMs: 60000,
           maxRequests: 100,
-          ddosProtection: 'basic' as any
-        }
+          ddosProtection: 'basic' as any,
+        },
       });
       break;
     case 'relaxed':
@@ -630,8 +684,8 @@ export function createSecureMiddlewarePipeline(): ConciergusMiddlewarePipeline {
           strategy: 'ip_based' as any,
           windowMs: 60000,
           maxRequests: 1000,
-          ddosProtection: 'basic' as any
-        }
+          ddosProtection: 'basic' as any,
+        },
       });
       break;
   }
@@ -653,8 +707,8 @@ export function createRateLimitingMiddleware(
       algorithm: 'fixed_window' as any,
       strategy: 'ip_based' as any,
       windowMs,
-      maxRequests
-    }
+      maxRequests,
+    },
   });
 }
 
@@ -666,5 +720,5 @@ export {
   standardApiRateLimit,
   strictRateLimit,
   lenientRateLimit,
-  type EnhancedRateLimitOptions
-}; 
+  type EnhancedRateLimitOptions,
+};

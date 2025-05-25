@@ -8,11 +8,11 @@ export * from './context/useConciergus';
 
 // Enhanced AI SDK 5 Integration (Core)
 export * from './context/EnhancedConciergusContext';
-export { 
+export {
   UnifiedConciergusProvider,
   ConciergusProvider,
   migrateToEnhancedConfig,
-  validateProviderConfig
+  validateProviderConfig,
 } from './context/UnifiedConciergusProvider';
 
 // Core Components (most commonly used)
@@ -43,7 +43,7 @@ export {
   createSecureRateLimitingEngine,
   RateLimitAlgorithm,
   RateLimitStrategy,
-  DDoSProtectionLevel
+  DDoSProtectionLevel,
 } from './security';
 
 // Middleware Infrastructure (New)
@@ -60,7 +60,7 @@ export {
   createBasicRateLimitMiddleware,
   type MiddlewareFunction,
   type MiddlewareContext,
-  type EnhancedRateLimitOptions
+  type EnhancedRateLimitOptions,
 } from './middleware';
 
 // Enterprise Examples (lightweight demo)

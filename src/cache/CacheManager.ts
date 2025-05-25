@@ -4,7 +4,12 @@
  */
 
 import { EventEmitter } from 'events';
-import { RedisCache, type RedisCacheConfig, type CacheStats, type CachePattern } from './RedisCache';
+import {
+  RedisCache,
+  type RedisCacheConfig,
+  type CacheStats,
+  type CachePattern,
+} from './RedisCache';
 import { MemoryCache, type MemoryCacheConfig } from './MemoryCache';
 import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
 
@@ -97,7 +102,9 @@ export class CacheManager extends EventEmitter {
       this.startHealthChecking();
       this.initialized = true;
       this.emit('initialized');
-      console.log(`✅ Cache manager initialized with provider: ${this.activeProvider}`);
+      console.log(
+        `✅ Cache manager initialized with provider: ${this.activeProvider}`
+      );
     } catch (error) {
       this.emit('error', error);
       throw new Error(`Failed to initialize cache manager: ${error}`);
@@ -120,7 +127,7 @@ export class CacheManager extends EventEmitter {
           this.redisCache = new RedisCache(this.config.redis);
           await this.redisCache.connect();
           this.activeProvider = 'redis';
-          
+
           // Setup Redis event handlers
           this.redisCache.on('error', (error) => {
             console.error('Redis cache error:', error);
@@ -132,7 +139,10 @@ export class CacheManager extends EventEmitter {
             this.handleRedisFailure(new Error('Redis disconnected'));
           });
         } catch (error) {
-          console.warn('Failed to connect to Redis, falling back to memory cache:', error);
+          console.warn(
+            'Failed to connect to Redis, falling back to memory cache:',
+            error
+          );
           this.handleRedisFailure(error as Error);
         }
       }
@@ -152,8 +162,11 @@ export class CacheManager extends EventEmitter {
    */
   private handleRedisFailure(error: Error): void {
     this.emit('redis-failure', error);
-    
-    if (this.config.fallback.enabled && this.config.fallback.strategy === 'memory') {
+
+    if (
+      this.config.fallback.enabled &&
+      this.config.fallback.strategy === 'memory'
+    ) {
       this.activeProvider = 'memory';
       this.startRetryTimer();
       console.log('🔄 Switched to memory cache fallback');
@@ -164,7 +177,10 @@ export class CacheManager extends EventEmitter {
    * Start retry timer for Redis reconnection
    */
   private startRetryTimer(): void {
-    if (this.retryTimer || this.retryAttempts >= this.config.fallback.maxRetries) {
+    if (
+      this.retryTimer ||
+      this.retryAttempts >= this.config.fallback.maxRetries
+    ) {
       return;
     }
 
@@ -181,7 +197,7 @@ export class CacheManager extends EventEmitter {
       } catch (error) {
         this.retryAttempts++;
         this.retryTimer = null;
-        
+
         if (this.retryAttempts < this.config.fallback.maxRetries) {
           this.startRetryTimer();
         } else {
@@ -205,7 +221,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: new Error('No cache provider available')
+        error: new Error('No cache provider available'),
       };
     }
 
@@ -216,7 +232,7 @@ export class CacheManager extends EventEmitter {
         value: value || undefined,
         fromCache: value !== null,
         provider: this.activeProvider,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
       };
 
       // Check for prefetch opportunity
@@ -224,10 +240,10 @@ export class CacheManager extends EventEmitter {
         this.considerPrefetch(key);
       }
 
-      this.recordMetric('cache_operation', 1, { 
-        operation: 'get', 
+      this.recordMetric('cache_operation', 1, {
+        operation: 'get',
         provider: this.activeProvider,
-        hit: result.fromCache
+        hit: result.fromCache,
       });
 
       return result;
@@ -237,7 +253,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -246,9 +262,9 @@ export class CacheManager extends EventEmitter {
    * Set value in cache
    */
   async set<T>(
-    key: string, 
-    value: T, 
-    ttl?: number, 
+    key: string,
+    value: T,
+    ttl?: number,
     metadata?: Record<string, any>
   ): Promise<CacheResult<void>> {
     const startTime = Date.now();
@@ -264,23 +280,23 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: new Error('No cache provider available')
+        error: new Error('No cache provider available'),
       };
     }
 
     try {
       await cache.set(key, value, ttl, metadata);
-      
-      this.recordMetric('cache_operation', 1, { 
-        operation: 'set', 
-        provider: this.activeProvider 
+
+      this.recordMetric('cache_operation', 1, {
+        operation: 'set',
+        provider: this.activeProvider,
       });
 
       return {
         success: true,
         fromCache: false,
         provider: this.activeProvider,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
       };
     } catch (error) {
       return {
@@ -288,7 +304,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -310,16 +326,16 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: new Error('No cache provider available')
+        error: new Error('No cache provider available'),
       };
     }
 
     try {
       const deleted = await cache.delete(key);
-      
-      this.recordMetric('cache_operation', 1, { 
-        operation: 'delete', 
-        provider: this.activeProvider 
+
+      this.recordMetric('cache_operation', 1, {
+        operation: 'delete',
+        provider: this.activeProvider,
       });
 
       return {
@@ -327,7 +343,7 @@ export class CacheManager extends EventEmitter {
         value: deleted,
         fromCache: false,
         provider: this.activeProvider,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
       };
     } catch (error) {
       return {
@@ -335,7 +351,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -353,19 +369,19 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: new Error('No cache provider available')
+        error: new Error('No cache provider available'),
       };
     }
 
     try {
       const exists = await cache.exists(key);
-      
+
       return {
         success: true,
         value: exists,
         fromCache: true,
         provider: this.activeProvider,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
       };
     } catch (error) {
       return {
@@ -373,7 +389,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -391,16 +407,16 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: new Error('No cache provider available')
+        error: new Error('No cache provider available'),
       };
     }
 
     try {
       const cleared = await cache.clear(pattern);
-      
-      this.recordMetric('cache_operation', 1, { 
-        operation: 'clear', 
-        provider: this.activeProvider 
+
+      this.recordMetric('cache_operation', 1, {
+        operation: 'clear',
+        provider: this.activeProvider,
       });
 
       return {
@@ -408,7 +424,7 @@ export class CacheManager extends EventEmitter {
         value: cleared,
         fromCache: false,
         provider: this.activeProvider,
-        latency: Date.now() - startTime
+        latency: Date.now() - startTime,
       };
     } catch (error) {
       return {
@@ -416,7 +432,7 @@ export class CacheManager extends EventEmitter {
         fromCache: false,
         provider: this.activeProvider,
         latency: Date.now() - startTime,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -449,17 +465,22 @@ export class CacheManager extends EventEmitter {
     this.batchQueue = [];
 
     const results: CacheResult<any>[] = [];
-    
+
     for (const operation of batch) {
       try {
         let result: CacheResult<any>;
-        
+
         switch (operation.type) {
           case 'get':
             result = await this.get(operation.key);
             break;
           case 'set':
-            result = await this.set(operation.key, operation.value, operation.ttl, operation.metadata);
+            result = await this.set(
+              operation.key,
+              operation.value,
+              operation.ttl,
+              operation.metadata
+            );
             break;
           case 'delete':
             result = await this.delete(operation.key);
@@ -470,10 +491,10 @@ export class CacheManager extends EventEmitter {
               fromCache: false,
               provider: this.activeProvider,
               latency: 0,
-              error: new Error(`Unknown operation: ${(operation as any).type}`)
+              error: new Error(`Unknown operation: ${(operation as any).type}`),
             };
         }
-        
+
         results.push(result);
       } catch (error) {
         results.push({
@@ -481,7 +502,7 @@ export class CacheManager extends EventEmitter {
           fromCache: false,
           provider: this.activeProvider,
           latency: 0,
-          error: error as Error
+          error: error as Error,
         });
       }
     }
@@ -508,7 +529,7 @@ export class CacheManager extends EventEmitter {
       success: true,
       fromCache: false,
       provider: this.activeProvider,
-      latency: 0
+      latency: 0,
     };
   }
 
@@ -540,7 +561,7 @@ export class CacheManager extends EventEmitter {
     // Simple prefetch strategy - prefetch related keys based on patterns
     // This can be enhanced with ML-based predictions
     const relatedKeys = this.generatePrefetchKeys(key);
-    
+
     for (const relatedKey of relatedKeys) {
       this.prefetchQueue.add(relatedKey);
     }
@@ -548,7 +569,7 @@ export class CacheManager extends EventEmitter {
     // Limit prefetch queue size
     if (this.prefetchQueue.size > 100) {
       const keysToRemove = Array.from(this.prefetchQueue).slice(0, 50);
-      keysToRemove.forEach(k => this.prefetchQueue.delete(k));
+      keysToRemove.forEach((k) => this.prefetchQueue.delete(k));
     }
   }
 
@@ -557,7 +578,7 @@ export class CacheManager extends EventEmitter {
    */
   private generatePrefetchKeys(key: string): string[] {
     const keys: string[] = [];
-    
+
     // Example patterns - customize based on your application
     if (key.includes(':')) {
       const parts = key.split(':');
@@ -588,7 +609,7 @@ export class CacheManager extends EventEmitter {
    */
   private async performHealthCheck(): Promise<void> {
     const cache = this.getActiveCache();
-    
+
     if (!cache) {
       this.emit('health-check', { healthy: false, provider: 'none' });
       return;
@@ -597,35 +618,41 @@ export class CacheManager extends EventEmitter {
     try {
       const testKey = '__health_check__';
       const testValue = Date.now();
-      
+
       await cache.set(testKey, testValue, 10); // 10 second TTL
       const retrieved = await cache.get(testKey);
       await cache.delete(testKey);
-      
+
       const healthy = retrieved === testValue;
-      
-      this.emit('health-check', { 
-        healthy, 
+
+      this.emit('health-check', {
+        healthy,
         provider: this.activeProvider,
-        latency: Date.now() - testValue
+        latency: Date.now() - testValue,
       });
-      
+
       if (healthy) {
-        this.recordMetric('cache_health_check', 1, { healthy: true, provider: this.activeProvider });
+        this.recordMetric('cache_health_check', 1, {
+          healthy: true,
+          provider: this.activeProvider,
+        });
       } else {
-        this.recordMetric('cache_health_check', 0, { healthy: false, provider: this.activeProvider });
+        this.recordMetric('cache_health_check', 0, {
+          healthy: false,
+          provider: this.activeProvider,
+        });
       }
     } catch (error) {
-      this.emit('health-check', { 
-        healthy: false, 
+      this.emit('health-check', {
+        healthy: false,
         provider: this.activeProvider,
-        error: error as Error
+        error: error as Error,
       });
-      
-      this.recordMetric('cache_health_check', 0, { 
-        healthy: false, 
+
+      this.recordMetric('cache_health_check', 0, {
+        healthy: false,
         provider: this.activeProvider,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
   }
@@ -635,7 +662,9 @@ export class CacheManager extends EventEmitter {
    */
   private getActiveCache(): RedisCache | MemoryCache | null {
     if (this.activeProvider === 'redis') {
-      return this.redisCache && this.redisCache.isConnected() ? this.redisCache : this.memoryCache;
+      return this.redisCache && this.redisCache.isConnected()
+        ? this.redisCache
+        : this.memoryCache;
     }
     return this.memoryCache;
   }
@@ -643,7 +672,11 @@ export class CacheManager extends EventEmitter {
   /**
    * Record performance metrics
    */
-  private recordMetric(metric: string, value: number, labels: Record<string, any> = {}): void {
+  private recordMetric(
+    metric: string,
+    value: number,
+    labels: Record<string, any> = {}
+  ): void {
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         metric as any,
@@ -706,4 +739,4 @@ export class CacheManager extends EventEmitter {
     this.emit('shutdown');
     console.log('🔌 Cache manager shutdown complete');
   }
-} 
+}

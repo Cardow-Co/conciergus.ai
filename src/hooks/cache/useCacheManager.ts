@@ -4,7 +4,12 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { CacheManager, createCacheManagerFromEnv, type CacheManagerConfig, type CacheResult } from '../../cache';
+import {
+  CacheManager,
+  createCacheManagerFromEnv,
+  type CacheManagerConfig,
+  type CacheResult,
+} from '../../cache';
 
 /**
  * Cache manager hook configuration
@@ -25,12 +30,12 @@ export interface UseCacheManagerReturn {
   isHealthy: boolean;
   isLoading: boolean;
   error: Error | null;
-  
+
   // Operations
   initialize: () => Promise<boolean>;
   shutdown: () => Promise<void>;
   checkHealth: () => Promise<boolean>;
-  
+
   // Convenience methods
   get: <T>(key: string) => Promise<CacheResult<T>>;
   set: <T>(key: string, value: T, ttl?: number) => Promise<CacheResult<void>>;
@@ -41,7 +46,9 @@ export interface UseCacheManagerReturn {
 /**
  * Cache manager hook
  */
-export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheManagerReturn {
+export function useCacheManager(
+  config: UseCacheManagerConfig = {}
+): UseCacheManagerReturn {
   const {
     config: cacheConfig,
     autoInitialize = true,
@@ -108,7 +115,7 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
 
         await manager.initialize();
         setCacheManager(manager);
-        
+
         return true;
       } catch (err) {
         const error = err as Error;
@@ -140,7 +147,7 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
       } catch (error) {
         console.warn('Error during cache manager shutdown:', error);
       }
-      
+
       setCacheManager(null);
       setIsInitialized(false);
       setIsHealthy(false);
@@ -158,14 +165,14 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
     try {
       const testKey = '__health_check__';
       const testValue = Date.now();
-      
+
       await cacheManager.set(testKey, testValue, 10);
       const result = await cacheManager.get(testKey);
       await cacheManager.delete(testKey);
-      
+
       const healthy = result.success && result.value === testValue;
       setIsHealthy(healthy);
-      
+
       return healthy;
     } catch (error) {
       setIsHealthy(false);
@@ -176,70 +183,86 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
   /**
    * Convenience method: get value
    */
-  const get = useCallback(async <T>(key: string): Promise<CacheResult<T>> => {
-    if (!cacheManager) {
-      return {
-        success: false,
-        fromCache: false,
-        provider: 'memory',
-        latency: 0,
-        error: new Error('Cache manager not initialized'),
-      };
-    }
+  const get = useCallback(
+    async <T>(key: string): Promise<CacheResult<T>> => {
+      if (!cacheManager) {
+        return {
+          success: false,
+          fromCache: false,
+          provider: 'memory',
+          latency: 0,
+          error: new Error('Cache manager not initialized'),
+        };
+      }
 
-    return await cacheManager.get<T>(key);
-  }, [cacheManager]);
+      return await cacheManager.get<T>(key);
+    },
+    [cacheManager]
+  );
 
   /**
    * Convenience method: set value
    */
-  const set = useCallback(async <T>(key: string, value: T, ttl?: number): Promise<CacheResult<void>> => {
-    if (!cacheManager) {
-      return {
-        success: false,
-        fromCache: false,
-        provider: 'memory',
-        latency: 0,
-        error: new Error('Cache manager not initialized'),
-      };
-    }
+  const set = useCallback(
+    async <T>(
+      key: string,
+      value: T,
+      ttl?: number
+    ): Promise<CacheResult<void>> => {
+      if (!cacheManager) {
+        return {
+          success: false,
+          fromCache: false,
+          provider: 'memory',
+          latency: 0,
+          error: new Error('Cache manager not initialized'),
+        };
+      }
 
-    return await cacheManager.set(key, value, ttl);
-  }, [cacheManager]);
+      return await cacheManager.set(key, value, ttl);
+    },
+    [cacheManager]
+  );
 
   /**
    * Convenience method: delete key
    */
-  const deleteKey = useCallback(async (key: string): Promise<CacheResult<boolean>> => {
-    if (!cacheManager) {
-      return {
-        success: false,
-        fromCache: false,
-        provider: 'memory',
-        latency: 0,
-        error: new Error('Cache manager not initialized'),
-      };
-    }
+  const deleteKey = useCallback(
+    async (key: string): Promise<CacheResult<boolean>> => {
+      if (!cacheManager) {
+        return {
+          success: false,
+          fromCache: false,
+          provider: 'memory',
+          latency: 0,
+          error: new Error('Cache manager not initialized'),
+        };
+      }
 
-    return await cacheManager.delete(key);
-  }, [cacheManager]);
+      return await cacheManager.delete(key);
+    },
+    [cacheManager]
+  );
 
   /**
    * Convenience method: clear cache
    */
-  const clear = useCallback(async (pattern?: string): Promise<CacheResult<number>> => {
-    if (!cacheManager) {
-      return {
-        success: false,
-        fromCache: false,
-        provider: 'memory',
-        latency: 0,
-        error: new Error('Cache manager not initialized'),
-      };
-    }
+  const clear = useCallback(
+    async (pattern?: string): Promise<CacheResult<number>> => {
+      if (!cacheManager) {
+        return {
+          success: false,
+          fromCache: false,
+          provider: 'memory',
+          latency: 0,
+          error: new Error('Cache manager not initialized'),
+        };
+      }
 
-    return await cacheManager.clear(pattern);
-  }, [cacheManager]);
+      return await cacheManager.clear(pattern);
+    },
+    [cacheManager]
+  );
 
   // Auto-initialize on mount
   useEffect(() => {
@@ -261,7 +284,13 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
         }
       };
     }
-  }, [enableHealthMonitoring, isInitialized, cacheManager, healthCheckInterval, checkHealth]);
+  }, [
+    enableHealthMonitoring,
+    isInitialized,
+    cacheManager,
+    healthCheckInterval,
+    checkHealth,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -284,4 +313,4 @@ export function useCacheManager(config: UseCacheManagerConfig = {}): UseCacheMan
     delete: deleteKey,
     clear,
   };
-} 
+}

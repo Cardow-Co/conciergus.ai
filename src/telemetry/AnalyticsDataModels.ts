@@ -168,7 +168,11 @@ export interface OptimizationInsights {
   costOptimization: {
     potentialSavings: number;
     recommendations: Array<{
-      type: 'model_switch' | 'parameter_tuning' | 'batch_processing' | 'caching';
+      type:
+        | 'model_switch'
+        | 'parameter_tuning'
+        | 'batch_processing'
+        | 'caching';
       description: string;
       estimatedSavings: number;
       effort: 'low' | 'medium' | 'high';
@@ -317,7 +321,11 @@ export interface AnalyticsDashboard {
 export interface AnalyticsEvent {
   id: string;
   timestamp: Date;
-  type: 'operation_completed' | 'cost_threshold_reached' | 'performance_alert' | 'usage_spike';
+  type:
+    | 'operation_completed'
+    | 'cost_threshold_reached'
+    | 'performance_alert'
+    | 'usage_spike';
   data: {
     operationId?: string;
     userId?: string;
@@ -332,4 +340,4 @@ export interface AnalyticsEvent {
   };
   severity: 'info' | 'warning' | 'critical';
   processed: boolean;
-} 
+}

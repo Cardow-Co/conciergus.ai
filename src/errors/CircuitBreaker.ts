@@ -19,17 +19,17 @@ export interface CircuitBreakerConfig {
   failureThreshold: number; // Number of failures before opening
   failurePercentageThreshold: number; // Percentage of failures before opening
   minimumCalls: number; // Minimum calls before evaluating failure rate
-  
+
   // Timing configuration
   timeout: number; // Request timeout in milliseconds
   resetTimeout: number; // Time before transitioning from OPEN to HALF_OPEN
   halfOpenMaxCalls: number; // Max calls allowed in HALF_OPEN state
-  
+
   // Monitoring
   monitoringWindow: number; // Time window for monitoring calls (milliseconds)
   enableMetrics: boolean; // Enable performance metrics
   enableLogging: boolean; // Enable debug logging
-  
+
   // Fallback configuration
   enableFallback: boolean; // Enable fallback execution
   fallbackTimeout: number; // Timeout for fallback execution
@@ -108,11 +108,11 @@ export class CircuitBreaker<T = any> extends EventEmitter {
     super();
     this.name = name;
     this.config = config;
-    
+
     if (this.config.enableMetrics) {
       this.performanceMonitor = PerformanceMonitor.getInstance();
     }
-    
+
     this.log(`Circuit breaker '${name}' initialized in CLOSED state`);
   }
 
@@ -125,21 +125,21 @@ export class CircuitBreaker<T = any> extends EventEmitter {
   ): Promise<CircuitBreakerResult<R>> {
     const startTime = Date.now();
     this.totalCalls++;
-    
+
     // Check if circuit is OPEN
     if (this.state === 'OPEN') {
       if (this.nextAttemptTime && Date.now() < this.nextAttemptTime) {
         this.rejectedCalls++;
         this.recordMetric('circuit_breaker_rejected');
-        
+
         // Try fallback if available
         if (this.config.enableFallback && fallback) {
           return this.executeFallback(fallback, startTime);
         }
-        
+
         const error = new Error(`Circuit breaker '${this.name}' is OPEN`);
         this.emit('call-rejected', { name: this.name, error });
-        
+
         return {
           success: false,
           error,
@@ -153,17 +153,22 @@ export class CircuitBreaker<T = any> extends EventEmitter {
         this.transitionTo('HALF_OPEN');
       }
     }
-    
+
     // Check if we've exceeded half-open max calls
-    if (this.state === 'HALF_OPEN' && this.halfOpenCallCount >= this.config.halfOpenMaxCalls) {
+    if (
+      this.state === 'HALF_OPEN' &&
+      this.halfOpenCallCount >= this.config.halfOpenMaxCalls
+    ) {
       this.rejectedCalls++;
       this.recordMetric('circuit_breaker_rejected');
-      
+
       if (this.config.enableFallback && fallback) {
         return this.executeFallback(fallback, startTime);
       }
-      
-      const error = new Error(`Circuit breaker '${this.name}' half-open call limit exceeded`);
+
+      const error = new Error(
+        `Circuit breaker '${this.name}' half-open call limit exceeded`
+      );
       return {
         success: false,
         error,
@@ -173,15 +178,15 @@ export class CircuitBreaker<T = any> extends EventEmitter {
         attemptNumber: this.totalCalls,
       };
     }
-    
+
     try {
       // Execute the operation with timeout
       const result = await this.executeWithTimeout(operation);
       const executionTime = Date.now() - startTime;
-      
+
       // Record successful call
       this.onSuccess(executionTime);
-      
+
       return {
         success: true,
         data: result,
@@ -190,14 +195,14 @@ export class CircuitBreaker<T = any> extends EventEmitter {
         circuitState: this.state,
         attemptNumber: this.totalCalls,
       };
-      
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      const isTimeout = error instanceof Error && error.message.includes('timeout');
-      
+      const isTimeout =
+        error instanceof Error && error.message.includes('timeout');
+
       // Record failed call
       this.onFailure(error as Error, isTimeout);
-      
+
       // Try fallback if available
       if (this.config.enableFallback && fallback) {
         try {
@@ -214,7 +219,7 @@ export class CircuitBreaker<T = any> extends EventEmitter {
           };
         }
       }
-      
+
       return {
         success: false,
         error: error as Error,
@@ -255,14 +260,14 @@ export class CircuitBreaker<T = any> extends EventEmitter {
     startTime: number
   ): Promise<CircuitBreakerResult<R>> {
     this.fallbackCalls++;
-    
+
     try {
       const result = await this.executeWithTimeout(fallback);
       const executionTime = Date.now() - startTime;
-      
+
       this.recordMetric('circuit_breaker_fallback_success');
       this.emit('fallback-success', { name: this.name, executionTime });
-      
+
       return {
         success: true,
         data: result,
@@ -271,12 +276,11 @@ export class CircuitBreaker<T = any> extends EventEmitter {
         circuitState: this.state,
         attemptNumber: this.totalCalls,
       };
-      
     } catch (error) {
       const executionTime = Date.now() - startTime;
       this.recordMetric('circuit_breaker_fallback_failure');
       this.emit('fallback-failure', { name: this.name, error, executionTime });
-      
+
       return {
         success: false,
         error: error as Error,
@@ -296,19 +300,23 @@ export class CircuitBreaker<T = any> extends EventEmitter {
     this.lastSuccessTime = new Date();
     this.recordCallStats(true, executionTime);
     this.recordResponseTime(executionTime);
-    
+
     this.recordMetric('circuit_breaker_success', executionTime);
-    this.emit('call-success', { name: this.name, executionTime, state: this.state });
-    
+    this.emit('call-success', {
+      name: this.name,
+      executionTime,
+      state: this.state,
+    });
+
     if (this.state === 'HALF_OPEN') {
       this.halfOpenCallCount++;
-      
+
       // Check if we should close the circuit
       if (this.halfOpenCallCount >= this.config.halfOpenMaxCalls) {
         this.transitionTo('CLOSED');
       }
     }
-    
+
     // Reset failure count on success
     this.failureCount = 0;
   }
@@ -319,17 +327,17 @@ export class CircuitBreaker<T = any> extends EventEmitter {
   private onFailure(error: Error, isTimeout: boolean): void {
     this.failedCalls++;
     this.lastFailureTime = new Date();
-    
+
     if (isTimeout) {
       this.timeoutCalls++;
     }
-    
+
     this.failureCount++;
     this.recordCallStats(false, 0, error);
-    
+
     this.recordMetric('circuit_breaker_failure');
     this.emit('call-failure', { name: this.name, error, state: this.state });
-    
+
     if (this.state === 'HALF_OPEN') {
       // Failed call in half-open state should open the circuit
       this.transitionTo('OPEN');
@@ -347,20 +355,22 @@ export class CircuitBreaker<T = any> extends EventEmitter {
   private shouldOpenCircuit(): boolean {
     // Clean old call history
     this.cleanCallHistory();
-    
+
     if (this.callHistory.length < this.config.minimumCalls) {
       return false;
     }
-    
+
     // Check failure count threshold
     if (this.failureCount >= this.config.failureThreshold) {
       return true;
     }
-    
+
     // Check failure percentage threshold
-    const recentFailures = this.callHistory.filter(call => !call.success).length;
+    const recentFailures = this.callHistory.filter(
+      (call) => !call.success
+    ).length;
     const failurePercentage = (recentFailures / this.callHistory.length) * 100;
-    
+
     return failurePercentage >= this.config.failurePercentageThreshold;
   }
 
@@ -371,20 +381,20 @@ export class CircuitBreaker<T = any> extends EventEmitter {
     const previousState = this.state;
     this.state = newState;
     this.stateChangedTime = Date.now();
-    
+
     switch (newState) {
       case 'OPEN':
         this.nextAttemptTime = Date.now() + this.config.resetTimeout;
         this.halfOpenCallCount = 0;
         this.log(`Circuit opened (failure count: ${this.failureCount})`);
         break;
-        
+
       case 'HALF_OPEN':
         this.nextAttemptTime = null;
         this.halfOpenCallCount = 0;
         this.log('Circuit transitioned to half-open');
         break;
-        
+
       case 'CLOSED':
         this.nextAttemptTime = null;
         this.halfOpenCallCount = 0;
@@ -392,7 +402,7 @@ export class CircuitBreaker<T = any> extends EventEmitter {
         this.log('Circuit closed');
         break;
     }
-    
+
     this.recordMetric('circuit_breaker_state_change');
     this.emit('state-change', {
       name: this.name,
@@ -405,14 +415,18 @@ export class CircuitBreaker<T = any> extends EventEmitter {
   /**
    * Record call statistics
    */
-  private recordCallStats(success: boolean, duration: number, error?: Error): void {
+  private recordCallStats(
+    success: boolean,
+    duration: number,
+    error?: Error
+  ): void {
     this.callHistory.push({
       timestamp: Date.now(),
       success,
       duration,
       error,
     });
-    
+
     this.cleanCallHistory();
   }
 
@@ -421,7 +435,9 @@ export class CircuitBreaker<T = any> extends EventEmitter {
    */
   private cleanCallHistory(): void {
     const cutoffTime = Date.now() - this.config.monitoringWindow;
-    this.callHistory = this.callHistory.filter(call => call.timestamp > cutoffTime);
+    this.callHistory = this.callHistory.filter(
+      (call) => call.timestamp > cutoffTime
+    );
   }
 
   /**
@@ -429,7 +445,7 @@ export class CircuitBreaker<T = any> extends EventEmitter {
    */
   private recordResponseTime(time: number): void {
     this.responseTimes.push(time);
-    
+
     // Keep only last 1000 response times
     if (this.responseTimes.length > 1000) {
       this.responseTimes = this.responseTimes.slice(-500);
@@ -458,14 +474,20 @@ export class CircuitBreaker<T = any> extends EventEmitter {
    */
   getMetrics(): CircuitBreakerMetrics {
     this.cleanCallHistory();
-    
-    const averageResponseTime = this.responseTimes.length > 0
-      ? this.responseTimes.reduce((sum, time) => sum + time, 0) / this.responseTimes.length
-      : 0;
-    
-    const successRate = this.totalCalls > 0 ? (this.successfulCalls / this.totalCalls) * 100 : 100;
-    const failureRate = this.totalCalls > 0 ? (this.failedCalls / this.totalCalls) * 100 : 0;
-    
+
+    const averageResponseTime =
+      this.responseTimes.length > 0
+        ? this.responseTimes.reduce((sum, time) => sum + time, 0) /
+          this.responseTimes.length
+        : 0;
+
+    const successRate =
+      this.totalCalls > 0
+        ? (this.successfulCalls / this.totalCalls) * 100
+        : 100;
+    const failureRate =
+      this.totalCalls > 0 ? (this.failedCalls / this.totalCalls) * 100 : 0;
+
     return {
       name: this.name,
       state: this.state,
@@ -481,7 +503,9 @@ export class CircuitBreaker<T = any> extends EventEmitter {
       lastFailureTime: this.lastFailureTime,
       lastSuccessTime: this.lastSuccessTime,
       stateChangedTime: new Date(this.stateChangedTime),
-      nextAttemptTime: this.nextAttemptTime ? new Date(this.nextAttemptTime) : null,
+      nextAttemptTime: this.nextAttemptTime
+        ? new Date(this.nextAttemptTime)
+        : null,
     };
   }
 
@@ -537,4 +561,4 @@ export class CircuitBreaker<T = any> extends EventEmitter {
     this.removeAllListeners();
     this.log('Circuit breaker shutdown');
   }
-} 
+}

@@ -5,49 +5,52 @@
 
 import { EventEmitter } from 'events';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';
-import { AISDKTelemetryIntegration, type AIOperationTelemetry } from './AISDKTelemetryIntegration';
+import {
+  AISDKTelemetryIntegration,
+  type AIOperationTelemetry,
+} from './AISDKTelemetryIntegration';
 import { AnalyticsEngine } from './AnalyticsEngine';
 import { ABTestingFramework } from './ABTestingFramework';
 
 /**
  * Compliance event types for different regulatory frameworks
  */
-export type ComplianceEventType = 
-  | 'data_access'           // GDPR Article 15
-  | 'data_processing'       // GDPR Article 6
-  | 'data_deletion'         // GDPR Article 17
-  | 'data_portability'      // GDPR Article 20
-  | 'consent_given'         // GDPR Article 7
-  | 'consent_withdrawn'     // GDPR Article 7
-  | 'ai_decision_made'      // EU AI Act
-  | 'bias_detection'        // EU AI Act
-  | 'model_explanation'     // EU AI Act
-  | 'audit_access'          // SOX, HIPAA
-  | 'security_incident'     // HIPAA, SOX
-  | 'data_breach'           // GDPR Article 33-34
-  | 'user_rights_request'   // CCPA, GDPR
-  | 'automated_decision'    // GDPR Article 22
-  | 'profiling_activity'    // GDPR Article 22
-  | 'third_party_sharing'   // Various regulations
-  | 'data_anonymization'    // Privacy regulations
-  | 'retention_policy'      // Data governance
+export type ComplianceEventType =
+  | 'data_access' // GDPR Article 15
+  | 'data_processing' // GDPR Article 6
+  | 'data_deletion' // GDPR Article 17
+  | 'data_portability' // GDPR Article 20
+  | 'consent_given' // GDPR Article 7
+  | 'consent_withdrawn' // GDPR Article 7
+  | 'ai_decision_made' // EU AI Act
+  | 'bias_detection' // EU AI Act
+  | 'model_explanation' // EU AI Act
+  | 'audit_access' // SOX, HIPAA
+  | 'security_incident' // HIPAA, SOX
+  | 'data_breach' // GDPR Article 33-34
+  | 'user_rights_request' // CCPA, GDPR
+  | 'automated_decision' // GDPR Article 22
+  | 'profiling_activity' // GDPR Article 22
+  | 'third_party_sharing' // Various regulations
+  | 'data_anonymization' // Privacy regulations
+  | 'retention_policy' // Data governance
   | 'cross_border_transfer' // GDPR Chapter V
-  | 'employee_access';      // Internal governance
+  | 'employee_access'; // Internal governance
 
 /**
  * Compliance framework types
  */
-export type ComplianceFramework = 
-  | 'GDPR'      // General Data Protection Regulation
-  | 'CCPA'      // California Consumer Privacy Act
-  | 'HIPAA'     // Health Insurance Portability and Accountability Act
-  | 'SOX'       // Sarbanes-Oxley Act
-  | 'PCI_DSS'   // Payment Card Industry Data Security Standard
+export type ComplianceFramework =
+  | 'GDPR' // General Data Protection Regulation
+  | 'CCPA' // California Consumer Privacy Act
+  | 'HIPAA' // Health Insurance Portability and Accountability Act
+  | 'SOX' // Sarbanes-Oxley Act
+  | 'PCI_DSS' // Payment Card Industry Data Security Standard
   | 'ISO_27001' // Information Security Management
-  | 'SOC_2'     // Service Organization Control 2
+  | 'SOC_2' // Service Organization Control 2
   | 'EU_AI_ACT' // European Union AI Act
-  | 'NIST'      // NIST AI Risk Management Framework
-  | 'CUSTOM';   // Custom compliance requirements
+  | 'NIST' // NIST AI Risk Management Framework
+  | 'CUSTOM'; // Custom compliance requirements
 
 /**
  * Severity levels for compliance events
@@ -115,7 +118,13 @@ export interface ComplianceLogEntry {
  */
 export interface DataProtectionRights {
   userId: string;
-  requestType: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction' | 'objection';
+  requestType:
+    | 'access'
+    | 'rectification'
+    | 'erasure'
+    | 'portability'
+    | 'restriction'
+    | 'objection';
   requestDate: Date;
   deadline: Date;
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
@@ -141,7 +150,12 @@ export interface ComplianceReport {
   id: string;
   name: string;
   framework: ComplianceFramework;
-  type: 'audit_trail' | 'data_inventory' | 'risk_assessment' | 'incident_report' | 'rights_requests';
+  type:
+    | 'audit_trail'
+    | 'data_inventory'
+    | 'risk_assessment'
+    | 'incident_report'
+    | 'rights_requests';
   period: {
     start: Date;
     end: Date;
@@ -231,7 +245,7 @@ export class ComplianceLogging extends EventEmitter {
   private logs: Map<string, ComplianceLogEntry> = new Map();
   private userRights: Map<string, DataProtectionRights[]> = new Map();
   private reports: Map<string, ComplianceReport> = new Map();
-  
+
   private logBuffer: ComplianceLogEntry[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
@@ -282,9 +296,12 @@ export class ComplianceLogging extends EventEmitter {
 
     // Subscribe to analytics events
     if (this.analyticsEngine) {
-      this.analyticsEngine.on('operation_recorded', (operation: AIOperationTelemetry) => {
-        this.logAIOperation(operation);
-      });
+      this.analyticsEngine.on(
+        'operation_recorded',
+        (operation: AIOperationTelemetry) => {
+          this.logAIOperation(operation);
+        }
+      );
       console.log('Compliance Logging integrated with Analytics Engine');
     }
 
@@ -303,14 +320,14 @@ export class ComplianceLogging extends EventEmitter {
             details: {
               testId: assignment.testId,
               variantId: assignment.variantId,
-              context: assignment.context
-            }
+              context: assignment.context,
+            },
           },
           context: {
             sessionId: assignment.sessionId,
-            environment: process.env.NODE_ENV as any || 'development',
-            legalBasis: 'legitimate_interest'
-          }
+            environment: (process.env.NODE_ENV as any) || 'development',
+            legalBasis: 'legitimate_interest',
+          },
         });
       });
       console.log('Compliance Logging integrated with A/B Testing Framework');
@@ -320,13 +337,15 @@ export class ComplianceLogging extends EventEmitter {
   /**
    * Log a compliance event
    */
-  logEvent(event: Partial<ComplianceLogEntry> & {
-    eventType: ComplianceEventType;
-    framework: ComplianceFramework[];
-    actor: ComplianceLogEntry['actor'];
-    subject: ComplianceLogEntry['subject'];
-    action: ComplianceLogEntry['action'];
-  }): string {
+  logEvent(
+    event: Partial<ComplianceLogEntry> & {
+      eventType: ComplianceEventType;
+      framework: ComplianceFramework[];
+      actor: ComplianceLogEntry['actor'];
+      subject: ComplianceLogEntry['subject'];
+      action: ComplianceLogEntry['action'];
+    }
+  ): string {
     if (!this.config.enabled) {
       return '';
     }
@@ -345,26 +364,31 @@ export class ComplianceLogging extends EventEmitter {
       action: event.action,
       context: {
         environment: 'production',
-        ...event.context
+        ...event.context,
       },
       metadata: {
         tags: event.metadata?.tags || [event.eventType],
         classification: event.metadata?.classification || 'internal',
         retention: {
-          expires: new Date(Date.now() + this.getRetentionPeriod(event.framework) * 24 * 60 * 60 * 1000),
-          policy: this.getRetentionPolicy(event.framework)
+          expires: new Date(
+            Date.now() +
+              this.getRetentionPeriod(event.framework) * 24 * 60 * 60 * 1000
+          ),
+          policy: this.getRetentionPolicy(event.framework),
         },
         encryption: {
           encrypted: this.config.storage.encryption.enabled,
-          algorithm: this.config.storage.encryption.enabled ? this.config.storage.encryption.algorithm : undefined
-        }
+          algorithm: this.config.storage.encryption.enabled
+            ? this.config.storage.encryption.algorithm
+            : undefined,
+        },
       },
       audit: {
         immutable: true,
         checksum: this.calculateChecksum(event),
         signature: this.generateSignature(event),
-        witness: this.generateWitness()
-      }
+        witness: this.generateWitness(),
+      },
     };
 
     // Store log entry
@@ -393,13 +417,13 @@ export class ComplianceLogging extends EventEmitter {
       eventType: 'ai_decision_made',
       framework: ['EU_AI_ACT', 'GDPR'],
       severity: operation.success ? 'low' : 'medium',
-      actor: { 
+      actor: {
         systemId: 'ai_system',
-        userId: operation.metadata.userId 
+        userId: operation.metadata.userId,
       },
-      subject: { 
+      subject: {
         aiModel: operation.model,
-        operation: operation.metadata.operationType 
+        operation: operation.metadata.operationType,
       },
       action: {
         description: `AI operation: ${operation.metadata.operationType}`,
@@ -409,30 +433,34 @@ export class ComplianceLogging extends EventEmitter {
           duration: operation.duration,
           tokenUsage: operation.tokenUsage,
           cost: operation.cost,
-          error: operation.error
-        }
+          error: operation.error,
+        },
       },
       context: {
         sessionId: operation.metadata.sessionId,
         requestId: operation.operationId,
-        environment: process.env.NODE_ENV as any || 'development',
-        legalBasis: 'legitimate_interest'
-      }
+        environment: (process.env.NODE_ENV as any) || 'development',
+        legalBasis: 'legitimate_interest',
+      },
     });
   }
 
   /**
    * Handle user data protection rights requests
    */
-  processUserRightsRequest(request: Omit<DataProtectionRights, 'processingLog'>): string {
+  processUserRightsRequest(
+    request: Omit<DataProtectionRights, 'processingLog'>
+  ): string {
     const requestId = this.generateRequestId();
     const userRights: DataProtectionRights = {
       ...request,
-      processingLog: [{
-        timestamp: new Date(),
-        action: 'request_received',
-        actor: 'system'
-      }]
+      processingLog: [
+        {
+          timestamp: new Date(),
+          action: 'request_received',
+          actor: 'system',
+        },
+      ],
     };
 
     // Store user rights request
@@ -453,13 +481,13 @@ export class ComplianceLogging extends EventEmitter {
         details: {
           requestType: request.requestType,
           scope: request.details.scope,
-          deadline: request.deadline
-        }
+          deadline: request.deadline,
+        },
       },
       context: {
-        environment: process.env.NODE_ENV as any || 'development',
-        legalBasis: 'user_rights'
-      }
+        environment: (process.env.NODE_ENV as any) || 'development',
+        legalBasis: 'user_rights',
+      },
     });
 
     // Process request based on type
@@ -471,7 +499,10 @@ export class ComplianceLogging extends EventEmitter {
   /**
    * Process rights request automatically if enabled
    */
-  private processRightsRequestAutomatically(requestId: string, request: DataProtectionRights): void {
+  private processRightsRequestAutomatically(
+    requestId: string,
+    request: DataProtectionRights
+  ): void {
     if (!this.config.automation.autoRespond) return;
 
     switch (request.requestType) {
@@ -487,7 +518,9 @@ export class ComplianceLogging extends EventEmitter {
         this.generateDataPortabilityExport(request.userId);
         break;
       default:
-        console.log(`Manual processing required for ${request.requestType} request`);
+        console.log(
+          `Manual processing required for ${request.requestType} request`
+        );
     }
   }
 
@@ -495,24 +528,25 @@ export class ComplianceLogging extends EventEmitter {
    * Generate data access report for GDPR Article 15
    */
   private generateDataAccessReport(userId: string): any {
-    const userLogs = Array.from(this.logs.values())
-      .filter(log => 
-        log.subject.userId === userId || 
-        log.actor.userId === userId
-      );
+    const userLogs = Array.from(this.logs.values()).filter(
+      (log) => log.subject.userId === userId || log.actor.userId === userId
+    );
 
     const report = {
       userId,
       generatedAt: new Date(),
       personalData: {
         logs: userLogs.length,
-        aiOperations: userLogs.filter(l => l.eventType === 'ai_decision_made').length,
-        dataProcessing: userLogs.filter(l => l.eventType === 'data_processing').length
+        aiOperations: userLogs.filter((l) => l.eventType === 'ai_decision_made')
+          .length,
+        dataProcessing: userLogs.filter(
+          (l) => l.eventType === 'data_processing'
+        ).length,
       },
       processingPurposes: this.getProcessingPurposes(userLogs),
       dataRetention: this.getDataRetentionInfo(userId),
       thirdPartySharing: this.getThirdPartySharing(userId),
-      userRights: this.getUserRights(userId)
+      userRights: this.getUserRights(userId),
     };
 
     this.logEvent({
@@ -524,12 +558,12 @@ export class ComplianceLogging extends EventEmitter {
       action: {
         description: 'Generated data access report',
         outcome: 'success',
-        details: { reportSize: JSON.stringify(report).length }
+        details: { reportSize: JSON.stringify(report).length },
       },
       context: {
-        environment: process.env.NODE_ENV as any || 'development',
-        legalBasis: 'user_rights'
-      }
+        environment: (process.env.NODE_ENV as any) || 'development',
+        legalBasis: 'user_rights',
+      },
     });
 
     return report;
@@ -562,15 +596,15 @@ export class ComplianceLogging extends EventEmitter {
       action: {
         description: 'User data deletion completed',
         outcome: 'success',
-        details: { 
+        details: {
           deletedLogs: deletedLogs.length,
-          anonymizedLogs: this.getAnonymizedLogsCount(userId)
-        }
+          anonymizedLogs: this.getAnonymizedLogsCount(userId),
+        },
       },
       context: {
-        environment: process.env.NODE_ENV as any || 'development',
-        legalBasis: 'user_rights'
-      }
+        environment: (process.env.NODE_ENV as any) || 'development',
+        legalBasis: 'user_rights',
+      },
     });
   }
 
@@ -578,29 +612,37 @@ export class ComplianceLogging extends EventEmitter {
    * Generate compliance report
    */
   generateReport(reportConfig: ComplianceReport): any {
-    const logs = Array.from(this.logs.values())
-      .filter(log => {
-        // Filter by date range
-        if (log.timestamp < reportConfig.period.start || log.timestamp > reportConfig.period.end) {
-          return false;
-        }
+    const logs = Array.from(this.logs.values()).filter((log) => {
+      // Filter by date range
+      if (
+        log.timestamp < reportConfig.period.start ||
+        log.timestamp > reportConfig.period.end
+      ) {
+        return false;
+      }
 
-        // Filter by framework
-        if (!log.framework.includes(reportConfig.framework)) {
-          return false;
-        }
+      // Filter by framework
+      if (!log.framework.includes(reportConfig.framework)) {
+        return false;
+      }
 
-        // Apply additional filters
-        if (reportConfig.filters.eventTypes && !reportConfig.filters.eventTypes.includes(log.eventType)) {
-          return false;
-        }
+      // Apply additional filters
+      if (
+        reportConfig.filters.eventTypes &&
+        !reportConfig.filters.eventTypes.includes(log.eventType)
+      ) {
+        return false;
+      }
 
-        if (reportConfig.filters.severity && !reportConfig.filters.severity.includes(log.severity)) {
-          return false;
-        }
+      if (
+        reportConfig.filters.severity &&
+        !reportConfig.filters.severity.includes(log.severity)
+      ) {
+        return false;
+      }
 
-        return true;
-      });
+      return true;
+    });
 
     const report = {
       id: reportConfig.id,
@@ -611,10 +653,16 @@ export class ComplianceLogging extends EventEmitter {
         totalEvents: logs.length,
         eventsByType: this.groupByEventType(logs),
         eventsBySeverity: this.groupBySeverity(logs),
-        complianceStatus: this.assessComplianceStatus(logs, reportConfig.framework)
+        complianceStatus: this.assessComplianceStatus(
+          logs,
+          reportConfig.framework
+        ),
       },
       details: logs,
-      recommendations: this.generateRecommendations(logs, reportConfig.framework)
+      recommendations: this.generateRecommendations(
+        logs,
+        reportConfig.framework
+      ),
     };
 
     this.logEvent({
@@ -626,11 +674,11 @@ export class ComplianceLogging extends EventEmitter {
       action: {
         description: 'Generated compliance report',
         outcome: 'success',
-        details: { reportId: reportConfig.id, eventsIncluded: logs.length }
+        details: { reportId: reportConfig.id, eventsIncluded: logs.length },
       },
       context: {
-        environment: process.env.NODE_ENV as any || 'development'
-      }
+        environment: (process.env.NODE_ENV as any) || 'development',
+      },
     });
 
     return report;
@@ -654,20 +702,31 @@ export class ComplianceLogging extends EventEmitter {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-    const recentLogs = Array.from(this.logs.values())
-      .filter(log => log.timestamp >= oneHourAgo);
+    const recentLogs = Array.from(this.logs.values()).filter(
+      (log) => log.timestamp >= oneHourAgo
+    );
 
     // Check thresholds
-    const highRiskEvents = recentLogs.filter(log => log.severity === 'critical' || log.severity === 'high').length;
-    const failedRequests = recentLogs.filter(log => log.action.outcome === 'failure').length;
-    const dataBreaches = recentLogs.filter(log => log.eventType === 'data_breach').length;
+    const highRiskEvents = recentLogs.filter(
+      (log) => log.severity === 'critical' || log.severity === 'high'
+    ).length;
+    const failedRequests = recentLogs.filter(
+      (log) => log.action.outcome === 'failure'
+    ).length;
+    const dataBreaches = recentLogs.filter(
+      (log) => log.eventType === 'data_breach'
+    ).length;
 
     if (highRiskEvents > this.config.monitoring.thresholds.highRiskEvents) {
-      this.sendAlert('High risk events threshold exceeded', { count: highRiskEvents });
+      this.sendAlert('High risk events threshold exceeded', {
+        count: highRiskEvents,
+      });
     }
 
     if (failedRequests > this.config.monitoring.thresholds.failedRequests) {
-      this.sendAlert('Failed requests threshold exceeded', { count: failedRequests });
+      this.sendAlert('Failed requests threshold exceeded', {
+        count: failedRequests,
+      });
     }
 
     if (dataBreaches > this.config.monitoring.thresholds.dataBreaches) {
@@ -683,14 +742,17 @@ export class ComplianceLogging extends EventEmitter {
       timestamp: new Date(),
       message,
       details,
-      severity: 'critical' as ComplianceSeverity
+      severity: 'critical' as ComplianceSeverity,
     };
 
     this.emit('compliance_alert', alert);
 
     // Send notifications
     if (this.config.monitoring.notifications.webhook) {
-      this.sendWebhookAlert(this.config.monitoring.notifications.webhook, alert);
+      this.sendWebhookAlert(
+        this.config.monitoring.notifications.webhook,
+        alert
+      );
     }
 
     console.warn('COMPLIANCE ALERT:', message, details);
@@ -700,9 +762,12 @@ export class ComplianceLogging extends EventEmitter {
    * Setup data cleanup schedule
    */
   private setupCleanupSchedule(): void {
-    this.cleanupTimer = setInterval(() => {
-      this.cleanupExpiredData();
-    }, 24 * 60 * 60 * 1000); // Daily cleanup
+    this.cleanupTimer = setInterval(
+      () => {
+        this.cleanupExpiredData();
+      },
+      24 * 60 * 60 * 1000
+    ); // Daily cleanup
   }
 
   /**
@@ -738,11 +803,11 @@ export class ComplianceLogging extends EventEmitter {
         action: {
           description: 'Automated data cleanup completed',
           outcome: 'success',
-          details: { deleted: deletedCount, anonymized: anonymizedCount }
+          details: { deleted: deletedCount, anonymized: anonymizedCount },
         },
         context: {
-          environment: process.env.NODE_ENV as any || 'development'
-        }
+          environment: (process.env.NODE_ENV as any) || 'development',
+        },
       });
     }
   }
@@ -750,12 +815,20 @@ export class ComplianceLogging extends EventEmitter {
   /**
    * Helper methods
    */
-  private calculateSeverity(eventType: ComplianceEventType): ComplianceSeverity {
+  private calculateSeverity(
+    eventType: ComplianceEventType
+  ): ComplianceSeverity {
     const highRiskEvents: ComplianceEventType[] = [
-      'data_breach', 'security_incident', 'automated_decision', 'cross_border_transfer'
+      'data_breach',
+      'security_incident',
+      'automated_decision',
+      'cross_border_transfer',
     ];
     const mediumRiskEvents: ComplianceEventType[] = [
-      'ai_decision_made', 'user_rights_request', 'data_deletion', 'consent_withdrawn'
+      'ai_decision_made',
+      'user_rights_request',
+      'data_deletion',
+      'consent_withdrawn',
     ];
 
     if (highRiskEvents.includes(eventType)) return 'high';
@@ -765,7 +838,7 @@ export class ComplianceLogging extends EventEmitter {
 
   private getRetentionPeriod(frameworks: ComplianceFramework[]): number {
     let maxPeriod = this.config.retention.defaultPeriod;
-    frameworks.forEach(framework => {
+    frameworks.forEach((framework) => {
       const frameworkPeriod = this.config.retention.byFramework[framework];
       if (frameworkPeriod && frameworkPeriod > maxPeriod) {
         maxPeriod = frameworkPeriod;
@@ -775,7 +848,7 @@ export class ComplianceLogging extends EventEmitter {
   }
 
   private getRetentionPolicy(frameworks: ComplianceFramework[]): string {
-    return frameworks.map(f => `${f}_retention`).join(',');
+    return frameworks.map((f) => `${f}_retention`).join(',');
   }
 
   private calculateChecksum(event: any): string {
@@ -801,11 +874,14 @@ export class ComplianceLogging extends EventEmitter {
   }
 
   private checkHighRiskEvent(logEntry: ComplianceLogEntry): void {
-    if (logEntry.severity === 'critical' || logEntry.eventType === 'data_breach') {
+    if (
+      logEntry.severity === 'critical' ||
+      logEntry.eventType === 'data_breach'
+    ) {
       this.sendAlert('High risk compliance event detected', {
         eventType: logEntry.eventType,
         severity: logEntry.severity,
-        framework: logEntry.framework
+        framework: logEntry.framework,
       });
     }
   }
@@ -818,7 +894,9 @@ export class ComplianceLogging extends EventEmitter {
 
   private canDeleteLog(log: ComplianceLogEntry): boolean {
     // Check if log can be deleted based on legal/audit requirements
-    return !['audit_access', 'data_breach', 'security_incident'].includes(log.eventType);
+    return !['audit_access', 'data_breach', 'security_incident'].includes(
+      log.eventType
+    );
   }
 
   private anonymizeLogEntry(logId: string): void {
@@ -842,16 +920,17 @@ export class ComplianceLogging extends EventEmitter {
   }
 
   private getAnonymizedLogsCount(userId: string): number {
-    return Array.from(this.logs.values())
-      .filter(log => 
+    return Array.from(this.logs.values()).filter(
+      (log) =>
         log.metadata.tags.includes('anonymized') &&
-        (log.actor.userId?.includes('anon_') || log.subject.userId?.includes('anon_'))
-      ).length;
+        (log.actor.userId?.includes('anon_') ||
+          log.subject.userId?.includes('anon_'))
+    ).length;
   }
 
   private getProcessingPurposes(logs: ComplianceLogEntry[]): string[] {
     const purposes = new Set<string>();
-    logs.forEach(log => {
+    logs.forEach((log) => {
       if (log.context.legalBasis) {
         purposes.add(log.context.legalBasis);
       }
@@ -866,8 +945,12 @@ export class ComplianceLogging extends EventEmitter {
 
   private getThirdPartySharing(userId: string): any[] {
     return Array.from(this.logs.values())
-      .filter(log => log.eventType === 'third_party_sharing' && log.subject.userId === userId)
-      .map(log => log.action.details);
+      .filter(
+        (log) =>
+          log.eventType === 'third_party_sharing' &&
+          log.subject.userId === userId
+      )
+      .map((log) => log.action.details);
   }
 
   private getUserRights(userId: string): DataProtectionRights[] {
@@ -875,40 +958,60 @@ export class ComplianceLogging extends EventEmitter {
   }
 
   private groupByEventType(logs: ComplianceLogEntry[]): Record<string, number> {
-    return logs.reduce((acc, log) => {
-      acc[log.eventType] = (acc[log.eventType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return logs.reduce(
+      (acc, log) => {
+        acc[log.eventType] = (acc[log.eventType] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   }
 
   private groupBySeverity(logs: ComplianceLogEntry[]): Record<string, number> {
-    return logs.reduce((acc, log) => {
-      acc[log.severity] = (acc[log.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return logs.reduce(
+      (acc, log) => {
+        acc[log.severity] = (acc[log.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   }
 
-  private assessComplianceStatus(logs: ComplianceLogEntry[], framework: ComplianceFramework): string {
-    const violations = logs.filter(log => 
-      log.severity === 'critical' && log.framework.includes(framework)
+  private assessComplianceStatus(
+    logs: ComplianceLogEntry[],
+    framework: ComplianceFramework
+  ): string {
+    const violations = logs.filter(
+      (log) => log.severity === 'critical' && log.framework.includes(framework)
     ).length;
-    
+
     if (violations === 0) return 'compliant';
     if (violations < 5) return 'minor_issues';
     return 'major_violations';
   }
 
-  private generateRecommendations(logs: ComplianceLogEntry[], framework: ComplianceFramework): string[] {
+  private generateRecommendations(
+    logs: ComplianceLogEntry[],
+    framework: ComplianceFramework
+  ): string[] {
     const recommendations: string[] = [];
-    
-    const criticalEvents = logs.filter(log => log.severity === 'critical').length;
+
+    const criticalEvents = logs.filter(
+      (log) => log.severity === 'critical'
+    ).length;
     if (criticalEvents > 0) {
-      recommendations.push(`Address ${criticalEvents} critical compliance events`);
+      recommendations.push(
+        `Address ${criticalEvents} critical compliance events`
+      );
     }
 
-    const failedEvents = logs.filter(log => log.action.outcome === 'failure').length;
+    const failedEvents = logs.filter(
+      (log) => log.action.outcome === 'failure'
+    ).length;
     if (failedEvents > logs.length * 0.1) {
-      recommendations.push('High failure rate detected - review system reliability');
+      recommendations.push(
+        'High failure rate detected - review system reliability'
+      );
     }
 
     return recommendations;
@@ -936,21 +1039,28 @@ export class ComplianceLogging extends EventEmitter {
     const logs = Array.from(this.logs.values());
     const pendingRequests = Array.from(this.userRights.values())
       .flat()
-      .filter(req => req.status === 'pending' || req.status === 'in_progress').length;
+      .filter(
+        (req) => req.status === 'pending' || req.status === 'in_progress'
+      ).length;
 
     return {
       totalLogs: logs.length,
       logsByFramework: this.groupLogsByFramework(logs),
-      logsBySeverity: this.groupBySeverity(logs) as Record<ComplianceSeverity, number>,
+      logsBySeverity: this.groupBySeverity(logs) as Record<
+        ComplianceSeverity,
+        number
+      >,
       pendingRequests,
-      complianceScore: this.calculateComplianceScore(logs)
+      complianceScore: this.calculateComplianceScore(logs),
     };
   }
 
-  private groupLogsByFramework(logs: ComplianceLogEntry[]): Record<ComplianceFramework, number> {
+  private groupLogsByFramework(
+    logs: ComplianceLogEntry[]
+  ): Record<ComplianceFramework, number> {
     const counts: Record<string, number> = {};
-    logs.forEach(log => {
-      log.framework.forEach(framework => {
+    logs.forEach((log) => {
+      log.framework.forEach((framework) => {
         counts[framework] = (counts[framework] || 0) + 1;
       });
     });
@@ -960,7 +1070,9 @@ export class ComplianceLogging extends EventEmitter {
   private calculateComplianceScore(logs: ComplianceLogEntry[]): number {
     if (logs.length === 0) return 100;
 
-    const violations = logs.filter(log => log.severity === 'critical' || log.severity === 'high').length;
+    const violations = logs.filter(
+      (log) => log.severity === 'critical' || log.severity === 'high'
+    ).length;
     const score = Math.max(0, 100 - (violations / logs.length) * 100);
     return Math.round(score);
   }
@@ -1012,55 +1124,55 @@ export const defaultComplianceConfig: ComplianceLoggingConfig = {
     encryption: {
       enabled: true,
       algorithm: 'AES-256-GCM',
-      keyRotation: 90
+      keyRotation: 90,
     },
     backup: {
       enabled: true,
       frequency: 24,
-      retention: 2555 // 7 years for GDPR
-    }
+      retention: 2555, // 7 years for GDPR
+    },
   },
   retention: {
     defaultPeriod: 2555, // 7 years
     byFramework: {
-      'GDPR': 2555,
-      'CCPA': 1825,
-      'HIPAA': 2190,
-      'SOX': 2555,
-      'PCI_DSS': 365,
-      'ISO_27001': 1095,
-      'SOC_2': 1095,
-      'EU_AI_ACT': 1825,
-      'NIST': 1095,
-      'CUSTOM': 1095
+      GDPR: 2555,
+      CCPA: 1825,
+      HIPAA: 2190,
+      SOX: 2555,
+      PCI_DSS: 365,
+      ISO_27001: 1095,
+      SOC_2: 1095,
+      EU_AI_ACT: 1825,
+      NIST: 1095,
+      CUSTOM: 1095,
     },
     deleteAfterExpiry: false,
-    archiveAfterExpiry: true
+    archiveAfterExpiry: true,
   },
   anonymization: {
     enabled: true,
     delay: 30,
-    techniques: ['pseudonymization', 'k_anonymity']
+    techniques: ['pseudonymization', 'k_anonymity'],
   },
   monitoring: {
     realTimeAlerts: true,
     thresholds: {
       highRiskEvents: 10,
       failedRequests: 50,
-      dataBreaches: 1
+      dataBreaches: 1,
     },
     notifications: {
       email: [],
       webhook: undefined,
-      sms: []
-    }
+      sms: [],
+    },
   },
   automation: {
     autoRespond: true,
     autoDelete: false,
     autoAnonymize: true,
-    autoReport: true
-  }
+    autoReport: true,
+  },
 };
 
-export default ComplianceLogging; 
+export default ComplianceLogging;

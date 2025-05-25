@@ -2,41 +2,79 @@
 const React = require('react');
 
 const DialogRoot = ({ children, open, onOpenChange, ...props }) => {
-  return React.createElement('div', { 'data-testid': 'dialog-root', ...props }, children);
+  return React.createElement(
+    'div',
+    { 'data-testid': 'dialog-root', ...props },
+    children
+  );
 };
 
 const DialogTrigger = ({ children, asChild, ...props }) => {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { 'data-testid': 'dialog-trigger', ...props });
+    return React.cloneElement(children, {
+      'data-testid': 'dialog-trigger',
+      ...props,
+    });
   }
-  return React.createElement('button', { 'data-testid': 'dialog-trigger', ...props }, children);
+  return React.createElement(
+    'button',
+    { 'data-testid': 'dialog-trigger', ...props },
+    children
+  );
 };
 
 const DialogPortal = ({ children, ...props }) => {
-  return React.createElement('div', { 'data-testid': 'dialog-portal', ...props }, children);
+  return React.createElement(
+    'div',
+    { 'data-testid': 'dialog-portal', ...props },
+    children
+  );
 };
 
 const DialogOverlay = ({ children, ...props }) => {
-  return React.createElement('div', { 'data-testid': 'dialog-overlay', ...props }, children);
+  return React.createElement(
+    'div',
+    { 'data-testid': 'dialog-overlay', ...props },
+    children
+  );
 };
 
 const DialogContent = ({ children, ...props }) => {
-  return React.createElement('div', { 'data-testid': 'dialog-content', ...props }, children);
+  return React.createElement(
+    'div',
+    { 'data-testid': 'dialog-content', ...props },
+    children
+  );
 };
 
 const DialogTitle = ({ children, ...props }) => {
-  return React.createElement('h1', { 'data-testid': 'dialog-title', ...props }, children);
+  return React.createElement(
+    'h1',
+    { 'data-testid': 'dialog-title', ...props },
+    children
+  );
 };
 
 const DialogDescription = ({ children, ...props }) => {
-  return React.createElement('p', { 'data-testid': 'dialog-description', ...props }, children);
+  return React.createElement(
+    'p',
+    { 'data-testid': 'dialog-description', ...props },
+    children
+  );
 };
 
 const DialogClose = ({ children, asChild, ...props }) => {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { 'data-testid': 'dialog-close', ...props });
+    return React.cloneElement(children, {
+      'data-testid': 'dialog-close',
+      ...props,
+    });
   }
-  return React.createElement('button', { 'data-testid': 'dialog-close', ...props }, children);
+  return React.createElement(
+    'button',
+    { 'data-testid': 'dialog-close', ...props },
+    children
+  );
 };
 
 module.exports = {
@@ -48,4 +86,4 @@ module.exports = {
   Title: DialogTitle,
   Description: DialogDescription,
   Close: DialogClose,
-}; 
+};

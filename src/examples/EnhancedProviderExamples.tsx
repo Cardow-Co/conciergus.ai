@@ -1,7 +1,14 @@
 import React from 'react';
-import { UnifiedConciergusProvider, validateProviderConfig } from '../context/UnifiedConciergusProvider';
+import {
+  UnifiedConciergusProvider,
+  validateProviderConfig,
+} from '../context/UnifiedConciergusProvider';
 import { useConciergus } from '../context/useConciergus';
-import { useEnhancedConciergus, useModelManager, useTelemetry } from '../context/EnhancedConciergusContext';
+import {
+  useEnhancedConciergus,
+  useModelManager,
+  useTelemetry,
+} from '../context/EnhancedConciergusContext';
 
 /**
  * Example 1: Basic Usage (Backward Compatible)
@@ -18,8 +25,11 @@ export function BasicUsageExample() {
           id: 'welcome',
           triggerType: 'session_start',
           conditions: { event: 'start' },
-          action: { message: 'Welcome! How can I help you today?', priority: 'high' }
-        }
+          action: {
+            message: 'Welcome! How can I help you today?',
+            priority: 'high',
+          },
+        },
       ]}
     >
       <BasicApp />
@@ -29,7 +39,7 @@ export function BasicUsageExample() {
 
 function BasicApp() {
   const { config } = useConciergus();
-  
+
   return (
     <div>
       <h2>Basic Conciergus App</h2>
@@ -50,7 +60,6 @@ export function EnhancedUsageExample() {
       // Basic configuration (still supported)
       defaultTTSVoice="alloy"
       enableDebug={true}
-      
       // Enhanced AI SDK 5 configuration
       defaultModel="gpt-4o"
       aiGatewayConfig={{
@@ -78,15 +87,15 @@ function EnhancedApp() {
   const { config, isInitialized, error } = useEnhancedConciergus();
   const modelManager = useModelManager();
   const telemetry = useTelemetry();
-  
+
   if (!isInitialized) {
     return <div>Initializing AI features...</div>;
   }
-  
+
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  
+
   const handleModelSwitch = async () => {
     try {
       await modelManager.switchModel('anthropic/claude-3-7-sonnet-20250219');
@@ -95,20 +104,20 @@ function EnhancedApp() {
       console.error('Failed to switch model:', err);
     }
   };
-  
+
   const stats = telemetry.getUsageStats();
-  
+
   return (
     <div>
       <h2>Enhanced Conciergus App</h2>
-      
+
       <div>
         <h3>Model Management</h3>
         <p>Current Model: {modelManager.getCurrentModel()}</p>
         <p>Available Models: {modelManager.getAvailableModels().length}</p>
         <button onClick={handleModelSwitch}>Switch to Claude</button>
       </div>
-      
+
       <div>
         <h3>Usage Statistics</h3>
         <p>Total Requests: {stats.requestCount}</p>
@@ -116,12 +125,17 @@ function EnhancedApp() {
         <p>Total Cost: ${stats.totalCost.toFixed(4)}</p>
         <p>Average Latency: {stats.averageLatency.toFixed(2)}ms</p>
       </div>
-      
+
       <div>
         <h3>Configuration</h3>
         <p>Default Model: {config.defaultModel}</p>
-        <p>Object Streaming: {config.enableObjectStreaming ? 'Enabled' : 'Disabled'}</p>
-        <p>Generative UI: {config.enableGenerativeUI ? 'Enabled' : 'Disabled'}</p>
+        <p>
+          Object Streaming:{' '}
+          {config.enableObjectStreaming ? 'Enabled' : 'Disabled'}
+        </p>
+        <p>
+          Generative UI: {config.enableGenerativeUI ? 'Enabled' : 'Disabled'}
+        </p>
       </div>
     </div>
   );
@@ -146,17 +160,20 @@ export function ExplicitEnhancedExample() {
 function ExplicitEnhancedApp() {
   const { isInitialized } = useEnhancedConciergus();
   const modelManager = useModelManager();
-  
+
   if (!isInitialized) {
     return <div>Loading enhanced features...</div>;
   }
-  
+
   return (
     <div>
       <h2>Explicitly Enhanced App</h2>
       <p>Enhanced features are explicitly enabled</p>
       <p>Current Model: {modelManager.getCurrentModel()}</p>
-      <p>Model Capabilities: {JSON.stringify(modelManager.getModelCapabilities())}</p>
+      <p>
+        Model Capabilities:{' '}
+        {JSON.stringify(modelManager.getModelCapabilities())}
+      </p>
     </div>
   );
 }
@@ -172,14 +189,14 @@ export function MigrationExample() {
     isTTSEnabledByDefault: true,
     enableDebug: true,
   };
-  
+
   // Validate the configuration
   const validation = validateProviderConfig(basicConfig);
-  
+
   return (
     <div>
       <h2>Migration Example</h2>
-      
+
       <div>
         <h3>Configuration Validation</h3>
         <p>Valid: {validation.isValid ? 'Yes' : 'No'}</p>
@@ -204,7 +221,7 @@ export function MigrationExample() {
           </div>
         )}
       </div>
-      
+
       <UnifiedConciergusProvider {...basicConfig}>
         <MigrationApp />
       </UnifiedConciergusProvider>
@@ -214,7 +231,7 @@ export function MigrationExample() {
 
 function MigrationApp() {
   const { config } = useConciergus();
-  
+
   return (
     <div>
       <h3>Current Configuration</h3>
@@ -236,58 +253,71 @@ export function ValidationExample() {
         defaultModel: 'gpt-4o',
         aiGatewayConfig: { costOptimization: true },
         telemetryConfig: { enabled: true },
-      }
+      },
     },
     {
       name: 'Invalid Config (Gateway without model)',
       config: {
         aiGatewayConfig: { costOptimization: true },
         // Missing defaultModel
-      }
+      },
     },
     {
       name: 'Production Debug Warning',
       config: {
         enableDebug: true, // This will warn in production
         defaultModel: 'gpt-4o-mini',
-      }
-    }
+      },
+    },
   ];
-  
+
   return (
     <div>
       <h2>Configuration Validation Examples</h2>
-      
+
       {configs.map(({ name, config }, index) => {
         const validation = validateProviderConfig(config);
-        
+
         return (
-          <div key={index} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
+          <div
+            key={index}
+            style={{
+              marginBottom: '20px',
+              padding: '10px',
+              border: '1px solid #ccc',
+            }}
+          >
             <h3>{name}</h3>
-            <p><strong>Valid:</strong> {validation.isValid ? '✅' : '❌'}</p>
-            
+            <p>
+              <strong>Valid:</strong> {validation.isValid ? '✅' : '❌'}
+            </p>
+
             {validation.warnings.length > 0 && (
               <div>
                 <strong>Warnings:</strong>
                 <ul>
                   {validation.warnings.map((warning, i) => (
-                    <li key={i} style={{ color: 'orange' }}>{warning}</li>
+                    <li key={i} style={{ color: 'orange' }}>
+                      {warning}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
-            
+
             {validation.suggestions.length > 0 && (
               <div>
                 <strong>Suggestions:</strong>
                 <ul>
                   {validation.suggestions.map((suggestion, i) => (
-                    <li key={i} style={{ color: 'blue' }}>{suggestion}</li>
+                    <li key={i} style={{ color: 'blue' }}>
+                      {suggestion}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
-            
+
             <details>
               <summary>Configuration</summary>
               <pre>{JSON.stringify(config, null, 2)}</pre>
@@ -306,7 +336,7 @@ export function ValidationExample() {
 export function CustomChatStoreExample() {
   // In a real application, you might create a custom ChatStore
   // const customChatStore = createChatStore({ ... });
-  
+
   return (
     <UnifiedConciergusProvider
       enableEnhancedFeatures={true}
@@ -320,12 +350,14 @@ export function CustomChatStoreExample() {
 
 function CustomChatStoreApp() {
   const { chatStore } = useEnhancedConciergus();
-  
+
   return (
     <div>
       <h2>Custom ChatStore Example</h2>
       <p>Using ChatStore: {chatStore ? 'Available' : 'Not Available'}</p>
-      <p>This example shows how to integrate with custom ChatStore instances.</p>
+      <p>
+        This example shows how to integrate with custom ChatStore instances.
+      </p>
     </div>
   );
 }
@@ -337,27 +369,27 @@ export function CompleteExample() {
   return (
     <div>
       <h1>Conciergus Enhanced Provider Examples</h1>
-      
+
       <section>
         <BasicUsageExample />
       </section>
-      
+
       <section>
         <EnhancedUsageExample />
       </section>
-      
+
       <section>
         <ExplicitEnhancedExample />
       </section>
-      
+
       <section>
         <MigrationExample />
       </section>
-      
+
       <section>
         <ValidationExample />
       </section>
-      
+
       <section>
         <CustomChatStoreExample />
       </section>
@@ -365,4 +397,4 @@ export function CompleteExample() {
   );
 }
 
-export default CompleteExample; 
+export default CompleteExample;

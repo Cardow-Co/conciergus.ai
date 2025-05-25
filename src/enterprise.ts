@@ -2,29 +2,35 @@
 // Optimized for enterprise telemetry, monitoring, and debugging
 
 // Telemetry & Monitoring
-export { ConciergusOpenTelemetry, type TelemetryInstance } from './telemetry/OpenTelemetryConfig';
-export { 
-  AISDKTelemetryIntegration, 
+export {
+  ConciergusOpenTelemetry,
+  type TelemetryInstance,
+} from './telemetry/OpenTelemetryConfig';
+export {
+  AISDKTelemetryIntegration,
   type AISDKTelemetrySettings,
   type ConciergusAISDKTelemetryConfig,
   type AIOperationTelemetry,
   defaultAISDKTelemetryConfig,
   developmentAISDKTelemetryConfig,
-  productionAISDKTelemetryConfig
+  productionAISDKTelemetryConfig,
 } from './telemetry/AISDKTelemetryIntegration';
-export { 
+export {
   AIDistributedTracing,
   type AISpanAttributes,
   type AITraceContext,
-  type AIOperationTrace
+  type AIOperationTrace,
 } from './telemetry/AIDistributedTracing';
-export { EnterpriseTelemetryManager, type EnterpriseTelemetryConfig } from './telemetry/EnterpriseTelemetryManager';
+export {
+  EnterpriseTelemetryManager,
+  type EnterpriseTelemetryConfig,
+} from './telemetry/EnterpriseTelemetryManager';
 
 // Analytics & Reporting
-export { 
-  AnalyticsEngine, 
+export {
+  AnalyticsEngine,
   type AnalyticsEngineConfig,
-  defaultAnalyticsConfig
+  defaultAnalyticsConfig,
 } from './telemetry/AnalyticsEngine';
 export type {
   UsageMetrics,
@@ -39,7 +45,7 @@ export type {
   AnalyticsFilter,
   AnalyticsTimeRange,
   AnalyticsReport,
-  AnalyticsDashboard as AnalyticsDashboardType
+  AnalyticsDashboard as AnalyticsDashboardType,
 } from './telemetry/AnalyticsDataModels';
 
 // Performance Monitoring
@@ -52,7 +58,7 @@ export {
   type PerformanceMetricType,
   type PerformanceMonitorConfig,
   type AlertAction,
-  defaultPerformanceMonitorConfig
+  defaultPerformanceMonitorConfig,
 } from './telemetry/PerformanceMonitor';
 
 // A/B Testing & Experimentation
@@ -65,7 +71,7 @@ export {
   type ABTestSummary,
   type StatisticalAnalysis,
   type ABTestingConfig,
-  defaultABTestingConfig
+  defaultABTestingConfig,
 } from './telemetry/ABTestingFramework';
 
 // Compliance Logging
@@ -78,18 +84,18 @@ export {
   type DataProtectionRights,
   type ComplianceReport,
   type ComplianceLoggingConfig,
-  defaultComplianceConfig
+  defaultComplianceConfig,
 } from './telemetry/ComplianceLogging';
 
 // React Components
 export { default as AnalyticsDashboard } from './components/AnalyticsDashboard';
-export { 
-  UsageMetricsPanel, 
-  ModelStatsPanel, 
-  CostBreakdownPanel, 
+export {
+  UsageMetricsPanel,
+  ModelStatsPanel,
+  CostBreakdownPanel,
   AlertsPanel,
   MetricCard,
-  SimpleChart
+  SimpleChart,
 } from './components/AnalyticsDashboard';
 
 export { default as PerformanceDashboard } from './components/PerformanceDashboard';
@@ -97,7 +103,7 @@ export {
   SystemHealthPanel,
   PerformanceMetricsPanel,
   AlertsPanel as PerformanceAlertsPanel,
-  StatusIndicator
+  StatusIndicator,
 } from './components/PerformanceDashboard';
 
 export { default as ABTestingDashboard } from './components/ABTestingDashboard';
@@ -105,11 +111,14 @@ export {
   TestList,
   TestDetails,
   StatusBadge,
-  MetricCard as ABTestingMetricCard
+  MetricCard as ABTestingMetricCard,
 } from './components/ABTestingDashboard';
 
 // Middleware Pipeline
-export { ConciergusMiddlewarePipeline, type MiddlewareContext } from './middleware/MiddlewarePipeline';
+export {
+  ConciergusMiddlewarePipeline,
+  type MiddlewareContext,
+} from './middleware/MiddlewarePipeline';
 
 // Error Handling & Debugging
 export * from './errors/ErrorBoundary';
@@ -117,6 +126,4 @@ export * from './debug/DebugUtils';
 export { default as ConciergusDebugInspector } from './debug/DebugInspector';
 
 // Re-export core types needed for enterprise features
-export type {
-  ConciergusConfig
-} from './context/ConciergusContext'; 
+export type { ConciergusConfig } from './context/ConciergusContext';

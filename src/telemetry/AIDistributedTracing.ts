@@ -1,7 +1,16 @@
-import { trace, context, SpanStatusCode, SpanKind, Span } from '@opentelemetry/api';
+import {
+  trace,
+  context,
+  SpanStatusCode,
+  SpanKind,
+  Span,
+} from '@opentelemetry/api';
 import { ConciergusOpenTelemetry } from './OpenTelemetryConfig';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';
-import { AISDKTelemetryIntegration, type AIOperationTelemetry } from './AISDKTelemetryIntegration';
+import {
+  AISDKTelemetryIntegration,
+  type AIOperationTelemetry,
+} from './AISDKTelemetryIntegration';
 
 /**
  * AI-specific span attributes following OpenTelemetry semantic conventions
@@ -18,14 +27,14 @@ export interface AISpanAttributes {
   'ai.request.top_p'?: number;
   'ai.request.frequency_penalty'?: number;
   'ai.request.presence_penalty'?: number;
-  
+
   // Input/Output attributes
   'ai.prompt.tokens'?: number;
   'ai.prompt.characters'?: number;
   'ai.completion.tokens'?: number;
   'ai.completion.characters'?: number;
   'ai.total.tokens'?: number;
-  
+
   // Cost and performance
   'ai.cost.total'?: number;
   'ai.cost.input'?: number;
@@ -34,14 +43,14 @@ export interface AISpanAttributes {
   'ai.latency.total_ms': number;
   'ai.latency.first_token_ms'?: number;
   'ai.latency.tokens_per_second'?: number;
-  
+
   // Quality and reliability
   'ai.response.finish_reason'?: string;
   'ai.response.quality_score'?: number;
   'ai.retry.count'?: number;
   'ai.fallback.used'?: boolean;
   'ai.fallback.reason'?: string;
-  
+
   // Context and metadata
   'ai.user.id'?: string;
   'ai.session.id'?: string;
@@ -107,10 +116,14 @@ export class AIDistributedTracing {
   private constructor() {
     const telemetryInstance = ConciergusOpenTelemetry.getInstance();
     if (!telemetryInstance) {
-      throw new Error('OpenTelemetry must be initialized before AIDistributedTracing');
+      throw new Error(
+        'OpenTelemetry must be initialized before AIDistributedTracing'
+      );
     }
-    
-    this.tracer = telemetryInstance.getTracer('conciergus-ai-distributed-tracing');
+
+    this.tracer = telemetryInstance.getTracer(
+      'conciergus-ai-distributed-tracing'
+    );
     this.telemetryManager = EnterpriseTelemetryManager.getInstance();
     this.aiTelemetry = AISDKTelemetryIntegration.getInstance();
   }
@@ -214,20 +227,19 @@ export class AIDistributedTracing {
   ): Span {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      throw new Error(`No active trace found for operation: ${traceContext.operationId}`);
+      throw new Error(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
     }
 
-    const span = this.tracer.startSpan(
-      `ai.${trace.operation}.preprocessing`,
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {
-          'ai.operation.id': traceContext.operationId,
-          'ai.operation.phase': 'preprocessing',
-          ...attributes,
-        },
-      }
-    );
+    const span = this.tracer.startSpan(`ai.${trace.operation}.preprocessing`, {
+      kind: SpanKind.INTERNAL,
+      attributes: {
+        'ai.operation.id': traceContext.operationId,
+        'ai.operation.phase': 'preprocessing',
+        ...attributes,
+      },
+    });
 
     trace.spans.preprocessing = span.spanContext().spanId;
     return span;
@@ -242,22 +254,21 @@ export class AIDistributedTracing {
   ): Span {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      throw new Error(`No active trace found for operation: ${traceContext.operationId}`);
+      throw new Error(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
     }
 
-    const span = this.tracer.startSpan(
-      `ai.${trace.operation}.inference`,
-      {
-        kind: SpanKind.CLIENT,
-        attributes: {
-          'ai.operation.id': traceContext.operationId,
-          'ai.operation.phase': 'inference',
-          'ai.request.model': trace.model,
-          'ai.request.provider': trace.provider,
-          ...attributes,
-        },
-      }
-    );
+    const span = this.tracer.startSpan(`ai.${trace.operation}.inference`, {
+      kind: SpanKind.CLIENT,
+      attributes: {
+        'ai.operation.id': traceContext.operationId,
+        'ai.operation.phase': 'inference',
+        'ai.request.model': trace.model,
+        'ai.request.provider': trace.provider,
+        ...attributes,
+      },
+    });
 
     trace.spans.inference = span.spanContext().spanId;
     return span;
@@ -272,20 +283,19 @@ export class AIDistributedTracing {
   ): Span {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      throw new Error(`No active trace found for operation: ${traceContext.operationId}`);
+      throw new Error(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
     }
 
-    const span = this.tracer.startSpan(
-      `ai.${trace.operation}.postprocessing`,
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {
-          'ai.operation.id': traceContext.operationId,
-          'ai.operation.phase': 'postprocessing',
-          ...attributes,
-        },
-      }
-    );
+    const span = this.tracer.startSpan(`ai.${trace.operation}.postprocessing`, {
+      kind: SpanKind.INTERNAL,
+      attributes: {
+        'ai.operation.id': traceContext.operationId,
+        'ai.operation.phase': 'postprocessing',
+        ...attributes,
+      },
+    });
 
     trace.spans.postprocessing = span.spanContext().spanId;
     return span;
@@ -302,24 +312,23 @@ export class AIDistributedTracing {
   ): Span {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      throw new Error(`No active trace found for operation: ${traceContext.operationId}`);
+      throw new Error(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
     }
 
-    const span = this.tracer.startSpan(
-      `ai.${trace.operation}.fallback`,
-      {
-        kind: SpanKind.CLIENT,
-        attributes: {
-          'ai.operation.id': traceContext.operationId,
-          'ai.operation.phase': 'fallback',
-          'ai.request.model': fallbackModel,
-          'ai.fallback.used': true,
-          'ai.fallback.reason': reason,
-          'ai.fallback.original_model': trace.model,
-          ...attributes,
-        },
-      }
-    );
+    const span = this.tracer.startSpan(`ai.${trace.operation}.fallback`, {
+      kind: SpanKind.CLIENT,
+      attributes: {
+        'ai.operation.id': traceContext.operationId,
+        'ai.operation.phase': 'fallback',
+        'ai.request.model': fallbackModel,
+        'ai.fallback.used': true,
+        'ai.fallback.reason': reason,
+        'ai.fallback.original_model': trace.model,
+        ...attributes,
+      },
+    });
 
     trace.spans.fallback = span.spanContext().spanId;
     trace.fallbackUsed = true;
@@ -348,7 +357,9 @@ export class AIDistributedTracing {
   ): void {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      console.warn(`No active trace found for operation: ${traceContext.operationId}`);
+      console.warn(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
       return;
     }
 
@@ -371,7 +382,7 @@ export class AIDistributedTracing {
     if (activeSpan) {
       // Find and update the span (this is a simplified approach)
       const span = trace.spans.main; // In a real implementation, you'd get the actual span object
-      
+
       // Update span attributes
       const finalAttributes: Partial<AISpanAttributes> = {
         'ai.latency.total_ms': duration,
@@ -381,12 +392,18 @@ export class AIDistributedTracing {
         'ai.fallback.used': trace.fallbackUsed || false,
       };
 
-      if (result.inputTokens) finalAttributes['ai.prompt.tokens'] = result.inputTokens;
-      if (result.outputTokens) finalAttributes['ai.completion.tokens'] = result.outputTokens;
-      if (result.totalTokens) finalAttributes['ai.total.tokens'] = result.totalTokens;
+      if (result.inputTokens)
+        finalAttributes['ai.prompt.tokens'] = result.inputTokens;
+      if (result.outputTokens)
+        finalAttributes['ai.completion.tokens'] = result.outputTokens;
+      if (result.totalTokens)
+        finalAttributes['ai.total.tokens'] = result.totalTokens;
       if (result.cost) finalAttributes['ai.cost.total'] = result.cost;
-      if (result.firstTokenLatency) finalAttributes['ai.latency.first_token_ms'] = result.firstTokenLatency;
-      if (result.tokensPerSecond) finalAttributes['ai.latency.tokens_per_second'] = result.tokensPerSecond;
+      if (result.firstTokenLatency)
+        finalAttributes['ai.latency.first_token_ms'] = result.firstTokenLatency;
+      if (result.tokensPerSecond)
+        finalAttributes['ai.latency.tokens_per_second'] =
+          result.tokensPerSecond;
 
       // Set span status
       if (result.success) {
@@ -413,11 +430,17 @@ export class AIDistributedTracing {
   recordError(
     traceContext: AITraceContext,
     error: Error,
-    phase: 'preprocessing' | 'inference' | 'postprocessing' | 'fallback' = 'inference'
+    phase:
+      | 'preprocessing'
+      | 'inference'
+      | 'postprocessing'
+      | 'fallback' = 'inference'
   ): void {
     const trace = this.activeTraces.get(traceContext.operationId);
     if (!trace) {
-      console.warn(`No active trace found for operation: ${traceContext.operationId}`);
+      console.warn(
+        `No active trace found for operation: ${traceContext.operationId}`
+      );
       return;
     }
 
@@ -468,7 +491,9 @@ export class AIDistributedTracing {
   /**
    * Helper methods
    */
-  private getOperationType(operation: string): 'generate' | 'stream' | 'embed' | 'classify' | 'chat' {
+  private getOperationType(
+    operation: string
+  ): 'generate' | 'stream' | 'embed' | 'classify' | 'chat' {
     if (operation.includes('stream')) return 'stream';
     if (operation.includes('embed')) return 'embed';
     if (operation.includes('classify')) return 'classify';
@@ -493,7 +518,11 @@ export class AIDistributedTracing {
 
     // Duration metric
     if (trace.duration) {
-      this.telemetryManager.recordMetric('ai_operation_duration', trace.duration, baseAttributes);
+      this.telemetryManager.recordMetric(
+        'ai_operation_duration',
+        trace.duration,
+        baseAttributes
+      );
     }
 
     // Token metrics
@@ -520,11 +549,19 @@ export class AIDistributedTracing {
 
     // Cost metric
     if (trace.cost) {
-      this.telemetryManager.recordMetric('ai_operation_cost', trace.cost, baseAttributes);
+      this.telemetryManager.recordMetric(
+        'ai_operation_cost',
+        trace.cost,
+        baseAttributes
+      );
     }
 
     // Success/failure metrics
-    this.telemetryManager.recordMetric('ai_operation_completed', 1, baseAttributes);
+    this.telemetryManager.recordMetric(
+      'ai_operation_completed',
+      1,
+      baseAttributes
+    );
 
     if (!trace.success) {
       this.telemetryManager.recordMetric('ai_operation_errors', 1, {
@@ -535,9 +572,13 @@ export class AIDistributedTracing {
 
     // Retry metrics
     if (trace.retryCount && trace.retryCount > 0) {
-      this.telemetryManager.recordMetric('ai_operation_retries', trace.retryCount, baseAttributes);
+      this.telemetryManager.recordMetric(
+        'ai_operation_retries',
+        trace.retryCount,
+        baseAttributes
+      );
     }
   }
 }
 
-export default AIDistributedTracing; 
+export default AIDistributedTracing;

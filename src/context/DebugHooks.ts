@@ -1,23 +1,41 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { DebugManager, DebugLog, SystemHealth, SystemDiagnostics, DebugConfig } from './DebugManager';
+import {
+  DebugManager,
+  DebugLog,
+  SystemHealth,
+  SystemDiagnostics,
+  DebugConfig,
+} from './DebugManager';
 
 // Hook for debug logging
 export function useDebugLogger(debugManager: DebugManager) {
-  const logDebug = useCallback((message: string, data?: any, source?: string, category?: string) => {
-    debugManager.debug(message, data, source, category);
-  }, [debugManager]);
+  const logDebug = useCallback(
+    (message: string, data?: any, source?: string, category?: string) => {
+      debugManager.debug(message, data, source, category);
+    },
+    [debugManager]
+  );
 
-  const logInfo = useCallback((message: string, data?: any, source?: string, category?: string) => {
-    debugManager.info(message, data, source, category);
-  }, [debugManager]);
+  const logInfo = useCallback(
+    (message: string, data?: any, source?: string, category?: string) => {
+      debugManager.info(message, data, source, category);
+    },
+    [debugManager]
+  );
 
-  const logWarn = useCallback((message: string, data?: any, source?: string, category?: string) => {
-    debugManager.warn(message, data, source, category);
-  }, [debugManager]);
+  const logWarn = useCallback(
+    (message: string, data?: any, source?: string, category?: string) => {
+      debugManager.warn(message, data, source, category);
+    },
+    [debugManager]
+  );
 
-  const logError = useCallback((message: string, data?: any, source?: string, category?: string) => {
-    debugManager.error(message, data, source, category);
-  }, [debugManager]);
+  const logError = useCallback(
+    (message: string, data?: any, source?: string, category?: string) => {
+      debugManager.error(message, data, source, category);
+    },
+    [debugManager]
+  );
 
   return {
     debug: logDebug,
@@ -54,9 +72,12 @@ export function useDebugLogs(debugManager: DebugManager) {
     refreshLogs();
   }, [debugManager, refreshLogs]);
 
-  const exportLogs = useCallback((format: 'json' | 'csv' = 'json') => {
-    return debugManager.exportLogs(format);
-  }, [debugManager]);
+  const exportLogs = useCallback(
+    (format: 'json' | 'csv' = 'json') => {
+      return debugManager.exportLogs(format);
+    },
+    [debugManager]
+  );
 
   // Auto-refresh functionality
   useEffect(() => {
@@ -140,7 +161,9 @@ export function useSystemHealth(debugManager: DebugManager) {
 
 // Hook for system diagnostics
 export function useSystemDiagnostics(debugManager: DebugManager) {
-  const [diagnostics, setDiagnostics] = useState<SystemDiagnostics | null>(null);
+  const [diagnostics, setDiagnostics] = useState<SystemDiagnostics | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -200,17 +223,20 @@ export function useDebugConfig(debugManager: DebugManager) {
   const [config, setConfig] = useState<DebugConfig>(debugManager.getConfig());
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const updateConfig = useCallback(async (newConfig: Partial<DebugConfig>) => {
-    setIsUpdating(true);
-    try {
-      debugManager.updateConfig(newConfig);
-      setConfig(debugManager.getConfig());
-    } catch (error) {
-      console.error('Failed to update debug config:', error);
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [debugManager]);
+  const updateConfig = useCallback(
+    async (newConfig: Partial<DebugConfig>) => {
+      setIsUpdating(true);
+      try {
+        debugManager.updateConfig(newConfig);
+        setConfig(debugManager.getConfig());
+      } catch (error) {
+        console.error('Failed to update debug config:', error);
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [debugManager]
+  );
 
   const resetConfig = useCallback(() => {
     const defaultConfig: DebugConfig = {
@@ -233,33 +259,49 @@ export function useDebugConfig(debugManager: DebugManager) {
 
 // Hook for request tracking
 export function useRequestTracker(debugManager: DebugManager) {
-  const trackRequest = useCallback((responseTime?: number) => {
-    debugManager.trackRequest(responseTime);
-  }, [debugManager]);
+  const trackRequest = useCallback(
+    (responseTime?: number) => {
+      debugManager.trackRequest(responseTime);
+    },
+    [debugManager]
+  );
 
-  const trackApiCall = useCallback(async <T>(
-    apiCall: () => Promise<T>,
-    source = 'api',
-    category = 'request'
-  ): Promise<T> => {
-    const startTime = Date.now();
-    
-    try {
-      debugManager.info(`API call started`, { source }, source, category);
-      const result = await apiCall();
-      const responseTime = Date.now() - startTime;
-      
-      debugManager.trackRequest(responseTime);
-      debugManager.info(`API call completed`, { responseTime, source }, source, category);
-      
-      return result;
-    } catch (error) {
-      const responseTime = Date.now() - startTime;
-      debugManager.trackRequest(responseTime);
-      debugManager.error(`API call failed`, { error, responseTime, source }, source, category);
-      throw error;
-    }
-  }, [debugManager]);
+  const trackApiCall = useCallback(
+    async <T>(
+      apiCall: () => Promise<T>,
+      source = 'api',
+      category = 'request'
+    ): Promise<T> => {
+      const startTime = Date.now();
+
+      try {
+        debugManager.info(`API call started`, { source }, source, category);
+        const result = await apiCall();
+        const responseTime = Date.now() - startTime;
+
+        debugManager.trackRequest(responseTime);
+        debugManager.info(
+          `API call completed`,
+          { responseTime, source },
+          source,
+          category
+        );
+
+        return result;
+      } catch (error) {
+        const responseTime = Date.now() - startTime;
+        debugManager.trackRequest(responseTime);
+        debugManager.error(
+          `API call failed`,
+          { error, responseTime, source },
+          source,
+          category
+        );
+        throw error;
+      }
+    },
+    [debugManager]
+  );
 
   return {
     trackRequest,
@@ -276,7 +318,9 @@ export function useDebugDashboard(debugManager: DebugManager) {
   const logger = useDebugLogger(debugManager);
   const tracker = useRequestTracker(debugManager);
 
-  const [activeTab, setActiveTab] = useState<'logs' | 'health' | 'diagnostics' | 'config'>('logs');
+  const [activeTab, setActiveTab] = useState<
+    'logs' | 'health' | 'diagnostics' | 'config'
+  >('logs');
 
   const exportAll = useCallback(() => {
     const allData = {
@@ -297,10 +341,10 @@ export function useDebugDashboard(debugManager: DebugManager) {
     config,
     logger,
     tracker,
-    
+
     // Dashboard state
     activeTab,
     setActiveTab,
     exportAll,
   };
-} 
+}

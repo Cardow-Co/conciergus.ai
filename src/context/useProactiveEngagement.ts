@@ -9,4 +9,4 @@ export interface ProactiveRule {
   action: Record<string, unknown>;
   cooldown?: number;
   enabled?: boolean;
-} 
+}

@@ -4,14 +4,14 @@
  */
 
 import { MiddlewareFunction, MiddlewareContext } from './MiddlewarePipeline';
-import { 
-  createSecureRateLimitingEngine, 
-  RateLimitingEngine, 
-  RateLimitAlgorithm, 
+import {
+  createSecureRateLimitingEngine,
+  RateLimitingEngine,
+  RateLimitAlgorithm,
   RateLimitStrategy,
   DDoSProtectionLevel,
   type RateLimitConfig,
-  type RateLimitInfo 
+  type RateLimitInfo,
 } from '../security/RateLimitingEngine';
 import { SecureErrorHandler } from '../security/SecureErrorHandler';
 import { getSecurityCore } from '../security/SecurityCore';
@@ -26,7 +26,10 @@ export interface EnhancedRateLimitOptions {
   customConfig?: Partial<RateLimitConfig>;
   enableDynamicLimits?: boolean;
   skipPaths?: string[];
-  onLimitReached?: (context: MiddlewareContext, rateLimitInfo: RateLimitInfo) => void;
+  onLimitReached?: (
+    context: MiddlewareContext,
+    rateLimitInfo: RateLimitInfo
+  ) => void;
   errorResponse?: {
     message?: string;
     includeRetryAfter?: boolean;
@@ -43,19 +46,19 @@ export function createEnhancedRateLimitingMiddleware(
 ): MiddlewareFunction {
   const engine = options.engine || createSecureRateLimitingEngine();
   const configName = options.configName || 'default';
-  
+
   // Register custom config if provided
   if (options.customConfig) {
     const securityCore = getSecurityCore();
     const securityConfig = securityCore.getConfig();
-    
+
     // Provide safe defaults if rateLimiting config is missing
     const rateLimitingConfig = securityConfig.rateLimiting || {
       windowMs: 60000,
       maxRequests: 100,
-      skipSuccessfulRequests: false
+      skipSuccessfulRequests: false,
     };
-    
+
     const fullConfig: RateLimitConfig = {
       algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
       strategy: RateLimitStrategy.COMBINED,
@@ -63,9 +66,9 @@ export function createEnhancedRateLimitingMiddleware(
       maxRequests: rateLimitingConfig.maxRequests,
       skipSuccessfulRequests: rateLimitingConfig.skipSuccessfulRequests,
       ddosProtection: DDoSProtectionLevel.BASIC,
-      ...options.customConfig
+      ...options.customConfig,
     };
-    
+
     engine.registerConfig(configName, fullConfig);
   }
 
@@ -78,39 +81,52 @@ export function createEnhancedRateLimitingMiddleware(
           'ratelimit.config': configName,
           'ratelimit.url': context.request.url,
           'ratelimit.method': context.request.method,
-          'ratelimit.ip': extractIP(context)
+          'ratelimit.ip': extractIP(context),
         });
 
         try {
           // Skip rate limiting for specified paths
-          if (options.skipPaths && shouldSkipPath(context.request.url, options.skipPaths)) {
+          if (
+            options.skipPaths &&
+            shouldSkipPath(context.request.url, options.skipPaths)
+          ) {
             await next();
             return;
           }
 
           // Check rate limit
-          const rateLimitInfo = await engine.checkRateLimit(configName, context);
-          
+          const rateLimitInfo = await engine.checkRateLimit(
+            configName,
+            context
+          );
+
           // Add rate limit headers to response
-          const headers = createRateLimitHeaders(rateLimitInfo, options.errorResponse);
-          
+          const headers = createRateLimitHeaders(
+            rateLimitInfo,
+            options.errorResponse
+          );
+
           // Set response headers even for allowed requests
           context.response = context.response || {};
-          context.response.headers = { ...context.response.headers, ...headers };
+          context.response.headers = {
+            ...context.response.headers,
+            ...headers,
+          };
 
           span?.setAttributes({
             'ratelimit.limit': rateLimitInfo.limit,
             'ratelimit.remaining': rateLimitInfo.remaining,
             'ratelimit.blocked': rateLimitInfo.blocked,
             'ratelimit.algorithm': rateLimitInfo.algorithm,
-            'ratelimit.strategy': rateLimitInfo.strategy
+            'ratelimit.strategy': rateLimitInfo.strategy,
           });
 
           if (rateLimitInfo.blocked) {
             // Handle rate limit exceeded
             span?.setAttributes({
-              'ratelimit.block_reason': rateLimitInfo.reason || 'limit_exceeded',
-              'ratelimit.retry_after': rateLimitInfo.retryAfter
+              'ratelimit.block_reason':
+                rateLimitInfo.reason || 'limit_exceeded',
+              'ratelimit.retry_after': rateLimitInfo.retryAfter,
             });
 
             // Call custom callback if provided
@@ -119,8 +135,10 @@ export function createEnhancedRateLimitingMiddleware(
             }
 
             // Create rate limit error
-            const rateLimitError = SecureErrorHandler.createRateLimitError(rateLimitInfo.retryAfter);
-            
+            const rateLimitError = SecureErrorHandler.createRateLimitError(
+              rateLimitInfo.retryAfter
+            );
+
             // Set 429 response
             context.response = {
               status: 429,
@@ -129,19 +147,20 @@ export function createEnhancedRateLimitingMiddleware(
                 ...headers,
                 'Content-Type': 'application/json',
                 'X-Request-ID': context.request.id,
-                ...options.errorResponse?.customHeaders
+                ...options.errorResponse?.customHeaders,
               },
               body: {
                 ...rateLimitError,
-                message: options.errorResponse?.message || rateLimitError.message,
-                ...(rateLimitInfo.ddosDetected && { 
-                  security: { ddosDetected: true, protection: 'enhanced' }
-                })
-              }
+                message:
+                  options.errorResponse?.message || rateLimitError.message,
+                ...(rateLimitInfo.ddosDetected && {
+                  security: { ddosDetected: true, protection: 'enhanced' },
+                }),
+              },
             };
 
             context.aborted = true;
-            
+
             // Record rate limit block metric
             ConciergusOpenTelemetry.recordMetric(
               'conciergus-security',
@@ -151,7 +170,7 @@ export function createEnhancedRateLimitingMiddleware(
                 config: configName,
                 reason: rateLimitInfo.reason || 'limit_exceeded',
                 algorithm: rateLimitInfo.algorithm,
-                strategy: rateLimitInfo.strategy
+                strategy: rateLimitInfo.strategy,
               }
             );
 
@@ -169,21 +188,21 @@ export function createEnhancedRateLimitingMiddleware(
             {
               config: configName,
               algorithm: rateLimitInfo.algorithm,
-              strategy: rateLimitInfo.strategy
+              strategy: rateLimitInfo.strategy,
             }
           );
-
         } catch (error) {
           span?.recordException(error as Error);
-          
+
           // Log rate limiting error but don't block request
           ConciergusOpenTelemetry.createSpan(
             'conciergus-security',
             'rate-limit-error',
             (errorSpan) => {
               errorSpan?.setAttributes({
-                'error.message': error instanceof Error ? error.message : String(error),
-                'ratelimit.config': configName
+                'error.message':
+                  error instanceof Error ? error.message : String(error),
+                'ratelimit.config': configName,
               });
             }
           );
@@ -204,36 +223,39 @@ export function createEndpointRateLimitMiddleware(
   globalOptions: EnhancedRateLimitOptions = {}
 ): MiddlewareFunction {
   const engine = globalOptions.engine || createSecureRateLimitingEngine();
-  
+
   // Register endpoint-specific configurations
   Object.entries(endpointConfigs).forEach(([endpoint, config]) => {
     const securityCore = getSecurityCore();
     const securityConfig = securityCore.getConfig();
-    
+
     const fullConfig: RateLimitConfig = {
       algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
       strategy: RateLimitStrategy.ENDPOINT_BASED,
       windowMs: securityConfig.rateLimiting.windowMs,
       maxRequests: securityConfig.rateLimiting.maxRequests,
-      skipSuccessfulRequests: securityConfig.rateLimiting.skipSuccessfulRequests,
+      skipSuccessfulRequests:
+        securityConfig.rateLimiting.skipSuccessfulRequests,
       ddosProtection: DDoSProtectionLevel.BASIC,
-      ...config
+      ...config,
     };
-    
+
     engine.registerConfig(endpoint, fullConfig);
   });
 
   return async (context: MiddlewareContext, next: () => Promise<void>) => {
     const endpoint = `${context.request.method}:${context.request.url}`;
-    const configName = findMatchingEndpointConfig(endpoint, Object.keys(endpointConfigs)) || 'default';
-    
+    const configName =
+      findMatchingEndpointConfig(endpoint, Object.keys(endpointConfigs)) ||
+      'default';
+
     // Use the enhanced middleware with the matched config
     const endpointMiddleware = createEnhancedRateLimitingMiddleware({
       ...globalOptions,
       configName,
-      engine
+      engine,
     });
-    
+
     return endpointMiddleware(context, next);
   };
 }
@@ -246,20 +268,23 @@ export function createAdaptiveRateLimitMiddleware(
 ): MiddlewareFunction {
   const engine = baseOptions.engine || createSecureRateLimitingEngine();
   let currentLoad = 0;
-  let loadHistory: number[] = [];
-  
+  const loadHistory: number[] = [];
+
   return async (context: MiddlewareContext, next: () => Promise<void>) => {
     const startTime = Date.now();
-    
+
     // Calculate adaptive limits based on current system load
-    const adaptiveConfig = calculateAdaptiveLimits(currentLoad, baseOptions.customConfig);
-    
+    const adaptiveConfig = calculateAdaptiveLimits(
+      currentLoad,
+      baseOptions.customConfig
+    );
+
     const adaptiveMiddleware = createEnhancedRateLimitingMiddleware({
       ...baseOptions,
       engine,
-      customConfig: adaptiveConfig
+      customConfig: adaptiveConfig,
     });
-    
+
     try {
       await adaptiveMiddleware(context, next);
     } finally {
@@ -276,13 +301,15 @@ export function createAdaptiveRateLimitMiddleware(
  */
 
 function extractIP(context: MiddlewareContext): string {
-  return context.request.headers['x-forwarded-for'] ||
-         context.request.headers['x-real-ip'] ||
-         'unknown';
+  return (
+    context.request.headers['x-forwarded-for'] ||
+    context.request.headers['x-real-ip'] ||
+    'unknown'
+  );
 }
 
 function shouldSkipPath(url: string, skipPaths: string[]): boolean {
-  return skipPaths.some(path => {
+  return skipPaths.some((path) => {
     if (path.includes('*')) {
       const regex = new RegExp(path.replace(/\*/g, '.*'));
       return regex.test(url);
@@ -296,23 +323,25 @@ function createRateLimitHeaders(
   options?: EnhancedRateLimitOptions['errorResponse']
 ): Record<string, string> {
   const headers: Record<string, string> = {};
-  
+
   if (options?.includeRateLimitHeaders !== false) {
     headers['X-RateLimit-Limit'] = String(rateLimitInfo.limit);
     headers['X-RateLimit-Remaining'] = String(rateLimitInfo.remaining);
-    headers['X-RateLimit-Reset'] = String(Math.ceil(rateLimitInfo.resetTime / 1000));
+    headers['X-RateLimit-Reset'] = String(
+      Math.ceil(rateLimitInfo.resetTime / 1000)
+    );
     headers['X-RateLimit-Algorithm'] = rateLimitInfo.algorithm;
     headers['X-RateLimit-Strategy'] = rateLimitInfo.strategy;
   }
-  
+
   if (rateLimitInfo.blocked && options?.includeRetryAfter !== false) {
     headers['Retry-After'] = String(rateLimitInfo.retryAfter);
   }
-  
+
   if (rateLimitInfo.ddosDetected) {
     headers['X-DDoS-Protection'] = 'active';
   }
-  
+
   return headers;
 }
 
@@ -324,7 +353,7 @@ function findMatchingEndpointConfig(
   if (configKeys.includes(endpoint)) {
     return endpoint;
   }
-  
+
   // Pattern matching
   for (const key of configKeys) {
     if (key.includes('*')) {
@@ -334,7 +363,7 @@ function findMatchingEndpointConfig(
       }
     }
   }
-  
+
   return null;
 }
 
@@ -342,19 +371,22 @@ function calculateAdaptiveLimits(
   currentLoad: number,
   baseConfig?: Partial<RateLimitConfig>
 ): Partial<RateLimitConfig> {
-  const loadFactor = Math.max(0.1, Math.min(2.0, 1 - (currentLoad / 100)));
-  
+  const loadFactor = Math.max(0.1, Math.min(2.0, 1 - currentLoad / 100));
+
   return {
     ...baseConfig,
     maxRequests: Math.floor((baseConfig?.maxRequests || 100) * loadFactor),
     // Adjust other parameters based on load
-    windowMs: baseConfig?.windowMs || 60000
+    windowMs: baseConfig?.windowMs || 60000,
   };
 }
 
-function updateLoadMetrics(requestDuration: number, loadHistory: number[]): void {
+function updateLoadMetrics(
+  requestDuration: number,
+  loadHistory: number[]
+): void {
   loadHistory.push(requestDuration);
-  
+
   // Keep only last 100 requests for load calculation
   if (loadHistory.length > 100) {
     loadHistory.shift();
@@ -363,9 +395,11 @@ function updateLoadMetrics(requestDuration: number, loadHistory: number[]): void
 
 function calculateCurrentLoad(loadHistory: number[]): number {
   if (loadHistory.length === 0) return 0;
-  
-  const avgDuration = loadHistory.reduce((sum, duration) => sum + duration, 0) / loadHistory.length;
-  
+
+  const avgDuration =
+    loadHistory.reduce((sum, duration) => sum + duration, 0) /
+    loadHistory.length;
+
   // Convert average response time to load percentage (higher response time = higher load)
   // Assuming 1000ms = 100% load
   return Math.min(100, (avgDuration / 1000) * 100);
@@ -383,13 +417,13 @@ export const standardApiRateLimit = createEnhancedRateLimitingMiddleware({
     strategy: RateLimitStrategy.COMBINED,
     windowMs: 60000, // 1 minute
     maxRequests: 100,
-    ddosProtection: DDoSProtectionLevel.BASIC
+    ddosProtection: DDoSProtectionLevel.BASIC,
   },
   errorResponse: {
     message: 'API rate limit exceeded. Please try again later.',
     includeRetryAfter: true,
-    includeRateLimitHeaders: true
-  }
+    includeRateLimitHeaders: true,
+  },
 });
 
 // Strict rate limiting for sensitive endpoints
@@ -401,12 +435,12 @@ export const strictRateLimit = createEnhancedRateLimitingMiddleware({
     windowMs: 60000,
     maxRequests: 20,
     burstLimit: 5,
-    ddosProtection: DDoSProtectionLevel.ENTERPRISE
+    ddosProtection: DDoSProtectionLevel.ENTERPRISE,
   },
   errorResponse: {
     message: 'Rate limit exceeded. Access temporarily restricted.',
-    includeRetryAfter: true
-  }
+    includeRetryAfter: true,
+  },
 });
 
 // Lenient rate limiting for public endpoints
@@ -417,7 +451,7 @@ export const lenientRateLimit = createEnhancedRateLimitingMiddleware({
     strategy: RateLimitStrategy.IP_BASED,
     windowMs: 60000,
     maxRequests: 1000,
-    ddosProtection: DDoSProtectionLevel.BASIC
+    ddosProtection: DDoSProtectionLevel.BASIC,
   },
-  skipPaths: ['/health', '/status', '/favicon.ico']
-}); 
+  skipPaths: ['/health', '/status', '/favicon.ico'],
+});

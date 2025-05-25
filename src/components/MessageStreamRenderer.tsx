@@ -9,13 +9,13 @@ import { ReasoningTrace } from './ReasoningTrace';
 import { SourcesDisplay } from './SourcesDisplay';
 import StreamingIndicator from './StreamingIndicator';
 import type { Source } from './SourcesDisplay';
-import type { ReasoningStep } from '../types/ai-sdk-5';
-import type { 
-  EnhancedStreamPart, 
-  StreamingType, 
+import type {
+  ReasoningStep,
+  EnhancedStreamPart,
+  StreamingType,
   StreamingState as EnhancedStreamingState,
   ToolCall,
-  StructuredObject
+  StructuredObject,
 } from '../types/ai-sdk-5';
 
 // Re-export enhanced types for backward compatibility
@@ -24,7 +24,9 @@ export type StreamingState = EnhancedStreamingState;
 
 export interface MessageStreamRendererProps {
   message: UIMessage;
-  streamParts?: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
+  streamParts?:
+    | AsyncIterable<EnhancedStreamPart>
+    | ReadableStream<EnhancedStreamPart>;
   isStreaming?: boolean;
   className?: string;
   showMetadata?: boolean;
@@ -70,7 +72,7 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
 
   // Handle stream processing
   const processStreamPart = useCallback((part: EnhancedStreamPart) => {
-    setStreamingState(prev => {
+    setStreamingState((prev) => {
       const newState = { ...prev };
 
       switch (part.type) {
@@ -95,7 +97,9 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
 
         case 'reasoning-signature':
           if (part.signature && newState.reasoning.length > 0) {
-            const lastReasoning = { ...newState.reasoning[newState.reasoning.length - 1] };
+            const lastReasoning = {
+              ...newState.reasoning[newState.reasoning.length - 1],
+            };
             lastReasoning.signature = part.signature;
             newState.reasoning = [
               ...newState.reasoning.slice(0, -1),
@@ -140,10 +144,13 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
 
         case 'tool-call-delta':
           if (part.toolCallId && part.argsTextDelta) {
-            const toolCallIndex = newState.toolCalls.findIndex(tc => tc.id === part.toolCallId);
+            const toolCallIndex = newState.toolCalls.findIndex(
+              (tc) => tc.id === part.toolCallId
+            );
             if (toolCallIndex >= 0) {
               const updatedToolCall = { ...newState.toolCalls[toolCallIndex] };
-              updatedToolCall.argsText = (updatedToolCall.argsText || '') + part.argsTextDelta;
+              updatedToolCall.argsText =
+                (updatedToolCall.argsText || '') + part.argsTextDelta;
               newState.toolCalls = [
                 ...newState.toolCalls.slice(0, toolCallIndex),
                 updatedToolCall,
@@ -155,7 +162,9 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
 
         case 'tool-result':
           if (part.toolCallId) {
-            const toolCallIndex = newState.toolCalls.findIndex(tc => tc.id === part.toolCallId);
+            const toolCallIndex = newState.toolCalls.findIndex(
+              (tc) => tc.id === part.toolCallId
+            );
             if (toolCallIndex >= 0) {
               const updatedToolCall = { ...newState.toolCalls[toolCallIndex] };
               updatedToolCall.result = part.result;
@@ -201,7 +210,7 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
     if (!streamParts || streamRef.current) return;
 
     streamRef.current = true;
-    
+
     const processStream = async () => {
       try {
         // Handle both AsyncIterable and ReadableStream
@@ -212,7 +221,9 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
           }
         } else {
           // ReadableStream
-          const reader = (streamParts as ReadableStream<TextStreamPart>).getReader();
+          const reader = (
+            streamParts as ReadableStream<TextStreamPart>
+          ).getReader();
           try {
             while (true) {
               const { done, value } = await reader.read();
@@ -225,29 +236,39 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
         }
 
         // Stream completed successfully
-        setStreamingState(prev => ({ ...prev, isStreaming: false }));
-        
+        setStreamingState((prev) => ({ ...prev, isStreaming: false }));
+
         if (onStreamComplete) {
           const finalMessage: UIMessage = {
             ...message,
             content: streamingState.currentText,
             parts: [
               { type: 'text', text: streamingState.currentText },
-              ...streamingState.reasoning.map(r => ({ type: 'reasoning', reasoning: r.content, details: [] })),
-              ...streamingState.sources.map(s => ({ type: 'source', source: s })),
-              ...streamingState.toolCalls.map(tc => ({ type: 'tool-invocation', toolInvocation: tc })),
+              ...streamingState.reasoning.map((r) => ({
+                type: 'reasoning',
+                reasoning: r.content,
+                details: [],
+              })),
+              ...streamingState.sources.map((s) => ({
+                type: 'source',
+                source: s,
+              })),
+              ...streamingState.toolCalls.map((tc) => ({
+                type: 'tool-invocation',
+                toolInvocation: tc,
+              })),
             ],
           };
           onStreamComplete(finalMessage);
         }
       } catch (error) {
         console.error('Stream processing error:', error);
-        setStreamingState(prev => ({ 
-          ...prev, 
-          isStreaming: false, 
-          errors: [...prev.errors, error as Error] 
+        setStreamingState((prev) => ({
+          ...prev,
+          isStreaming: false,
+          errors: [...prev.errors, error as Error],
         }));
-        
+
         if (onStreamError) {
           onStreamError(error as Error);
         }
@@ -259,17 +280,32 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
     return () => {
       streamRef.current = false;
     };
-  }, [streamParts, processStreamPart, message, onStreamComplete, onStreamError, streamingState.currentText]);
+  }, [
+    streamParts,
+    processStreamPart,
+    message,
+    onStreamComplete,
+    onStreamError,
+    streamingState.currentText,
+  ]);
 
   // Auto-scroll effect for smooth scrolling
   useEffect(() => {
-    if (enableSmoothScrolling && streamingState.isStreaming && containerRef.current) {
-      containerRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'nearest' 
+    if (
+      enableSmoothScrolling &&
+      streamingState.isStreaming &&
+      containerRef.current
+    ) {
+      containerRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
       });
     }
-  }, [streamingState.currentText, enableSmoothScrolling, streamingState.isStreaming]);
+  }, [
+    streamingState.currentText,
+    enableSmoothScrolling,
+    streamingState.isStreaming,
+  ]);
 
   // Token count callback
   useEffect(() => {
@@ -281,14 +317,14 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
   // Render content based on current state
   const renderContent = () => {
     // Use streaming content if available, otherwise fall back to message content
-    const contentToRender = streamingState.currentText || 
-      (message.parts && message.parts.length > 0 
+    const contentToRender =
+      streamingState.currentText ||
+      (message.parts && message.parts.length > 0
         ? message.parts
-            .filter(part => part.type === 'text')
-            .map(part => (part as any).text)
+            .filter((part) => part.type === 'text')
+            .map((part) => (part as any).text)
             .join('')
-        : (message as any).content || ''
-      );
+        : (message as any).content || '');
 
     return (
       <div className="message-stream-content">
@@ -321,9 +357,7 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
           <div className="stream-tool-calls">
             {streamingState.toolCalls.map((toolCall, index) => (
               <div key={toolCall.id || index} className="tool-call">
-                <div className="tool-call-header">
-                  🔧 {toolCall.name}
-                </div>
+                <div className="tool-call-header">🔧 {toolCall.name}</div>
                 {toolCall.args && (
                   <div className="tool-call-args">
                     <pre>{JSON.stringify(toolCall.args, null, 2)}</pre>
@@ -331,10 +365,9 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
                 )}
                 {toolCall.result && (
                   <div className="tool-call-result">
-                    {typeof toolCall.result === 'string' 
-                      ? toolCall.result 
-                      : JSON.stringify(toolCall.result, null, 2)
-                    }
+                    {typeof toolCall.result === 'string'
+                      ? toolCall.result
+                      : JSON.stringify(toolCall.result, null, 2)}
                   </div>
                 )}
               </div>
@@ -376,7 +409,7 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
       {...rest}
     >
       {renderContent()}
-      
+
       {/* Reasoning traces */}
       {showReasoningTraces && streamingState.reasoning.length > 0 && (
         <ReasoningTrace
@@ -409,4 +442,4 @@ export const MessageStreamRenderer: FC<MessageStreamRendererProps> = ({
   );
 };
 
-export default MessageStreamRenderer; 
+export default MessageStreamRenderer;

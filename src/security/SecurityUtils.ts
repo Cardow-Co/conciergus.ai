@@ -16,7 +16,7 @@ const HTML_ENTITIES: Record<string, string> = {
   "'": '&#x27;',
   '/': '&#x2F;',
   '`': '&#x60;',
-  '=': '&#x3D;'
+  '=': '&#x3D;',
 };
 
 /**
@@ -76,7 +76,12 @@ export interface ValidationResult {
   errors: string[];
   sanitized?: string;
   threat?: {
-    type: 'xss' | 'sql_injection' | 'prompt_injection' | 'length_violation' | 'content_type_violation';
+    type:
+      | 'xss'
+      | 'sql_injection'
+      | 'prompt_injection'
+      | 'length_violation'
+      | 'content_type_violation';
     severity: 'low' | 'medium' | 'high' | 'critical';
     details: string;
   };
@@ -95,10 +100,13 @@ export class SecurityUtils {
     }
 
     // First pass: escape HTML entities
-    let sanitized = input.replace(/[&<>"'`=\/]/g, (match) => HTML_ENTITIES[match] || match);
+    let sanitized = input.replace(
+      /[&<>"'`=\/]/g,
+      (match) => HTML_ENTITIES[match] || match
+    );
 
     // Second pass: remove or neutralize dangerous patterns
-    XSS_PATTERNS.forEach(pattern => {
+    XSS_PATTERNS.forEach((pattern) => {
       sanitized = sanitized.replace(pattern, '');
     });
 
@@ -116,8 +124,8 @@ export class SecurityUtils {
     // Handle SecurityCore singleton issues with safe defaults
     let config: any = {
       validation: {
-        sanitizeByDefault: true
-      }
+        sanitizeByDefault: true,
+      },
     };
 
     try {
@@ -128,7 +136,9 @@ export class SecurityUtils {
       }
     } catch (error) {
       // SecurityCore not available, use safe defaults
-      console.warn('SecurityCore not available in sanitizeInput, using default sanitization');
+      console.warn(
+        'SecurityCore not available in sanitizeInput, using default sanitization'
+      );
     }
 
     let sanitized = input;
@@ -150,21 +160,24 @@ export class SecurityUtils {
   /**
    * Validate input against security policies
    */
-  static validateInput(input: string, options?: {
-    maxLength?: number;
-    allowedContentTypes?: string[];
-    strictMode?: boolean;
-  }): ValidationResult {
+  static validateInput(
+    input: string,
+    options?: {
+      maxLength?: number;
+      allowedContentTypes?: string[];
+      strictMode?: boolean;
+    }
+  ): ValidationResult {
     // Handle SecurityCore singleton issues with safe defaults
     let config: any = {
       validation: {
         maxInputLength: 50000,
         allowedContentTypes: ['application/json', 'text/plain'],
-        strictMode: false
+        strictMode: false,
       },
       aiSecurity: {
-        enableInjectionProtection: true
-      }
+        enableInjectionProtection: true,
+      },
     };
 
     try {
@@ -175,16 +188,24 @@ export class SecurityUtils {
       }
     } catch (error) {
       // SecurityCore not available, use safe defaults
-      console.warn('SecurityCore not available in validateInput, using default validation config');
+      console.warn(
+        'SecurityCore not available in validateInput, using default validation config'
+      );
     }
-    
+
     const errors: string[] = [];
     let threat: ValidationResult['threat'] = undefined;
 
     // Use config defaults if options not provided
-    const maxLength = options?.maxLength ?? config.validation?.maxInputLength ?? 50000;
-    const allowedContentTypes = options?.allowedContentTypes ?? config.validation?.allowedContentTypes ?? ['application/json', 'text/plain'];
-    const strictMode = options?.strictMode ?? config.validation?.strictMode ?? false;
+    const maxLength =
+      options?.maxLength ?? config.validation?.maxInputLength ?? 50000;
+    const allowedContentTypes = options?.allowedContentTypes ??
+      config.validation?.allowedContentTypes ?? [
+        'application/json',
+        'text/plain',
+      ];
+    const strictMode =
+      options?.strictMode ?? config.validation?.strictMode ?? false;
 
     // Length validation
     if (input.length > maxLength) {
@@ -192,41 +213,47 @@ export class SecurityUtils {
       threat = {
         type: 'length_violation',
         severity: 'medium',
-        details: `Input length: ${input.length}, Maximum allowed: ${maxLength}`
+        details: `Input length: ${input.length}, Maximum allowed: ${maxLength}`,
       };
     }
 
     // XSS detection
-    const xssDetected = XSS_PATTERNS.some(pattern => pattern.test(input));
+    const xssDetected = XSS_PATTERNS.some((pattern) => pattern.test(input));
     if (xssDetected) {
       errors.push('Potential XSS attack detected');
       threat = {
         type: 'xss',
         severity: 'high',
-        details: 'Input contains patterns commonly used in XSS attacks'
+        details: 'Input contains patterns commonly used in XSS attacks',
       };
     }
 
     // SQL injection detection
-    const sqlInjectionDetected = SQL_INJECTION_PATTERNS.some(pattern => pattern.test(input));
+    const sqlInjectionDetected = SQL_INJECTION_PATTERNS.some((pattern) =>
+      pattern.test(input)
+    );
     if (sqlInjectionDetected) {
       errors.push('Potential SQL injection detected');
       threat = {
         type: 'sql_injection',
         severity: 'high',
-        details: 'Input contains patterns commonly used in SQL injection attacks'
+        details:
+          'Input contains patterns commonly used in SQL injection attacks',
       };
     }
 
     // Prompt injection detection (AI-specific)
     if (config.aiSecurity?.enableInjectionProtection !== false) {
-      const promptInjectionDetected = PROMPT_INJECTION_PATTERNS.some(pattern => pattern.test(input));
+      const promptInjectionDetected = PROMPT_INJECTION_PATTERNS.some(
+        (pattern) => pattern.test(input)
+      );
       if (promptInjectionDetected) {
         errors.push('Potential AI prompt injection detected');
         threat = {
           type: 'prompt_injection',
           severity: 'critical',
-          details: 'Input contains patterns commonly used in AI prompt injection attacks'
+          details:
+            'Input contains patterns commonly used in AI prompt injection attacks',
         };
       }
     }
@@ -240,7 +267,7 @@ export class SecurityUtils {
 
       // Check for extremely long words (potential buffer overflow attempts)
       const words = input.split(/\s+/);
-      const longWord = words.find(word => word.length > 100);
+      const longWord = words.find((word) => word.length > 100);
       if (longWord) {
         errors.push('Input contains unusually long words');
       }
@@ -250,29 +277,39 @@ export class SecurityUtils {
       isValid: errors.length === 0,
       errors,
       sanitized: SecurityUtils.sanitizeInput(input),
-      ...(threat && { threat })
+      ...(threat && { threat }),
     };
   }
 
   /**
    * Generate cryptographically secure random string
    */
-  static generateSecureRandom(length: number = 32, charset: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
+  static generateSecureRandom(
+    length: number = 32,
+    charset: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  ): string {
     if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
-      throw new Error('Secure random generation not available in this environment');
+      throw new Error(
+        'Secure random generation not available in this environment'
+      );
     }
 
     const result = new Uint8Array(length);
     crypto.getRandomValues(result);
 
-    return Array.from(result, byte => charset[byte % charset.length]).join('');
+    return Array.from(result, (byte) => charset[byte % charset.length]).join(
+      ''
+    );
   }
 
   /**
    * Generate secure random ID suitable for session tokens or request IDs
    */
   static generateSecureId(): string {
-    return this.generateSecureRandom(32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_');
+    return this.generateSecureRandom(
+      32,
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+    );
   }
 
   /**
@@ -304,7 +341,7 @@ export class SecurityUtils {
     let hash = 0;
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return 'hash_' + Math.abs(hash).toString(16) + '_' + data.length;
@@ -334,7 +371,7 @@ export class SecurityUtils {
 
     const allPatterns = [...defaultPatterns, ...(patterns || [])];
 
-    allPatterns.forEach(pattern => {
+    allPatterns.forEach((pattern) => {
       redacted = redacted.replace(pattern, '[REDACTED]');
     });
 
@@ -354,20 +391,23 @@ export class SecurityUtils {
 
     const validation = SecurityUtils.validateInput(prompt, {
       maxLength: config.aiSecurity.maxPromptLength,
-      strictMode: true
+      strictMode: true,
     });
 
     // Additional AI-specific checks
     if (validation.isValid) {
       // Check for prompt injection attempts
-      const injectionAttempt = PROMPT_INJECTION_PATTERNS.some(pattern => pattern.test(prompt));
+      const injectionAttempt = PROMPT_INJECTION_PATTERNS.some((pattern) =>
+        pattern.test(prompt)
+      );
       if (injectionAttempt) {
         validation.isValid = false;
         validation.errors.push('Prompt contains potential injection attempt');
         validation.threat = {
           type: 'prompt_injection',
           severity: 'critical',
-          details: 'Prompt contains patterns commonly used to manipulate AI behavior'
+          details:
+            'Prompt contains patterns commonly used to manipulate AI behavior',
         };
       }
     }
@@ -389,7 +429,7 @@ export class SecurityUtils {
     let sanitized = prompt;
 
     // Remove obvious injection attempts
-    PROMPT_INJECTION_PATTERNS.forEach(pattern => {
+    PROMPT_INJECTION_PATTERNS.forEach((pattern) => {
       sanitized = sanitized.replace(pattern, '[filtered]');
     });
 
@@ -398,7 +438,8 @@ export class SecurityUtils {
 
     // Limit length
     if (sanitized.length > config.aiSecurity.maxPromptLength) {
-      sanitized = sanitized.substring(0, config.aiSecurity.maxPromptLength) + '...';
+      sanitized =
+        sanitized.substring(0, config.aiSecurity.maxPromptLength) + '...';
     }
 
     return sanitized;
@@ -407,7 +448,11 @@ export class SecurityUtils {
   /**
    * Create a secure log entry
    */
-  static createSecureLogEntry(level: string, message: string, data?: any): {
+  static createSecureLogEntry(
+    level: string,
+    message: string,
+    data?: any
+  ): {
     level: string;
     message: string;
     timestamp: string;
@@ -445,5 +490,5 @@ export const {
   redactSensitiveData,
   validateAiPrompt,
   sanitizeAiPrompt,
-  createSecureLogEntry
-} = SecurityUtils; 
+  createSecureLogEntry,
+} = SecurityUtils;

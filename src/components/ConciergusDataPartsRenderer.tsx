@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { 
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
+import type {
   EnhancedStreamPart,
   StreamPartType,
   StructuredObject,
-  StructuredObjectState
+  StructuredObjectState,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -13,12 +19,22 @@ import type {
 /**
  * Data part display mode
  */
-export type DataPartDisplayMode = 'structured' | 'raw' | 'preview' | 'interactive';
+export type DataPartDisplayMode =
+  | 'structured'
+  | 'raw'
+  | 'preview'
+  | 'interactive';
 
 /**
  * Data part category for organization
  */
-export type DataPartCategory = 'all' | 'data' | 'file' | 'object' | 'annotation' | 'custom';
+export type DataPartCategory =
+  | 'all'
+  | 'data'
+  | 'file'
+  | 'object'
+  | 'annotation'
+  | 'custom';
 
 /**
  * Individual data part information
@@ -57,10 +73,12 @@ export interface ConciergusDataPartsRendererProps {
   /** Array of data parts to render */
   dataParts?: DataPart[];
   /** Stream parts for real-time updates */
-  streamParts?: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
+  streamParts?:
+    | AsyncIterable<EnhancedStreamPart>
+    | ReadableStream<EnhancedStreamPart>;
   /** Current streaming state */
   isStreaming?: boolean;
-  
+
   // === Display Options ===
   /** Display mode */
   mode?: DataPartDisplayMode;
@@ -80,7 +98,7 @@ export interface ConciergusDataPartsRendererProps {
   sortBy?: 'timestamp' | 'type' | 'size' | 'status';
   /** Sort direction */
   sortDirection?: 'asc' | 'desc';
-  
+
   // === Layout Options ===
   /** Compact display */
   compact?: boolean;
@@ -92,7 +110,7 @@ export interface ConciergusDataPartsRendererProps {
   itemsPerRow?: number;
   /** Enable animations */
   enableAnimations?: boolean;
-  
+
   // === Interaction Options ===
   /** Enable data part expansion */
   enableExpansion?: boolean;
@@ -102,7 +120,7 @@ export interface ConciergusDataPartsRendererProps {
   enableSelection?: boolean;
   /** Selected part IDs */
   selectedParts?: string[];
-  
+
   // === Custom Renderers ===
   /** Custom data renderer */
   dataRenderer?: React.ComponentType<DataRendererProps>;
@@ -112,13 +130,13 @@ export interface ConciergusDataPartsRendererProps {
   objectRenderer?: React.ComponentType<ObjectRendererProps>;
   /** Custom header renderer */
   headerRenderer?: React.ComponentType<HeaderRendererProps>;
-  
+
   // === Styling ===
   /** Additional CSS classes */
   className?: string;
   /** Color theme */
   theme?: 'light' | 'dark' | 'auto';
-  
+
   // === Events ===
   /** Data part click handler */
   onPartClick?: (part: DataPart) => void;
@@ -130,17 +148,17 @@ export interface ConciergusDataPartsRendererProps {
   onStreamUpdate?: (parts: DataPart[]) => void;
   /** Error handler */
   onError?: (error: Error) => void;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Debug ===
   /** Enable debug mode */
   debug?: boolean;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -226,17 +244,20 @@ export interface HeaderRendererProps {
 /**
  * Convert stream part to data part
  */
-const streamPartToDataPart = (streamPart: EnhancedStreamPart): DataPart | null => {
-  const id = streamPart.toolCallId || 
-             streamPart.stepId || 
-             `${streamPart.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+const streamPartToDataPart = (
+  streamPart: EnhancedStreamPart
+): DataPart | null => {
+  const id =
+    streamPart.toolCallId ||
+    streamPart.stepId ||
+    `${streamPart.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
   const basePart: Partial<DataPart> = {
     id,
     type: streamPart.type,
     timestamp: new Date(),
     metadata: streamPart.metadata,
-    status: 'complete'
+    status: 'complete',
   };
 
   switch (streamPart.type) {
@@ -249,10 +270,10 @@ const streamPartToDataPart = (streamPart: EnhancedStreamPart): DataPart | null =
           mimeType: streamPart.mimeType || 'application/octet-stream',
           size: streamPart.fileSize || 0,
           base64: streamPart.base64,
-          uint8Array: streamPart.uint8Array
-        }
+          uint8Array: streamPart.uint8Array,
+        },
       } as DataPart;
-      
+
     case 'object-start':
     case 'object-delta':
     case 'object-finish':
@@ -262,15 +283,15 @@ const streamPartToDataPart = (streamPart: EnhancedStreamPart): DataPart | null =
         object: {
           type: streamPart.objectType || 'unknown',
           data: streamPart.object || streamPart.objectDelta,
-          state: streamPart.type === 'object-finish' ? 'complete' : 'streaming'
-        }
+          state: streamPart.type === 'object-finish' ? 'complete' : 'streaming',
+        },
       } as DataPart;
-      
+
     default:
       if (streamPart.type.startsWith('data-')) {
         return {
           ...basePart,
-          data: streamPart
+          data: streamPart,
         } as DataPart;
       }
       return null;
@@ -292,7 +313,7 @@ const formatFileSize = (bytes: number): string => {
  */
 const getDataPartIcon = (type: StreamPartType): string => {
   const icons: Record<string, string> = {
-    'file': '📎',
+    file: '📎',
     'object-start': '📦',
     'object-delta': '🔄',
     'object-finish': '✅',
@@ -300,10 +321,10 @@ const getDataPartIcon = (type: StreamPartType): string => {
     'tool-result': '🎯',
     'step-start': '🚀',
     'step-finish': '🏁',
-    'metadata': '📊',
-    'error': '❌'
+    metadata: '📊',
+    error: '❌',
   };
-  
+
   if (type.startsWith('data-')) return '📋';
   return icons[type] || '📄';
 };
@@ -321,25 +342,24 @@ const DefaultDataRenderer: React.FC<DataRendererProps> = ({
   isExpanded,
   isSelected,
   onToggleExpansion,
-  onClick
+  onClick,
 }) => {
   const renderData = useCallback(() => {
     if (mode === 'raw') {
       return (
-        <pre className="data-raw">
-          {JSON.stringify(part.data, null, 2)}
-        </pre>
+        <pre className="data-raw">{JSON.stringify(part.data, null, 2)}</pre>
       );
     }
-    
+
     if (mode === 'preview') {
-      const preview = typeof part.data === 'string' 
-        ? part.data.substring(0, 100) + (part.data.length > 100 ? '...' : '')
-        : JSON.stringify(part.data, null, 2).substring(0, 100) + '...';
-      
+      const preview =
+        typeof part.data === 'string'
+          ? part.data.substring(0, 100) + (part.data.length > 100 ? '...' : '')
+          : JSON.stringify(part.data, null, 2).substring(0, 100) + '...';
+
       return <div className="data-preview">{preview}</div>;
     }
-    
+
     if (typeof part.data === 'object' && part.data !== null) {
       return (
         <div className="data-structured">
@@ -347,19 +367,21 @@ const DefaultDataRenderer: React.FC<DataRendererProps> = ({
             <div key={key} className="data-field">
               <span className="field-key">{key}:</span>
               <span className="field-value">
-                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                {typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : String(value)}
               </span>
             </div>
           ))}
         </div>
       );
     }
-    
+
     return <div className="data-simple">{String(part.data)}</div>;
   }, [part.data, mode]);
 
   return (
-    <div 
+    <div
       className={`data-part ${part.type} ${isSelected ? 'selected' : ''} ${isExpanded ? 'expanded' : 'collapsed'}`}
       onClick={onClick}
     >
@@ -375,7 +397,7 @@ const DefaultDataRenderer: React.FC<DataRendererProps> = ({
           <span className="part-timestamp">
             {part.timestamp.toLocaleTimeString()}
           </span>
-          <button 
+          <button
             className="expand-toggle"
             onClick={(e) => {
               e.stopPropagation();
@@ -387,18 +409,18 @@ const DefaultDataRenderer: React.FC<DataRendererProps> = ({
           </button>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="data-part-content">
           {renderData()}
-          
+
           {part.metadata && Object.keys(part.metadata).length > 0 && (
             <div className="data-metadata">
               <h5>Metadata:</h5>
               <pre>{JSON.stringify(part.metadata, null, 2)}</pre>
             </div>
           )}
-          
+
           {part.error && (
             <div className="data-error">
               <h5>Error:</h5>
@@ -418,7 +440,7 @@ const DefaultFileRenderer: React.FC<FileRendererProps> = ({
   part,
   mode,
   onDownload,
-  onPreview
+  onPreview,
 }) => {
   if (!part.file) return null;
 
@@ -434,7 +456,7 @@ const DefaultFileRenderer: React.FC<FileRendererProps> = ({
         <span className="file-size">{formatFileSize(file.size)}</span>
         <span className="file-type">{file.mimeType}</span>
       </div>
-      
+
       {mode !== 'preview' && (
         <div className="file-content">
           {isImage && file.base64 && (
@@ -445,7 +467,7 @@ const DefaultFileRenderer: React.FC<FileRendererProps> = ({
               style={{ maxWidth: '200px', maxHeight: '200px' }}
             />
           )}
-          
+
           {isText && file.base64 && (
             <div className="file-text-preview">
               <pre>
@@ -456,7 +478,7 @@ const DefaultFileRenderer: React.FC<FileRendererProps> = ({
           )}
         </div>
       )}
-      
+
       <div className="file-actions">
         {onDownload && (
           <button onClick={onDownload} className="file-action">
@@ -480,7 +502,7 @@ const DefaultObjectRenderer: React.FC<ObjectRendererProps> = ({
   part,
   mode,
   state,
-  onFieldUpdate
+  onFieldUpdate,
 }) => {
   if (!part.object) return null;
 
@@ -495,30 +517,27 @@ const DefaultObjectRenderer: React.FC<ObjectRendererProps> = ({
           {state}
         </span>
       </div>
-      
+
       <div className="object-content">
         {typeof object.data === 'object' ? (
           <div className="object-fields">
             {Object.entries(object.data).map(([key, value]) => (
-              <div 
-                key={key} 
+              <div
+                key={key}
                 className="object-field"
                 onClick={() => onFieldUpdate?.(key, value)}
               >
                 <span className="field-key">{key}:</span>
                 <span className="field-value">
-                  {typeof value === 'object' 
-                    ? JSON.stringify(value, null, 2) 
-                    : String(value)
-                  }
+                  {typeof value === 'object'
+                    ? JSON.stringify(value, null, 2)
+                    : String(value)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="object-simple">
-            {String(object.data)}
-          </div>
+          <div className="object-simple">{String(object.data)}</div>
         )}
       </div>
     </div>
@@ -534,7 +553,7 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
   filter,
   category,
   sorting,
-  controls
+  controls,
 }) => {
   return (
     <div className="data-parts-header">
@@ -543,12 +562,10 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
           {filteredParts} of {totalParts} parts
         </span>
         {category !== 'all' && (
-          <span className="stats-category">
-            ({category})
-          </span>
+          <span className="stats-category">({category})</span>
         )}
       </div>
-      
+
       <div className="header-controls">
         <div className="filter-controls">
           <input
@@ -558,10 +575,12 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
             onChange={(e) => controls.onFilterChange(e.target.value)}
             className="filter-input"
           />
-          
+
           <select
             value={category}
-            onChange={(e) => controls.onCategoryChange(e.target.value as DataPartCategory)}
+            onChange={(e) =>
+              controls.onCategoryChange(e.target.value as DataPartCategory)
+            }
             className="category-select"
           >
             <option value="all">All Types</option>
@@ -572,7 +591,7 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
             <option value="custom">Custom</option>
           </select>
         </div>
-        
+
         <div className="action-controls">
           <button onClick={controls.onExportAll} className="control-button">
             📤 Export
@@ -592,15 +611,17 @@ const DefaultHeaderRenderer: React.FC<HeaderRendererProps> = ({
 
 /**
  * ConciergusDataPartsRenderer Component
- * 
+ *
  * Advanced UI renderer for custom data parts streaming from AI SDK 5.
  * Provides real-time visualization with type-specific renderers and interactive exploration.
  */
-const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = ({
+const ConciergusDataPartsRenderer: React.FC<
+  ConciergusDataPartsRendererProps
+> = ({
   dataParts = [],
   streamParts,
   isStreaming = false,
-  
+
   // Display options
   mode = 'structured',
   categories = ['all'],
@@ -611,66 +632,70 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
   enableSorting = true,
   sortBy = 'timestamp',
   sortDirection = 'desc',
-  
+
   // Layout options
   compact = false,
   enableVirtualization = false,
   gridLayout = false,
   itemsPerRow = 3,
   enableAnimations = true,
-  
+
   // Interaction options
   enableExpansion = true,
   enableExport = true,
   enableSelection = false,
   selectedParts = [],
-  
+
   // Custom renderers
   dataRenderer: CustomDataRenderer = DefaultDataRenderer,
   fileRenderer: CustomFileRenderer = DefaultFileRenderer,
   objectRenderer: CustomObjectRenderer = DefaultObjectRenderer,
   headerRenderer: CustomHeaderRenderer = DefaultHeaderRenderer,
-  
+
   // Styling
   className = '',
   theme = 'auto',
-  
+
   // Events
   onPartClick,
   onPartSelect,
   onPartExport,
   onStreamUpdate,
   onError,
-  
+
   // Accessibility
   ariaLabel = 'Data parts display',
   ariaDescription,
-  
+
   // Debug
   debug = false,
-  
+
   ...props
 }) => {
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
+
   const [internalParts, setInternalParts] = useState<DataPart[]>(dataParts);
   const [expandedParts, setExpandedParts] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<DataPartCategory>('all');
-  const [currentSort, setCurrentSort] = useState({ sortBy, direction: sortDirection });
+  const [selectedCategory, setSelectedCategory] =
+    useState<DataPartCategory>('all');
+  const [currentSort, setCurrentSort] = useState({
+    sortBy,
+    direction: sortDirection,
+  });
   const streamRef = useRef<boolean>(false);
-  
+
   // ==========================================
   // STREAM PROCESSING
   // ==========================================
-  
+
   useEffect(() => {
     if (!streamParts || streamRef.current) return;
-    
+
     streamRef.current = true;
-    
+
     const processStream = async () => {
       try {
         // Handle both AsyncIterable and ReadableStream
@@ -678,19 +703,21 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
           for await (const part of streamParts as AsyncIterable<EnhancedStreamPart>) {
             const dataPart = streamPartToDataPart(part);
             if (dataPart) {
-              setInternalParts(prev => [...prev, dataPart]);
+              setInternalParts((prev) => [...prev, dataPart]);
             }
           }
         } else {
-          const reader = (streamParts as ReadableStream<EnhancedStreamPart>).getReader();
+          const reader = (
+            streamParts as ReadableStream<EnhancedStreamPart>
+          ).getReader();
           try {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              
+
               const dataPart = streamPartToDataPart(value);
               if (dataPart) {
-                setInternalParts(prev => [...prev, dataPart]);
+                setInternalParts((prev) => [...prev, dataPart]);
               }
             }
           } finally {
@@ -702,60 +729,73 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
         onError?.(error as Error);
       }
     };
-    
+
     processStream();
-    
+
     return () => {
       streamRef.current = false;
     };
   }, [streamParts, onError]);
-  
+
   // Update internal parts when prop changes
   useEffect(() => {
     setInternalParts(dataParts);
   }, [dataParts]);
-  
+
   // Notify of stream updates
   useEffect(() => {
     onStreamUpdate?.(internalParts);
   }, [internalParts, onStreamUpdate]);
-  
+
   // ==========================================
   // DATA PROCESSING
   // ==========================================
-  
+
   const processedParts = useMemo(() => {
     let filtered = internalParts;
-    
+
     // Apply category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(part => {
+      filtered = filtered.filter((part) => {
         switch (selectedCategory) {
-          case 'data': return part.type.startsWith('data-');
-          case 'file': return part.type === 'file';
-          case 'object': return part.type.startsWith('object-');
-          case 'annotation': return ['metadata', 'step-start', 'step-finish'].includes(part.type);
-          case 'custom': return !['file', 'metadata', 'step-start', 'step-finish'].includes(part.type) && !part.type.startsWith('object-');
-          default: return true;
+          case 'data':
+            return part.type.startsWith('data-');
+          case 'file':
+            return part.type === 'file';
+          case 'object':
+            return part.type.startsWith('object-');
+          case 'annotation':
+            return ['metadata', 'step-start', 'step-finish'].includes(
+              part.type
+            );
+          case 'custom':
+            return (
+              !['file', 'metadata', 'step-start', 'step-finish'].includes(
+                part.type
+              ) && !part.type.startsWith('object-')
+            );
+          default:
+            return true;
         }
       });
     }
-    
+
     // Apply text filter
     if (filter) {
       const filterLower = filter.toLowerCase();
-      filtered = filtered.filter(part => 
-        part.type.toLowerCase().includes(filterLower) ||
-        part.id.toLowerCase().includes(filterLower) ||
-        (part.file?.name.toLowerCase().includes(filterLower)) ||
-        JSON.stringify(part.data).toLowerCase().includes(filterLower)
+      filtered = filtered.filter(
+        (part) =>
+          part.type.toLowerCase().includes(filterLower) ||
+          part.id.toLowerCase().includes(filterLower) ||
+          part.file?.name.toLowerCase().includes(filterLower) ||
+          JSON.stringify(part.data).toLowerCase().includes(filterLower)
       );
     }
-    
+
     // Apply sorting
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
-      
+
       switch (currentSort.sortBy) {
         case 'timestamp':
           aValue = a.timestamp.getTime();
@@ -776,35 +816,38 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
         default:
           return 0;
       }
-      
+
       if (currentSort.direction === 'asc') {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       } else {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
-    
+
     // Apply limit
     return filtered.slice(0, maxParts);
   }, [internalParts, selectedCategory, filter, currentSort, maxParts]);
-  
+
   // ==========================================
   // EVENT HANDLERS
   // ==========================================
-  
-  const handlePartClick = useCallback((part: DataPart) => {
-    onPartClick?.(part);
-    
-    if (enableSelection) {
-      const newSelected = selectedParts.includes(part.id)
-        ? selectedParts.filter(id => id !== part.id)
-        : [...selectedParts, part.id];
-      onPartSelect?.(newSelected);
-    }
-  }, [onPartClick, enableSelection, selectedParts, onPartSelect]);
-  
+
+  const handlePartClick = useCallback(
+    (part: DataPart) => {
+      onPartClick?.(part);
+
+      if (enableSelection) {
+        const newSelected = selectedParts.includes(part.id)
+          ? selectedParts.filter((id) => id !== part.id)
+          : [...selectedParts, part.id];
+        onPartSelect?.(newSelected);
+      }
+    },
+    [onPartClick, enableSelection, selectedParts, onPartSelect]
+  );
+
   const toggleExpansion = useCallback((partId: string) => {
-    setExpandedParts(prev => {
+    setExpandedParts((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(partId)) {
         newSet.delete(partId);
@@ -814,73 +857,91 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
       return newSet;
     });
   }, []);
-  
+
   const handleExportAll = useCallback(() => {
-    processedParts.forEach(part => {
+    processedParts.forEach((part) => {
       onPartExport?.(part, 'json');
     });
   }, [processedParts, onPartExport]);
-  
+
   const handleClearAll = useCallback(() => {
     setInternalParts([]);
     setExpandedParts(new Set());
   }, []);
-  
+
   // ==========================================
   // RENDER HELPERS
   // ==========================================
-  
-  const renderDataPart = useCallback((part: DataPart) => {
-    const isExpanded = expandedParts.has(part.id);
-    const isSelected = selectedParts.includes(part.id);
-    
-    // Choose appropriate renderer based on part type
-    if (part.type === 'file' && part.file) {
+
+  const renderDataPart = useCallback(
+    (part: DataPart) => {
+      const isExpanded = expandedParts.has(part.id);
+      const isSelected = selectedParts.includes(part.id);
+
+      // Choose appropriate renderer based on part type
+      if (part.type === 'file' && part.file) {
+        return (
+          <CustomFileRenderer
+            key={part.id}
+            part={part}
+            mode={mode}
+            onDownload={() => onPartExport?.(part, 'download')}
+            onPreview={() => onPartExport?.(part, 'preview')}
+          />
+        );
+      }
+
+      if (part.type.startsWith('object-') && part.object) {
+        return (
+          <CustomObjectRenderer
+            key={part.id}
+            part={part}
+            mode={mode}
+            state={part.object.state}
+            onFieldUpdate={(field, value) => {
+              if (debug) {
+                console.log('[ConciergusDataPartsRenderer] Field update:', {
+                  field,
+                  value,
+                  partId: part.id,
+                });
+              }
+            }}
+          />
+        );
+      }
+
+      // Default data renderer
       return (
-        <CustomFileRenderer
+        <CustomDataRenderer
           key={part.id}
           part={part}
           mode={mode}
-          onDownload={() => onPartExport?.(part, 'download')}
-          onPreview={() => onPartExport?.(part, 'preview')}
+          isExpanded={isExpanded}
+          isSelected={isSelected}
+          onToggleExpansion={() => toggleExpansion(part.id)}
+          onClick={() => handlePartClick(part)}
         />
       );
-    }
-    
-    if (part.type.startsWith('object-') && part.object) {
-      return (
-        <CustomObjectRenderer
-          key={part.id}
-          part={part}
-          mode={mode}
-          state={part.object.state}
-          onFieldUpdate={(field, value) => {
-            if (debug) {
-              console.log('[ConciergusDataPartsRenderer] Field update:', { field, value, partId: part.id });
-            }
-          }}
-        />
-      );
-    }
-    
-    // Default data renderer
-    return (
-      <CustomDataRenderer
-        key={part.id}
-        part={part}
-        mode={mode}
-        isExpanded={isExpanded}
-        isSelected={isSelected}
-        onToggleExpansion={() => toggleExpansion(part.id)}
-        onClick={() => handlePartClick(part)}
-      />
-    );
-  }, [expandedParts, selectedParts, mode, onPartExport, debug, toggleExpansion, handlePartClick, CustomFileRenderer, CustomObjectRenderer, CustomDataRenderer]);
-  
+    },
+    [
+      expandedParts,
+      selectedParts,
+      mode,
+      onPartExport,
+      debug,
+      toggleExpansion,
+      handlePartClick,
+      CustomFileRenderer,
+      CustomObjectRenderer,
+      CustomDataRenderer,
+    ]
+  );
+
   // ==========================================
   // CSS CLASSES
   // ==========================================
-  
+
   const containerClasses = [
     'conciergus-data-parts-renderer',
     `mode-${mode}`,
@@ -889,13 +950,15 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
     gridLayout && 'grid-layout',
     enableAnimations && 'animated',
     isStreaming && 'streaming',
-    className
-  ].filter(Boolean).join(' ');
-  
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   // ==========================================
   // RENDER
   // ==========================================
-  
+
   return (
     <div
       className={containerClasses}
@@ -914,19 +977,24 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
         controls={{
           onFilterChange: setFilter,
           onCategoryChange: setSelectedCategory,
-          onSortChange: (sortBy, direction) => setCurrentSort({ sortBy, direction }),
+          onSortChange: (sortBy, direction) =>
+            setCurrentSort({ sortBy, direction }),
           onExportAll: handleExportAll,
-          onClearAll: handleClearAll
+          onClearAll: handleClearAll,
         }}
       />
-      
+
       {/* Data parts list */}
-      <div 
+      <div
         className={`data-parts-list ${gridLayout ? 'grid' : 'list'}`}
-        style={gridLayout ? { 
-          gridTemplateColumns: `repeat(${itemsPerRow}, 1fr)`,
-          gap: '1rem'
-        } : undefined}
+        style={
+          gridLayout
+            ? {
+                gridTemplateColumns: `repeat(${itemsPerRow}, 1fr)`,
+                gap: '1rem',
+              }
+            : undefined
+        }
       >
         {processedParts.length === 0 ? (
           <div className="empty-state">
@@ -935,31 +1003,33 @@ const ConciergusDataPartsRenderer: React.FC<ConciergusDataPartsRendererProps> = 
                 🔄 Waiting for data parts...
               </div>
             ) : (
-              <div className="no-data">
-                📄 No data parts to display
-              </div>
+              <div className="no-data">📄 No data parts to display</div>
             )}
           </div>
         ) : (
           processedParts.map(renderDataPart)
         )}
       </div>
-      
+
       {/* Debug information */}
       {debug && (
         <details className="debug-info">
           <summary>Debug Information</summary>
           <pre className="debug-content">
-            {JSON.stringify({
-              totalParts: internalParts.length,
-              filteredParts: processedParts.length,
-              isStreaming,
-              filter,
-              category: selectedCategory,
-              sorting: currentSort,
-              expandedParts: Array.from(expandedParts),
-              selectedParts
-            }, null, 2)}
+            {JSON.stringify(
+              {
+                totalParts: internalParts.length,
+                filteredParts: processedParts.length,
+                isStreaming,
+                filter,
+                category: selectedCategory,
+                sorting: currentSort,
+                expandedParts: Array.from(expandedParts),
+                selectedParts,
+              },
+              null,
+              2
+            )}
           </pre>
         </details>
       )}
@@ -980,5 +1050,5 @@ export type {
   HeaderRendererProps,
   DataPart,
   DataPartDisplayMode,
-  DataPartCategory
-}; 
+  DataPartCategory,
+};

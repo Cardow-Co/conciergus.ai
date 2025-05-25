@@ -45,35 +45,41 @@ export interface RedisCacheConfig {
   password?: string;
   db?: number;
   username?: string;
-  
+
   // Client library preference
   client: 'ioredis' | 'redis';
-  
+
   // Connection pool settings
   maxRetriesPerRequest: number;
   retryDelayOnFailover: number;
   enableReadyCheck: boolean;
   maxRetriesPerRequest: number;
   lazyConnect: boolean;
-  
+
   // Performance settings
   keepAlive: number;
   connectTimeout: number;
   commandTimeout: number;
-  
+
   // Cache behavior
   keyPrefix: string;
   defaultTtl: number; // seconds
-  maxMemoryPolicy: 'allkeys-lru' | 'volatile-lru' | 'allkeys-random' | 'volatile-random' | 'allkeys-lfu' | 'volatile-lfu';
-  
+  maxMemoryPolicy:
+    | 'allkeys-lru'
+    | 'volatile-lru'
+    | 'allkeys-random'
+    | 'volatile-random'
+    | 'allkeys-lfu'
+    | 'volatile-lfu';
+
   // Serialization
   serializer: 'json' | 'msgpack' | 'custom';
   compression: boolean;
-  
+
   // Monitoring
   enableMetrics: boolean;
   metricsInterval: number; // milliseconds
-  
+
   // Clustering (for future use)
   cluster?: {
     enabled: boolean;
@@ -85,12 +91,12 @@ export interface RedisCacheConfig {
 /**
  * Cache invalidation strategy
  */
-export type InvalidationStrategy = 
-  | 'ttl' 
-  | 'lru' 
-  | 'manual' 
-  | 'pattern' 
-  | 'dependency' 
+export type InvalidationStrategy =
+  | 'ttl'
+  | 'lru'
+  | 'manual'
+  | 'pattern'
+  | 'dependency'
   | 'version';
 
 /**
@@ -121,7 +127,7 @@ export class RedisCache extends EventEmitter {
     memory: 0,
     connections: 0,
     uptime: 0,
-    lastUpdated: new Date()
+    lastUpdated: new Date(),
   };
 
   constructor(config: RedisCacheConfig) {
@@ -150,11 +156,11 @@ export class RedisCache extends EventEmitter {
       } else {
         await this.connectWithNodeRedis();
       }
-      
+
       this.connected = true;
       this.emit('connected');
       this.recordMetric('cache_connection', 1);
-      
+
       console.log(`✅ Redis cache connected via ${this.config.client}`);
     } catch (error) {
       this.emit('error', error);
@@ -184,13 +190,10 @@ export class RedisCache extends EventEmitter {
     };
 
     if (this.config.cluster?.enabled) {
-      this.client = new Redis.Cluster(
-        this.config.cluster.nodes,
-        {
-          redisOptions: options,
-          ...this.config.cluster.options
-        }
-      );
+      this.client = new Redis.Cluster(this.config.cluster.nodes, {
+        redisOptions: options,
+        ...this.config.cluster.options,
+      });
     } else {
       this.client = new Redis(options);
     }
@@ -225,7 +228,7 @@ export class RedisCache extends EventEmitter {
         connectTimeout: this.config.connectTimeout,
         commandTimeout: this.config.commandTimeout,
         keepAlive: this.config.keepAlive,
-      }
+      },
     }) as NodeRedis;
 
     this.client.on('error', (error) => {
@@ -259,7 +262,7 @@ export class RedisCache extends EventEmitter {
 
     try {
       const rawValue = await this.client.get(this.formatKey(key));
-      
+
       if (rawValue === null) {
         this.stats.misses++;
         this.recordMetric('cache_miss', 1, { key });
@@ -267,9 +270,9 @@ export class RedisCache extends EventEmitter {
       }
 
       const entry = this.deserialize<CacheEntry<T>>(rawValue);
-      
+
       // Check if entry has expired (belt and suspenders)
-      if (entry.timestamp + (entry.ttl * 1000) < Date.now()) {
+      if (entry.timestamp + entry.ttl * 1000 < Date.now()) {
         await this.delete(key);
         this.stats.misses++;
         this.recordMetric('cache_miss', 1, { key, reason: 'expired' });
@@ -280,14 +283,16 @@ export class RedisCache extends EventEmitter {
       entry.hits++;
       entry.lastAccessed = Date.now();
       await this.client.setex(
-        this.formatKey(key), 
-        Math.ceil((entry.timestamp + (entry.ttl * 1000) - Date.now()) / 1000),
+        this.formatKey(key),
+        Math.ceil((entry.timestamp + entry.ttl * 1000 - Date.now()) / 1000),
         this.serialize(entry)
       );
 
       this.stats.hits++;
       this.recordMetric('cache_hit', 1, { key });
-      this.recordMetric('cache_latency', Date.now() - startTime, { operation: 'get' });
+      this.recordMetric('cache_latency', Date.now() - startTime, {
+        operation: 'get',
+      });
 
       return entry.value;
     } catch (error) {
@@ -300,8 +305,8 @@ export class RedisCache extends EventEmitter {
    * Set value in cache
    */
   async set<T>(
-    key: string, 
-    value: T, 
+    key: string,
+    value: T,
     ttl: number = this.config.defaultTtl,
     metadata?: Record<string, any>
   ): Promise<void> {
@@ -318,18 +323,16 @@ export class RedisCache extends EventEmitter {
         ttl,
         hits: 0,
         lastAccessed: Date.now(),
-        metadata
+        metadata,
       };
 
-      await this.client.setex(
-        this.formatKey(key),
-        ttl,
-        this.serialize(entry)
-      );
+      await this.client.setex(this.formatKey(key), ttl, this.serialize(entry));
 
       this.stats.sets++;
       this.recordMetric('cache_set', 1, { key });
-      this.recordMetric('cache_latency', Date.now() - startTime, { operation: 'set' });
+      this.recordMetric('cache_latency', Date.now() - startTime, {
+        operation: 'set',
+      });
     } catch (error) {
       this.recordMetric('cache_error', 1, { operation: 'set', key });
       throw new Error(`Failed to set cache value for key ${key}: ${error}`);
@@ -346,13 +349,13 @@ export class RedisCache extends EventEmitter {
 
     try {
       const result = await this.client.del(this.formatKey(key));
-      
+
       if (result > 0) {
         this.stats.deletes++;
         this.recordMetric('cache_delete', 1, { key });
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.recordMetric('cache_error', 1, { operation: 'delete', key });
@@ -387,7 +390,7 @@ export class RedisCache extends EventEmitter {
 
     try {
       let keys: string[];
-      
+
       if (pattern) {
         keys = await this.client.keys(this.formatKey(pattern));
       } else {
@@ -400,7 +403,7 @@ export class RedisCache extends EventEmitter {
 
       const result = await this.client.del(...keys);
       this.recordMetric('cache_clear', result, { pattern });
-      
+
       return result;
     } catch (error) {
       this.recordMetric('cache_error', 1, { operation: 'clear', pattern });
@@ -417,11 +420,11 @@ export class RedisCache extends EventEmitter {
     }
 
     try {
-      const info = await this.client.memory?.('usage') || 0;
-      
+      const info = (await this.client.memory?.('usage')) || 0;
+
       this.stats.memory = typeof info === 'number' ? info : 0;
       this.stats.lastUpdated = new Date();
-      
+
       return { ...this.stats };
     } catch (error) {
       console.warn('Failed to get Redis stats:', error);
@@ -439,13 +442,16 @@ export class RedisCache extends EventEmitter {
       try {
         const count = await this.clear(pattern.pattern);
         totalInvalidated += count;
-        
+
         this.recordMetric('cache_invalidation', count, {
           pattern: pattern.pattern,
-          strategy: pattern.strategy
+          strategy: pattern.strategy,
         });
       } catch (error) {
-        console.error(`Failed to invalidate pattern ${pattern.pattern}:`, error);
+        console.error(
+          `Failed to invalidate pattern ${pattern.pattern}:`,
+          error
+        );
       }
     }
 
@@ -484,7 +490,11 @@ export class RedisCache extends EventEmitter {
   /**
    * Record performance metrics
    */
-  private recordMetric(metric: string, value: number, labels: Record<string, any> = {}): void {
+  private recordMetric(
+    metric: string,
+    value: number,
+    labels: Record<string, any> = {}
+  ): void {
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         metric as any,
@@ -506,9 +516,12 @@ export class RedisCache extends EventEmitter {
     this.metricsTimer = setInterval(async () => {
       try {
         const stats = await this.getStats();
-        
+
         // Record key metrics
-        this.recordMetric('cache_hit_rate', stats.hits / (stats.hits + stats.misses || 1));
+        this.recordMetric(
+          'cache_hit_rate',
+          stats.hits / (stats.hits + stats.misses || 1)
+        );
         this.recordMetric('cache_memory_usage', stats.memory);
         this.recordMetric('cache_connections', stats.connections);
       } catch (error) {
@@ -549,4 +562,4 @@ export class RedisCache extends EventEmitter {
   getClient(): Redis | NodeRedis | null {
     return this.client;
   }
-} 
+}

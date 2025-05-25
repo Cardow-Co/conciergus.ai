@@ -4,7 +4,13 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { CacheMetrics, type CacheMetricsConfig, type CachePerformanceSummary, type CacheTrendAnalysis, type CacheHealthScore } from '../../cache/CacheMetrics';
+import {
+  CacheMetrics,
+  type CacheMetricsConfig,
+  type CachePerformanceSummary,
+  type CacheTrendAnalysis,
+  type CacheHealthScore,
+} from '../../cache/CacheMetrics';
 import { CacheManager } from '../../cache';
 
 /**
@@ -24,15 +30,15 @@ export interface UseCacheMetricsReturn {
   summary: CachePerformanceSummary | null;
   trends: CacheTrendAnalysis | null;
   health: CacheHealthScore | null;
-  
+
   // Loading states
   isLoading: boolean;
   error: Error | null;
-  
+
   // Operations
   refresh: () => Promise<void>;
   reset: () => void;
-  
+
   // Metrics instance
   metrics: CacheMetrics | null;
 }
@@ -63,7 +69,9 @@ const DEFAULT_METRICS_CONFIG: CacheMetricsConfig = {
 /**
  * Cache metrics hook
  */
-export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMetricsReturn {
+export function useCacheMetrics(
+  config: UseCacheMetricsConfig = {}
+): UseCacheMetricsReturn {
   const {
     cacheManager: externalCacheManager,
     autoRefresh = true,
@@ -79,7 +87,9 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
   const [error, setError] = useState<Error | null>(null);
 
   const refreshTimerRef = useRef<NodeJS.Timeout>();
-  const cacheManagerRef = useRef<CacheManager | null>(externalCacheManager || null);
+  const cacheManagerRef = useRef<CacheManager | null>(
+    externalCacheManager || null
+  );
 
   /**
    * Initialize metrics when cache manager is available
@@ -88,7 +98,7 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
     const initializeMetrics = async () => {
       // Try to get cache manager from external source or global
       let manager = externalCacheManager;
-      
+
       if (!manager) {
         try {
           const { getGlobalCacheManager } = await import('../../cache');
@@ -113,11 +123,14 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
       };
 
       const metricsInstance = new CacheMetrics(manager, finalConfig);
-      
+
       // Setup event listeners
-      metricsInstance.on('metrics-collected', (summaryData: CachePerformanceSummary) => {
-        setSummary(summaryData);
-      });
+      metricsInstance.on(
+        'metrics-collected',
+        (summaryData: CachePerformanceSummary) => {
+          setSummary(summaryData);
+        }
+      );
 
       metricsInstance.on('operation-recorded', () => {
         // Refresh metrics when operations are recorded
@@ -126,9 +139,12 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
         }
       });
 
-      metricsInstance.on('cache-failure', (event: { error: Error; timestamp: Date }) => {
-        setError(event.error);
-      });
+      metricsInstance.on(
+        'cache-failure',
+        (event: { error: Error; timestamp: Date }) => {
+          setError(event.error);
+        }
+      );
 
       metricsInstance.on('cache-recovery', () => {
         setError(null);
@@ -210,7 +226,7 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
       if (refreshTimerRef.current) {
         clearInterval(refreshTimerRef.current);
       }
-      
+
       if (metrics) {
         metrics.shutdown();
       }
@@ -227,4 +243,4 @@ export function useCacheMetrics(config: UseCacheMetricsConfig = {}): UseCacheMet
     reset,
     metrics,
   };
-} 
+}

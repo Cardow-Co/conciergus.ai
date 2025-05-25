@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import React, {
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import type { UIMessage } from '@ai-sdk/react';
 import { useStreamingManager } from './useStreamingManager';
@@ -98,38 +104,42 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  
+
   // Performance monitoring state
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
-    renderTime: 0,
-    messageCount: 0,
-    visibleMessageCount: 0,
-    scrollPerformance: 0,
-    lastUpdate: Date.now(),
-  });
-  
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics>({
+      renderTime: 0,
+      messageCount: 0,
+      visibleMessageCount: 0,
+      scrollPerformance: 0,
+      lastUpdate: Date.now(),
+    });
+
   // Virtualization state
   const [containerHeight, setContainerHeight] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 0 });
 
   // Performance monitoring functions
-  const measureRenderTime = useCallback((fn: () => void) => {
-    if (!enablePerformanceMonitoring) {
+  const measureRenderTime = useCallback(
+    (fn: () => void) => {
+      if (!enablePerformanceMonitoring) {
+        fn();
+        return;
+      }
+
+      const startTime = performance.now();
       fn();
-      return;
-    }
-    
-    const startTime = performance.now();
-    fn();
-    const endTime = performance.now();
-    
-    setPerformanceMetrics(prev => ({
-      ...prev,
-      renderTime: endTime - startTime,
-      lastUpdate: Date.now(),
-    }));
-  }, [enablePerformanceMonitoring]);
+      const endTime = performance.now();
+
+      setPerformanceMetrics((prev) => ({
+        ...prev,
+        renderTime: endTime - startTime,
+        lastUpdate: Date.now(),
+      }));
+    },
+    [enablePerformanceMonitoring]
+  );
 
   // Virtualization calculations
   const calculateVisibleRange = useCallback(() => {
@@ -140,30 +150,41 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
     const startIndex = Math.floor(scrollTop / estimatedMessageHeight);
     const endIndex = Math.min(
       messages.length,
-      Math.ceil((scrollTop + containerHeight) / estimatedMessageHeight) + overscan
+      Math.ceil((scrollTop + containerHeight) / estimatedMessageHeight) +
+        overscan
     );
 
     return {
       start: Math.max(0, startIndex - overscan),
       end: endIndex,
     };
-  }, [enableVirtualization, containerHeight, scrollTop, estimatedMessageHeight, overscan, messages.length]);
+  }, [
+    enableVirtualization,
+    containerHeight,
+    scrollTop,
+    estimatedMessageHeight,
+    overscan,
+    messages.length,
+  ]);
 
   // Handle scroll events for virtualization
-  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.currentTarget;
-    const newScrollTop = target.scrollTop;
-    
-    setScrollTop(newScrollTop);
-    
-    if (enablePerformanceMonitoring) {
-      const scrollPerformance = performance.now();
-      setPerformanceMetrics(prev => ({
-        ...prev,
-        scrollPerformance: scrollPerformance - prev.lastUpdate,
-      }));
-    }
-  }, [enablePerformanceMonitoring]);
+  const handleScroll = useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      const target = event.currentTarget;
+      const newScrollTop = target.scrollTop;
+
+      setScrollTop(newScrollTop);
+
+      if (enablePerformanceMonitoring) {
+        const scrollPerformance = performance.now();
+        setPerformanceMetrics((prev) => ({
+          ...prev,
+          scrollPerformance: scrollPerformance - prev.lastUpdate,
+        }));
+      }
+    },
+    [enablePerformanceMonitoring]
+  );
 
   // Initialize streaming manager
   const streamingManager = useStreamingManager(
@@ -221,28 +242,44 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
       };
       onPerformanceMetrics(updatedMetrics);
     }
-  }, [enablePerformanceMonitoring, onPerformanceMetrics, performanceMetrics, messages.length, visibleRange]);
+  }, [
+    enablePerformanceMonitoring,
+    onPerformanceMetrics,
+    performanceMetrics,
+    messages.length,
+    visibleRange,
+  ]);
 
   // Auto-scroll to bottom when new messages arrive or during streaming
   useEffect(() => {
     if (autoScroll && viewportRef.current) {
       const viewport = viewportRef.current;
       // Use smooth scrolling during streaming for better UX
-      const behavior = (enableStreaming && isStreaming && enableSmoothScrolling) ? 'smooth' : 'auto';
-      viewport.scrollTo({ 
-        top: viewport.scrollHeight, 
-        behavior 
+      const behavior =
+        enableStreaming && isStreaming && enableSmoothScrolling
+          ? 'smooth'
+          : 'auto';
+      viewport.scrollTo({
+        top: viewport.scrollHeight,
+        behavior,
       });
     }
-  }, [messages, autoScroll, isStreaming, enableStreaming, enableSmoothScrolling]);
+  }, [
+    messages,
+    autoScroll,
+    isStreaming,
+    enableStreaming,
+    enableSmoothScrolling,
+  ]);
 
   // Group consecutive messages from the same sender with performance optimization
   const messageGroups = useMemo(() => {
     return measureRenderTime(() => {
       // Apply memory optimization by limiting rendered messages
-      const messagesToRender = enableMemoryOptimization && messages.length > maxRenderedMessages
-        ? messages.slice(-maxRenderedMessages)
-        : messages;
+      const messagesToRender =
+        enableMemoryOptimization && messages.length > maxRenderedMessages
+          ? messages.slice(-maxRenderedMessages)
+          : messages;
 
       if (!groupMessages) {
         return messagesToRender.map((message, index) => ({
@@ -264,32 +301,46 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
         []
       );
     });
-  }, [messages, groupMessages, measureRenderTime, enableMemoryOptimization, maxRenderedMessages]);
+  }, [
+    messages,
+    groupMessages,
+    measureRenderTime,
+    enableMemoryOptimization,
+    maxRenderedMessages,
+  ]);
 
   // Get message content for display (prefer parts over content)
- const getMessagePreview = (message: UIMessage): string => {
-   if (Array.isArray(message.parts) && message.parts.length > 0) {
+  const getMessagePreview = (message: UIMessage): string => {
+    if (Array.isArray(message.parts) && message.parts.length > 0) {
       // Extract text from parts
       const textParts = message.parts
-       .filter((part): part is { type: 'text'; text: string } => 
-         part && typeof part === 'object' && 'type' in part && part.type === 'text'
-       )
-       .map((part) => part.text)
+        .filter(
+          (part): part is { type: 'text'; text: string } =>
+            part &&
+            typeof part === 'object' &&
+            'type' in part &&
+            part.type === 'text'
+        )
+        .map((part) => part.text)
         .join(' ');
-      
+
       if (textParts) return textParts;
-      
+
       // If no text parts, show part types
-     const partTypes = message.parts
-       .map((part) => (part && typeof part === 'object' && 'type' in part) ? part.type : 'unknown')
-       .join(', ');
+      const partTypes = message.parts
+        .map((part) =>
+          part && typeof part === 'object' && 'type' in part
+            ? part.type
+            : 'unknown'
+        )
+        .join(', ');
       return `[${partTypes}]`;
     }
-    
+
     // Fallback to content property
-   return ('content' in message && typeof message.content === 'string') 
-     ? message.content 
-     : '[Empty message]';
+    return 'content' in message && typeof message.content === 'string'
+      ? message.content
+      : '[Empty message]';
   };
 
   return (
@@ -299,30 +350,30 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
       {...rest}
     >
       <ScrollArea.Root className="scroll-area-root" ref={scrollAreaRef}>
-        <ScrollArea.Viewport 
-          className="scroll-area-viewport" 
+        <ScrollArea.Viewport
+          className="scroll-area-viewport"
           ref={viewportRef}
           onScroll={handleScroll}
         >
           <div className="message-list-content">
             {/* Virtualization spacer for items before visible range */}
             {enableVirtualization && visibleRange.start > 0 && (
-              <div 
+              <div
                 style={{ height: visibleRange.start * estimatedMessageHeight }}
                 className="virtualization-spacer-top"
               />
             )}
-            
+
             {messageGroups
               .slice(
                 enableVirtualization ? visibleRange.start : 0,
                 enableVirtualization ? visibleRange.end : undefined
               )
               .map((group, groupIndex) => {
-                const actualGroupIndex = enableVirtualization 
-                  ? groupIndex + visibleRange.start 
+                const actualGroupIndex = enableVirtualization
+                  ? groupIndex + visibleRange.start
                   : groupIndex;
-                
+
                 return (
                   <div
                     key={actualGroupIndex}
@@ -338,19 +389,46 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
                         data-message-id={message.id}
                       >
                         {MessageItemComponent ? (
-                          <MessageItemComponent 
+                          <MessageItemComponent
                             message={message}
                             showMetadata={showMetadata}
                             showReasoningTraces={showReasoningTraces}
                             showSourceCitations={showSourceCitations}
                             // Pass streaming props if this is the streaming message
-                            enableStreaming={enableStreaming && message.id === streamingMessageId}
-                            isStreaming={isStreaming && message.id === streamingMessageId}
-                            streamParts={message.id === streamingMessageId ? streamParts : undefined}
+                            enableStreaming={
+                              enableStreaming &&
+                              message.id === streamingMessageId
+                            }
+                            isStreaming={
+                              isStreaming && message.id === streamingMessageId
+                            }
+                            streamParts={
+                              message.id === streamingMessageId
+                                ? streamParts
+                                : undefined
+                            }
                             enableSmoothScrolling={enableSmoothScrolling}
-                            onStreamComplete={onStreamComplete ? (finalMessage) => onStreamComplete(message.id || '', finalMessage) : undefined}
-                            onStreamError={onStreamError ? (error) => onStreamError(message.id || '', error) : undefined}
-                            onTokenUpdate={onTokenUpdate ? (tokenCount) => onTokenUpdate(message.id || '', tokenCount) : undefined}
+                            onStreamComplete={
+                              onStreamComplete
+                                ? (finalMessage) =>
+                                    onStreamComplete(
+                                      message.id || '',
+                                      finalMessage
+                                    )
+                                : undefined
+                            }
+                            onStreamError={
+                              onStreamError
+                                ? (error) =>
+                                    onStreamError(message.id || '', error)
+                                : undefined
+                            }
+                            onTokenUpdate={
+                              onTokenUpdate
+                                ? (tokenCount) =>
+                                    onTokenUpdate(message.id || '', tokenCount)
+                                : undefined
+                            }
                             // Performance optimization props
                             enableLazyLoading={enableLazyLoading}
                             enableVirtualization={enableVirtualization}
@@ -362,12 +440,12 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
                             <div className="message-preview">
                               {getMessagePreview(message)}
                             </div>
-                            {('createdAt' in message && 
-                              message.createdAt instanceof Date) && (
-                               <div className="message-timestamp">
-                                {message.createdAt.toLocaleTimeString()}
-                               </div>
-                             )}
+                            {'createdAt' in message &&
+                              message.createdAt instanceof Date && (
+                                <div className="message-timestamp">
+                                  {message.createdAt.toLocaleTimeString()}
+                                </div>
+                              )}
                           </div>
                         )}
                       </div>
@@ -375,20 +453,28 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
                   </div>
                 );
               })}
-            
+
             {/* Virtualization spacer for items after visible range */}
-            {enableVirtualization && visibleRange.end < messageGroups.length && (
-              <div 
-                style={{ height: (messageGroups.length - visibleRange.end) * estimatedMessageHeight }}
-                className="virtualization-spacer-bottom"
-              />
-            )}
-            
+            {enableVirtualization &&
+              visibleRange.end < messageGroups.length && (
+                <div
+                  style={{
+                    height:
+                      (messageGroups.length - visibleRange.end) *
+                      estimatedMessageHeight,
+                  }}
+                  className="virtualization-spacer-bottom"
+                />
+              )}
+
             {/* Custom children (e.g., typing indicators) */}
             {children}
           </div>
         </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar className="scroll-area-scrollbar" orientation="vertical">
+        <ScrollArea.Scrollbar
+          className="scroll-area-scrollbar"
+          orientation="vertical"
+        >
           <ScrollArea.Thumb className="scroll-area-thumb" />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
@@ -396,4 +482,4 @@ const ConciergusMessageList: React.FC<ConciergusMessageListProps> = ({
   );
 };
 
-export default ConciergusMessageList; 
+export default ConciergusMessageList;

@@ -4,18 +4,24 @@
  */
 
 // Circuit Breaker
-export { CircuitBreaker, type CircuitBreakerConfig, type CircuitBreakerResult, type CircuitBreakerMetrics, type CircuitBreakerState } from './CircuitBreaker';
+export {
+  CircuitBreaker,
+  type CircuitBreakerConfig,
+  type CircuitBreakerResult,
+  type CircuitBreakerMetrics,
+  type CircuitBreakerState,
+} from './CircuitBreaker';
 
 // Error Boundaries
-export { 
-  ErrorBoundary, 
-  PageErrorBoundary, 
-  SectionErrorBoundary, 
+export {
+  ErrorBoundary,
+  PageErrorBoundary,
+  SectionErrorBoundary,
   ComponentErrorBoundary,
   MinimalErrorFallback,
   DetailedErrorFallback,
   type ErrorBoundaryConfig,
-  type ErrorFallbackProps
+  type ErrorFallbackProps,
 } from './ErrorBoundary';
 
 // Default configurations
@@ -40,7 +46,10 @@ export const DEFAULT_CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
 /**
  * Create circuit breaker for API calls
  */
-export function createAPICircuitBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+export function createAPICircuitBreaker(
+  name: string,
+  config?: Partial<CircuitBreakerConfig>
+): CircuitBreaker {
   return new CircuitBreaker(name, {
     ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
     timeout: 15000, // 15 seconds for API calls
@@ -53,7 +62,10 @@ export function createAPICircuitBreaker(name: string, config?: Partial<CircuitBr
 /**
  * Create circuit breaker for AI provider calls
  */
-export function createAIProviderCircuitBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+export function createAIProviderCircuitBreaker(
+  name: string,
+  config?: Partial<CircuitBreakerConfig>
+): CircuitBreaker {
   return new CircuitBreaker(name, {
     ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
     timeout: 60000, // 60 seconds for AI calls
@@ -67,7 +79,10 @@ export function createAIProviderCircuitBreaker(name: string, config?: Partial<Ci
 /**
  * Create circuit breaker for database operations
  */
-export function createDatabaseCircuitBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+export function createDatabaseCircuitBreaker(
+  name: string,
+  config?: Partial<CircuitBreakerConfig>
+): CircuitBreaker {
   return new CircuitBreaker(name, {
     ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
     timeout: 10000, // 10 seconds for DB calls
@@ -81,7 +96,10 @@ export function createDatabaseCircuitBreaker(name: string, config?: Partial<Circ
 /**
  * Create circuit breaker for external service calls
  */
-export function createExternalServiceCircuitBreaker(name: string, config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
+export function createExternalServiceCircuitBreaker(
+  name: string,
+  config?: Partial<CircuitBreakerConfig>
+): CircuitBreaker {
   return new CircuitBreaker(name, {
     ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
     timeout: 20000, // 20 seconds
@@ -107,13 +125,15 @@ export const ErrorUtils = {
     ];
 
     const errorString = `${error.name} ${error.message}`;
-    return retryablePatterns.some(pattern => pattern.test(errorString));
+    return retryablePatterns.some((pattern) => pattern.test(errorString));
   },
 
   /**
    * Get error category from error
    */
-  categorizeError(error: Error): 'network' | 'validation' | 'authorization' | 'system' | 'unknown' {
+  categorizeError(
+    error: Error
+  ): 'network' | 'validation' | 'authorization' | 'system' | 'unknown' {
     const errorString = `${error.name} ${error.message}`.toLowerCase();
 
     if (/network|fetch|connection|timeout/i.test(errorString)) {
@@ -128,7 +148,7 @@ export const ErrorUtils = {
     if (/500|502|503|504|system|internal/i.test(errorString)) {
       return 'system';
     }
-    
+
     return 'unknown';
   },
 
@@ -158,7 +178,7 @@ export const ErrorUtils = {
    */
   formatErrorForUser(error: Error): string {
     const category = this.categorizeError(error);
-    
+
     switch (category) {
       case 'network':
         return 'Connection issue. Please check your internet and try again.';
@@ -176,7 +196,10 @@ export const ErrorUtils = {
   /**
    * Create error context for logging
    */
-  createErrorContext(error: Error, additionalContext?: Record<string, any>): Record<string, any> {
+  createErrorContext(
+    error: Error,
+    additionalContext?: Record<string, any>
+  ): Record<string, any> {
     return {
       name: error.name,
       message: error.message,
@@ -184,7 +207,8 @@ export const ErrorUtils = {
       category: this.categorizeError(error),
       retryable: this.isRetryableError(error),
       timestamp: new Date().toISOString(),
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
       url: typeof window !== 'undefined' ? window.location.href : 'unknown',
       ...additionalContext,
     };
@@ -216,11 +240,11 @@ export class CircuitBreakerManager {
    */
   getAllMetrics(): Record<string, CircuitBreakerMetrics> {
     const metrics: Record<string, CircuitBreakerMetrics> = {};
-    
+
     for (const [name, breaker] of this.circuitBreakers.entries()) {
       metrics[name] = breaker.getMetrics();
     }
-    
+
     return metrics;
   }
 
@@ -295,15 +319,21 @@ export function initializeCommonCircuitBreakers(): CircuitBreakerManager {
 
   // API circuit breaker
   manager.register('api', createAPICircuitBreaker('api'));
-  
+
   // AI provider circuit breaker
-  manager.register('ai-provider', createAIProviderCircuitBreaker('ai-provider'));
-  
+  manager.register(
+    'ai-provider',
+    createAIProviderCircuitBreaker('ai-provider')
+  );
+
   // Database circuit breaker
   manager.register('database', createDatabaseCircuitBreaker('database'));
-  
+
   // External services circuit breaker
-  manager.register('external-services', createExternalServiceCircuitBreaker('external-services'));
+  manager.register(
+    'external-services',
+    createExternalServiceCircuitBreaker('external-services')
+  );
 
   return manager;
 }
@@ -313,7 +343,10 @@ export function initializeCommonCircuitBreakers(): CircuitBreakerManager {
  */
 export function useCircuitBreaker(name: string): {
   circuitBreaker: CircuitBreaker | undefined;
-  execute: <T>(operation: () => Promise<T>, fallback?: () => Promise<T>) => Promise<CircuitBreakerResult<T>>;
+  execute: <T>(
+    operation: () => Promise<T>,
+    fallback?: () => Promise<T>
+  ) => Promise<CircuitBreakerResult<T>>;
   metrics: CircuitBreakerMetrics | null;
   isHealthy: boolean;
   reset: () => void;
@@ -322,7 +355,7 @@ export function useCircuitBreaker(name: string): {
   const circuitBreaker = manager.get(name);
 
   const execute = async <T>(
-    operation: () => Promise<T>, 
+    operation: () => Promise<T>,
     fallback?: () => Promise<T>
   ): Promise<CircuitBreakerResult<T>> => {
     if (!circuitBreaker) {
@@ -356,7 +389,7 @@ export function useErrorHandler(): {
   const handleError = (error: Error, context?: Record<string, any>) => {
     const errorContext = ErrorUtils.createErrorContext(error, context);
     console.error('Error handled:', errorContext);
-    
+
     // Here you could also send to external error tracking service
     // Example: Sentry.captureException(error, { extra: errorContext });
   };
@@ -382,8 +415,10 @@ export function createErrorHandlingFromEnv(): {
   return {
     enableErrorReporting: process.env.ENABLE_ERROR_REPORTING !== 'false',
     enableCircuitBreakers: process.env.ENABLE_CIRCUIT_BREAKERS !== 'false',
-    enableDetailedErrors: process.env.NODE_ENV === 'development' || process.env.SHOW_ERROR_DETAILS === 'true',
+    enableDetailedErrors:
+      process.env.NODE_ENV === 'development' ||
+      process.env.SHOW_ERROR_DETAILS === 'true',
     maxRetries: parseInt(process.env.MAX_ERROR_RETRIES || '3'),
     baseRetryDelay: parseInt(process.env.BASE_RETRY_DELAY || '1000'),
   };
-} 
+}

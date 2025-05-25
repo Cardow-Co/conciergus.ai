@@ -5,7 +5,10 @@
 
 import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
 import type { CircuitBreakerMetrics } from '../errors/CircuitBreaker';
-import type { PerformanceMetrics, DashboardConfig } from './PerformanceDashboard';
+import type {
+  PerformanceMetrics,
+  DashboardConfig,
+} from './PerformanceDashboard';
 
 /**
  * Base APM provider interface
@@ -33,12 +36,12 @@ export interface APMConfig {
   serviceName: string;
   version: string;
   tags?: Record<string, string>;
-  
+
   // Sampling configuration
   sampleRate: number; // 0-1
   enableTracing: boolean;
   enableRUM: boolean; // Real User Monitoring
-  
+
   // Batch configuration
   batchSize: number;
   flushInterval: number; // milliseconds
@@ -109,15 +112,15 @@ export class DatadogAPMProvider implements APMProvider {
 
   async initialize(config: APMConfig): Promise<void> {
     this.config = config;
-    
+
     // Initialize Datadog RUM if enabled
     if (config.enableRUM && typeof window !== 'undefined') {
       await this.initializeRUM();
     }
-    
+
     // Start metrics flushing
     this.startMetricsFlush();
-    
+
     this.isInitialized = true;
     console.log(`Datadog APM initialized for service: ${config.serviceName}`);
   }
@@ -126,7 +129,7 @@ export class DatadogAPMProvider implements APMProvider {
     // Load Datadog RUM SDK dynamically
     try {
       const { datadogRum } = await import('@datadog/browser-rum');
-      
+
       datadogRum.init({
         applicationId: this.config.projectId!,
         clientToken: this.config.apiKey,
@@ -138,7 +141,7 @@ export class DatadogAPMProvider implements APMProvider {
         trackInteractions: true,
         defaultPrivacyLevel: 'mask-user-input',
       });
-      
+
       datadogRum.startSessionReplayRecording();
     } catch (error) {
       console.warn('Failed to initialize Datadog RUM:', error);
@@ -147,9 +150,9 @@ export class DatadogAPMProvider implements APMProvider {
 
   async sendMetrics(metrics: PerformanceMetrics): Promise<void> {
     if (!this.isInitialized) return;
-    
+
     this.metricsBuffer.push(metrics);
-    
+
     if (this.metricsBuffer.length >= this.config.batchSize) {
       await this.flushMetrics();
     }
@@ -157,21 +160,24 @@ export class DatadogAPMProvider implements APMProvider {
 
   private async flushMetrics(): Promise<void> {
     if (this.metricsBuffer.length === 0) return;
-    
+
     const metrics = this.metricsBuffer.splice(0);
-    
+
     try {
       const payload = this.formatDatadogMetrics(metrics);
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/series`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'DD-API-KEY': this.config.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/series`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DD-API-KEY': this.config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`Datadog API error: ${response.status}`);
       }
@@ -184,8 +190,8 @@ export class DatadogAPMProvider implements APMProvider {
 
   private formatDatadogMetrics(metrics: PerformanceMetrics[]): any {
     const series: any[] = [];
-    
-    metrics.forEach(metric => {
+
+    metrics.forEach((metric) => {
       const timestamp = Math.floor(metric.timestamp.getTime() / 1000);
       const tags = [
         `service:${this.config.serviceName}`,
@@ -193,7 +199,7 @@ export class DatadogAPMProvider implements APMProvider {
         `version:${this.config.version}`,
         ...Object.entries(this.config.tags || {}).map(([k, v]) => `${k}:${v}`),
       ];
-      
+
       // Core Web Vitals
       Object.entries(metric.coreWebVitals).forEach(([key, value]) => {
         series.push({
@@ -203,7 +209,7 @@ export class DatadogAPMProvider implements APMProvider {
           type: 'gauge',
         });
       });
-      
+
       // Performance metrics
       Object.entries(metric.performance).forEach(([key, value]) => {
         series.push({
@@ -213,7 +219,7 @@ export class DatadogAPMProvider implements APMProvider {
           type: key === 'throughput' ? 'rate' : 'gauge',
         });
       });
-      
+
       // System metrics
       Object.entries(metric.system).forEach(([key, value]) => {
         series.push({
@@ -224,7 +230,7 @@ export class DatadogAPMProvider implements APMProvider {
         });
       });
     });
-    
+
     return { series };
   }
 
@@ -233,21 +239,29 @@ export class DatadogAPMProvider implements APMProvider {
       const payload = {
         title: alert.title,
         text: alert.message,
-        alert_type: alert.severity === 'critical' ? 'error' : alert.severity === 'high' ? 'warning' : 'info',
+        alert_type:
+          alert.severity === 'critical'
+            ? 'error'
+            : alert.severity === 'high'
+              ? 'warning'
+              : 'info',
         date_happened: Math.floor(alert.timestamp.getTime() / 1000),
         tags: Object.entries(alert.tags).map(([k, v]) => `${k}:${v}`),
         source_type_name: alert.source,
       };
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'DD-API-KEY': this.config.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/events`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DD-API-KEY': this.config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`Datadog alert API error: ${response.status}`);
       }
@@ -263,19 +277,25 @@ export class DatadogAPMProvider implements APMProvider {
         level: log.level,
         timestamp: log.timestamp.toISOString(),
         service: this.config.serviceName,
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
-        ddtags: Object.entries(log.tags).map(([k, v]) => `${k}:${v}`).join(','),
+        hostname:
+          typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+        ddtags: Object.entries(log.tags)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(','),
         ...log.context,
       };
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://http-intake.logs.datadoghq.com'}/v1/input/${this.config.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://http-intake.logs.datadoghq.com'}/v1/input/${this.config.apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`Datadog logs API error: ${response.status}`);
       }
@@ -289,7 +309,7 @@ export class DatadogAPMProvider implements APMProvider {
       const payload = {
         title: config.name,
         description: config.description,
-        widgets: config.widgets.map(widget => ({
+        widgets: config.widgets.map((widget) => ({
           definition: {
             type: widget.type,
             title: widget.title,
@@ -306,20 +326,23 @@ export class DatadogAPMProvider implements APMProvider {
         layout_type: 'ordered',
         is_read_only: false,
       };
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/dashboard`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'DD-API-KEY': this.config.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://api.datadoghq.com'}/api/v1/dashboard`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'DD-API-KEY': this.config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`Datadog dashboard API error: ${response.status}`);
       }
-      
+
       const result = await response.json();
       return result.id;
     } catch (error) {
@@ -339,7 +362,7 @@ export class DatadogAPMProvider implements APMProvider {
       clearInterval(this.flushTimer);
       this.flushTimer = null;
     }
-    
+
     await this.flushMetrics(); // Final flush
     this.isInitialized = false;
   }
@@ -359,12 +382,12 @@ export class NewRelicAPMProvider implements APMProvider {
 
   async initialize(config: APMConfig): Promise<void> {
     this.config = config;
-    
+
     // Initialize New Relic Browser agent if enabled
     if (config.enableRUM && typeof window !== 'undefined') {
       await this.initializeBrowserAgent();
     }
-    
+
     this.isInitialized = true;
     console.log(`New Relic APM initialized for service: ${config.serviceName}`);
   }
@@ -376,7 +399,7 @@ export class NewRelicAPMProvider implements APMProvider {
       script.src = `https://js-agent.newrelic.com/nr-spa-${this.config.projectId}.min.js`;
       script.async = true;
       document.head.appendChild(script);
-      
+
       // Configure agent
       (window as any).NREUM = {
         info: {
@@ -394,19 +417,22 @@ export class NewRelicAPMProvider implements APMProvider {
 
   async sendMetrics(metrics: PerformanceMetrics): Promise<void> {
     if (!this.isInitialized) return;
-    
+
     try {
       const payload = this.formatNewRelicMetrics(metrics);
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://metric-api.newrelic.com'}/metric/v1`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Api-Key': this.config.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://metric-api.newrelic.com'}/metric/v1`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': this.config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`New Relic API error: ${response.status}`);
       }
@@ -423,9 +449,9 @@ export class NewRelicAPMProvider implements APMProvider {
       version: this.config.version,
       ...this.config.tags,
     };
-    
+
     const metricData: any[] = [];
-    
+
     // Core Web Vitals
     Object.entries(metrics.coreWebVitals).forEach(([key, value]) => {
       metricData.push({
@@ -436,7 +462,7 @@ export class NewRelicAPMProvider implements APMProvider {
         attributes,
       });
     });
-    
+
     // Performance metrics
     Object.entries(metrics.performance).forEach(([key, value]) => {
       metricData.push({
@@ -447,11 +473,13 @@ export class NewRelicAPMProvider implements APMProvider {
         attributes,
       });
     });
-    
-    return [{
-      common: { timestamp, attributes },
-      metrics: metricData,
-    }];
+
+    return [
+      {
+        common: { timestamp, attributes },
+        metrics: metricData,
+      },
+    ];
   }
 
   async sendAlert(alert: AlertPayload): Promise<void> {
@@ -468,16 +496,19 @@ export class NewRelicAPMProvider implements APMProvider {
         ...alert.tags,
         ...alert.metrics,
       };
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://insights-collector.newrelic.com'}/v1/accounts/${this.config.projectId}/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Insert-Key': this.config.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://insights-collector.newrelic.com'}/v1/accounts/${this.config.projectId}/events`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Insert-Key': this.config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`New Relic events API error: ${response.status}`);
       }
@@ -493,20 +524,24 @@ export class NewRelicAPMProvider implements APMProvider {
         level: log.level,
         timestamp: log.timestamp.getTime(),
         service: this.config.serviceName,
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+        hostname:
+          typeof window !== 'undefined' ? window.location.hostname : 'unknown',
         ...log.tags,
         ...log.context,
       };
-      
-      const response = await fetch(`${this.config.apiUrl || 'https://log-api.newrelic.com'}/log/v1`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Api-Key': this.config.apiKey,
-        },
-        body: JSON.stringify([payload]),
-      });
-      
+
+      const response = await fetch(
+        `${this.config.apiUrl || 'https://log-api.newrelic.com'}/log/v1`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': this.config.apiKey,
+          },
+          body: JSON.stringify([payload]),
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`New Relic logs API error: ${response.status}`);
       }
@@ -547,13 +582,13 @@ export class CustomAPMProvider implements APMProvider {
 
   async sendMetrics(metrics: PerformanceMetrics): Promise<void> {
     if (!this.isInitialized || !this.config.apiUrl) return;
-    
+
     try {
       const response = await fetch(`${this.config.apiUrl}/metrics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
           service: this.config.serviceName,
@@ -563,7 +598,7 @@ export class CustomAPMProvider implements APMProvider {
           tags: this.config.tags,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Custom APM API error: ${response.status}`);
       }
@@ -574,17 +609,17 @@ export class CustomAPMProvider implements APMProvider {
 
   async sendAlert(alert: AlertPayload): Promise<void> {
     if (!this.config.apiUrl) return;
-    
+
     try {
       const response = await fetch(`${this.config.apiUrl}/alerts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify(alert),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Custom APM alert API error: ${response.status}`);
       }
@@ -595,17 +630,17 @@ export class CustomAPMProvider implements APMProvider {
 
   async sendLog(log: LogPayload): Promise<void> {
     if (!this.config.apiUrl) return;
-    
+
     try {
       const response = await fetch(`${this.config.apiUrl}/logs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify(log),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Custom APM logs API error: ${response.status}`);
       }
@@ -616,21 +651,21 @@ export class CustomAPMProvider implements APMProvider {
 
   async createDashboard(config: DashboardDefinition): Promise<string> {
     if (!this.config.apiUrl) return 'custom-dashboard-id';
-    
+
     try {
       const response = await fetch(`${this.config.apiUrl}/dashboards`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify(config),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Custom APM dashboard API error: ${response.status}`);
       }
-      
+
       const result = await response.json();
       return result.id || 'custom-dashboard-id';
     } catch (error) {
@@ -694,10 +729,12 @@ export class APMManager {
   async sendMetrics(metrics: PerformanceMetrics): Promise<void> {
     if (this.isShuttingDown) return;
 
-    const promises = Array.from(this.providers.values()).map(provider =>
-      provider.sendMetrics(metrics).catch(error =>
-        console.error(`Failed to send metrics via ${provider.name}:`, error)
-      )
+    const promises = Array.from(this.providers.values()).map((provider) =>
+      provider
+        .sendMetrics(metrics)
+        .catch((error) =>
+          console.error(`Failed to send metrics via ${provider.name}:`, error)
+        )
     );
 
     await Promise.allSettled(promises);
@@ -706,10 +743,12 @@ export class APMManager {
   async sendAlert(alert: AlertPayload): Promise<void> {
     if (this.isShuttingDown) return;
 
-    const promises = Array.from(this.providers.values()).map(provider =>
-      provider.sendAlert(alert).catch(error =>
-        console.error(`Failed to send alert via ${provider.name}:`, error)
-      )
+    const promises = Array.from(this.providers.values()).map((provider) =>
+      provider
+        .sendAlert(alert)
+        .catch((error) =>
+          console.error(`Failed to send alert via ${provider.name}:`, error)
+        )
     );
 
     await Promise.allSettled(promises);
@@ -718,10 +757,12 @@ export class APMManager {
   async sendLog(log: LogPayload): Promise<void> {
     if (this.isShuttingDown) return;
 
-    const promises = Array.from(this.providers.values()).map(provider =>
-      provider.sendLog(log).catch(error =>
-        console.error(`Failed to send log via ${provider.name}:`, error)
-      )
+    const promises = Array.from(this.providers.values()).map((provider) =>
+      provider
+        .sendLog(log)
+        .catch((error) =>
+          console.error(`Failed to send log via ${provider.name}:`, error)
+        )
     );
 
     await Promise.allSettled(promises);
@@ -737,11 +778,13 @@ export class APMManager {
 
   async shutdown(): Promise<void> {
     this.isShuttingDown = true;
-    
-    const promises = Array.from(this.providers.values()).map(provider =>
-      provider.shutdown().catch(error =>
-        console.error(`Failed to shutdown ${provider.name}:`, error)
-      )
+
+    const promises = Array.from(this.providers.values()).map((provider) =>
+      provider
+        .shutdown()
+        .catch((error) =>
+          console.error(`Failed to shutdown ${provider.name}:`, error)
+        )
     );
 
     await Promise.allSettled(promises);
@@ -769,7 +812,7 @@ export function getGlobalAPMManager(): APMManager {
  */
 export async function initializeAPMFromEnv(): Promise<APMManager> {
   const manager = getGlobalAPMManager();
-  
+
   // Check for Datadog configuration
   if (process.env.DATADOG_API_KEY) {
     await manager.addProvider('datadog', {
@@ -788,7 +831,7 @@ export async function initializeAPMFromEnv(): Promise<APMManager> {
       retryDelay: parseInt(process.env.APM_RETRY_DELAY || '1000'),
     });
   }
-  
+
   // Check for New Relic configuration
   if (process.env.NEW_RELIC_LICENSE_KEY) {
     await manager.addProvider('newrelic', {
@@ -807,7 +850,7 @@ export async function initializeAPMFromEnv(): Promise<APMManager> {
       retryDelay: parseInt(process.env.APM_RETRY_DELAY || '1000'),
     });
   }
-  
+
   // Check for custom APM configuration
   if (process.env.CUSTOM_APM_API_KEY && process.env.CUSTOM_APM_URL) {
     await manager.addProvider('custom', {
@@ -826,8 +869,8 @@ export async function initializeAPMFromEnv(): Promise<APMManager> {
       retryDelay: parseInt(process.env.APM_RETRY_DELAY || '1000'),
     });
   }
-  
+
   return manager;
 }
 
-export default APMManager; 
+export default APMManager;

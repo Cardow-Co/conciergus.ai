@@ -93,12 +93,7 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
   ...rest
 }) => {
   // Filter out custom props to prevent React DOM warnings
-  const {
-    showPerformanceMetrics,
-    interactive,
-    compact,
-    ...domProps
-  } = rest;
+  const { showPerformanceMetrics, interactive, compact, ...domProps } = rest;
   const [audioState, setAudioState] = useState({
     currentTime: 0,
     duration: 0,
@@ -113,13 +108,13 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
 
   // Update audio state when playback speed prop changes
   useEffect(() => {
-    setAudioState(prev => ({ ...prev, playbackRate: audioPlaybackSpeed }));
+    setAudioState((prev) => ({ ...prev, playbackRate: audioPlaybackSpeed }));
   }, [audioPlaybackSpeed]);
 
   // Enhanced audio handling functions
   const handleAudioTimeUpdate = (e: React.SyntheticEvent<HTMLAudioElement>) => {
     const audio = e.currentTarget;
-    setAudioState(prev => ({
+    setAudioState((prev) => ({
       ...prev,
       currentTime: audio.currentTime,
       duration: audio.duration || 0,
@@ -127,12 +122,12 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
   };
 
   const handleAudioPlaybackRateChange = (newRate: number) => {
-    setAudioState(prev => ({ ...prev, playbackRate: newRate }));
+    setAudioState((prev) => ({ ...prev, playbackRate: newRate }));
     onAudioSpeedChange?.(newRate);
   };
 
   const handleAudioSeek = (time: number) => {
-    setAudioState(prev => ({ ...prev, currentTime: time }));
+    setAudioState((prev) => ({ ...prev, currentTime: time }));
     onAudioSeek?.(time);
   };
 
@@ -140,37 +135,37 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
   const role = message.role || 'assistant';
   const timestamp = message.createdAt ? new Date(message.createdAt) : null;
   const metadata = (message as any).metadata;
-  
+
   // Generate CSS classes for styling
   const roleClass = `message-${role}`;
   const metadataClass = metadata ? 'has-metadata' : '';
   const isStreamingClass = isStreaming ? 'is-streaming' : '';
   const compactClass = compactView ? 'compact' : '';
-  
+
   // Format timestamp for display
   const formatTimestamp = (ts: Date | null): string => {
     if (!ts || !(ts instanceof Date) || isNaN(ts.getTime())) {
       return '';
     }
-    
+
     try {
       // Use locale-aware formatting with fallback
       return ts.toLocaleTimeString(undefined, {
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
       });
     } catch (error) {
       // Fallback to ISO string if locale formatting fails
       return ts.toTimeString().split(' ')[0];
     }
   };
-  
+
   const formattedTimestamp = formatTimestamp(timestamp);
-  
+
   // Check for audio content in message parts
-  const hasAudioParts = message.parts?.some(part => 
-    part.type === 'file' && part.mimeType?.startsWith('audio/')
+  const hasAudioParts = message.parts?.some(
+    (part) => part.type === 'file' && part.mimeType?.startsWith('audio/')
   );
 
   // Handle audio blob conversion for TTS
@@ -222,7 +217,10 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
         if (!showReasoningTraces) return null;
         const ReasoningComponent = CustomReasoningRenderer || ReasoningTrace;
         return (
-          <div key={index} className="message-part message-part-reasoning message-reasoning">
+          <div
+            key={index}
+            className="message-part message-part-reasoning message-reasoning"
+          >
             <ReasoningComponent
               reasoning={part.text}
               metadata={part.providerMetadata}
@@ -235,29 +233,33 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
       case 'tool-invocation':
         const { toolInvocation } = part;
         const ToolCallComponent = CustomToolCallRenderer;
-        
+
         // Enhanced tool call rendering with state management
         return (
           <div key={index} className="message-part message-part-tool">
             {ToolCallComponent ? (
-              <ToolCallComponent 
-                toolCall={toolInvocation} 
+              <ToolCallComponent
+                toolCall={toolInvocation}
                 state={toolInvocation.state}
               />
             ) : (
               <div className="tool-invocation-container">
                 <div className="tool-header">
                   <span className="tool-name">{toolInvocation.toolName}</span>
-                  <span className={`tool-status tool-status-${toolInvocation.state}`}>
+                  <span
+                    className={`tool-status tool-status-${toolInvocation.state}`}
+                  >
                     {toolInvocation.state === 'partial-call' && '🔄 Calling...'}
                     {toolInvocation.state === 'call' && '⚡ Ready'}
                     {toolInvocation.state === 'result' && '✅ Complete'}
                     {toolInvocation.state === 'error' && '❌ Error'}
                   </span>
                 </div>
-                
+
                 {/* Arguments display */}
-                {(toolInvocation.state === 'call' || toolInvocation.state === 'result' || toolInvocation.state === 'error') && (
+                {(toolInvocation.state === 'call' ||
+                  toolInvocation.state === 'result' ||
+                  toolInvocation.state === 'error') && (
                   <div className="tool-args">
                     <div className="tool-args-header">Arguments:</div>
                     <pre className="tool-args-content">
@@ -265,30 +267,32 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                     </pre>
                   </div>
                 )}
-                
+
                 {/* Partial call delta display */}
-                {toolInvocation.state === 'partial-call' && toolInvocation.argsTextDelta && (
-                  <div className="tool-args-delta">
-                    <div className="tool-args-header">Building arguments...</div>
-                    <pre className="tool-args-content">
-                      {toolInvocation.argsTextDelta}
-                    </pre>
-                  </div>
-                )}
-                
+                {toolInvocation.state === 'partial-call' &&
+                  toolInvocation.argsTextDelta && (
+                    <div className="tool-args-delta">
+                      <div className="tool-args-header">
+                        Building arguments...
+                      </div>
+                      <pre className="tool-args-content">
+                        {toolInvocation.argsTextDelta}
+                      </pre>
+                    </div>
+                  )}
+
                 {/* Result display */}
                 {toolInvocation.state === 'result' && (
                   <div className="tool-result">
                     <div className="tool-result-header">Result:</div>
                     <div className="tool-result-content">
-                      {typeof toolInvocation.result === 'string' 
-                        ? toolInvocation.result 
-                        : JSON.stringify(toolInvocation.result, null, 2)
-                      }
+                      {typeof toolInvocation.result === 'string'
+                        ? toolInvocation.result
+                        : JSON.stringify(toolInvocation.result, null, 2)}
                     </div>
                   </div>
                 )}
-                
+
                 {/* Error display */}
                 {toolInvocation.state === 'error' && (
                   <div className="tool-error">
@@ -309,7 +313,10 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
         // Convert single source to array format for SourcesDisplay
         const sources: Source[] = [part.source];
         return (
-          <div key={index} className="message-part message-part-source message-sources">
+          <div
+            key={index}
+            className="message-part message-part-source message-sources"
+          >
             <SourcesComponent
               sources={sources}
               compactView={compactView}
@@ -342,7 +349,7 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                   >
                     Your browser does not support the audio element.
                   </audio>
-                  
+
                   {/* Advanced audio controls */}
                   {enableAdvancedAudioControls && (
                     <div className="advanced-audio-controls">
@@ -352,19 +359,26 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                           min="0"
                           max={audioState.duration || 100}
                           value={audioState.currentTime}
-                          onChange={(e) => handleAudioSeek(Number(e.target.value))}
+                          onChange={(e) =>
+                            handleAudioSeek(Number(e.target.value))
+                          }
                           className="audio-scrubber"
                         />
                         <div className="audio-time">
-                          {Math.floor(audioState.currentTime)}s / {Math.floor(audioState.duration)}s
+                          {Math.floor(audioState.currentTime)}s /{' '}
+                          {Math.floor(audioState.duration)}s
                         </div>
                       </div>
-                      
+
                       <div className="audio-speed-controls">
                         <label>Speed:</label>
                         <select
                           value={audioState.playbackRate}
-                          onChange={(e) => handleAudioPlaybackRateChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            handleAudioPlaybackRateChange(
+                              Number(e.target.value)
+                            )
+                          }
                         >
                           <option value={0.5}>0.5x</option>
                           <option value={0.75}>0.75x</option>
@@ -379,12 +393,10 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                 </div>
               ) : part.mimeType?.startsWith('image/') ? (
                 <div className="image-file-container">
-                  <div className="file-header">
-                    📎 Image: {part.filename}
-                  </div>
+                  <div className="file-header">📎 Image: {part.filename}</div>
                   <img
                     src={part.url}
-                    alt={part.filename || "Attached image"}
+                    alt={part.filename || 'Attached image'}
                     className="file-image"
                     loading="lazy"
                   />
@@ -399,7 +411,12 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                       [Base64 data: {part.url.length} characters]
                     </div>
                   ) : (
-                    <a href={part.url} target="_blank" rel="noopener noreferrer" className="file-link">
+                    <a
+                      href={part.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                    >
                       Download {part.filename}
                     </a>
                   )}
@@ -414,16 +431,19 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
           <div key={index} className="message-part message-part-step">
             <div className="step-boundary">
               ⚡ Step Start
-              {part.experimental_attachments && part.experimental_attachments.length > 0 && (
-                <div className="step-attachments">
-                  <span className="attachments-label">Attachments:</span>
-                  {part.experimental_attachments.map((attachment: any, i: number) => (
-                    <span key={i} className="attachment-item">
-                      {attachment.name} ({attachment.contentType})
-                    </span>
-                  ))}
-                </div>
-              )}
+              {part.experimental_attachments &&
+                part.experimental_attachments.length > 0 && (
+                  <div className="step-attachments">
+                    <span className="attachments-label">Attachments:</span>
+                    {part.experimental_attachments.map(
+                      (attachment: any, i: number) => (
+                        <span key={i} className="attachment-item">
+                          {attachment.name} ({attachment.contentType})
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
             </div>
           </div>
         );
@@ -433,32 +453,35 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
         if (part.type?.startsWith('data-')) {
           if (enableGenerativeUI && CustomUIRenderer) {
             return (
-              <div key={index} className={`message-part message-part-ui message-part-${part.type}`}>
+              <div
+                key={index}
+                className={`message-part message-part-ui message-part-${part.type}`}
+              >
                 <CustomUIRenderer data={part.data} type={part.type} />
               </div>
             );
           } else {
             return (
-              <div key={index} className={`message-part message-part-data message-part-${part.type}`}>
+              <div
+                key={index}
+                className={`message-part message-part-data message-part-${part.type}`}
+              >
                 <div className="custom-data-part">
                   <div className="data-type">{part.type}</div>
                   <div className="data-content">
-                    {typeof part.data === 'object' 
+                    {typeof part.data === 'object'
                       ? JSON.stringify(part.data, null, 2)
-                      : String(part.data)
-                    }
+                      : String(part.data)}
                   </div>
                 </div>
               </div>
             );
           }
         }
-        
+
         return (
           <div key={index} className="message-part message-part-unknown">
-            <div className="unknown-part">
-              Unknown part type: {part.type}
-            </div>
+            <div className="unknown-part">Unknown part type: {part.type}</div>
           </div>
         );
     }
@@ -476,9 +499,7 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
     >
       {/* Avatar */}
       {avatarComponent && (
-        <div className="message-avatar">
-          {avatarComponent}
-        </div>
+        <div className="message-avatar">{avatarComponent}</div>
       )}
 
       {/* Message Content */}
@@ -503,7 +524,9 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
             {/* Render parts if available (AI SDK 5 preferred approach) */}
             {message.parts && message.parts.length > 0 ? (
               <div className="message-parts">
-                {message.parts.map((part, index) => renderMessagePart(part, index))}
+                {message.parts.map((part, index) =>
+                  renderMessagePart(part, index)
+                )}
               </div>
             ) : (
               /* Fallback to content property for backward compatibility */
@@ -546,7 +569,7 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
             >
               Your browser does not support the audio element.
             </audio>
-            
+
             {enableAdvancedAudioControls && (
               <div className="advanced-audio-controls">
                 <div className="audio-progress">
@@ -559,15 +582,18 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
                     className="audio-scrubber"
                   />
                   <div className="audio-time">
-                    {Math.floor(audioState.currentTime)}s / {Math.floor(audioState.duration)}s
+                    {Math.floor(audioState.currentTime)}s /{' '}
+                    {Math.floor(audioState.duration)}s
                   </div>
                 </div>
-                
+
                 <div className="audio-speed-controls">
                   <label>Speed:</label>
                   <select
                     value={audioState.playbackRate}
-                    onChange={(e) => handleAudioPlaybackRateChange(Number(e.target.value))}
+                    onChange={(e) =>
+                      handleAudioPlaybackRateChange(Number(e.target.value))
+                    }
                   >
                     <option value={0.5}>0.5x</option>
                     <option value={0.75}>0.75x</option>
@@ -586,7 +612,8 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
         {showMetadata && metadata && (
           <div className="message-metadata-container message-metadata">
             {(() => {
-              const MetadataComponent = CustomMetadataRenderer || MessageMetadata;
+              const MetadataComponent =
+                CustomMetadataRenderer || MessageMetadata;
               return (
                 <MetadataComponent
                   metadata={{
@@ -611,7 +638,10 @@ const ConciergusMessageItem: FC<ConciergusMessageItemProps> = ({
         {/* Timestamp */}
         {formattedTimestamp && (
           <div className="message-timestamp">
-            <time dateTime={timestamp?.toISOString() || ''} title={timestamp?.toLocaleString() || ''}>
+            <time
+              dateTime={timestamp?.toISOString() || ''}
+              title={timestamp?.toLocaleString() || ''}
+            >
               {formattedTimestamp}
             </time>
           </div>
@@ -630,9 +660,10 @@ const arePropsEqual = (
   if (prevProps.message.id !== nextProps.message.id) return false;
   if (prevProps.message.role !== nextProps.message.role) return false;
   if (prevProps.message.createdAt !== nextProps.message.createdAt) return false;
-  
+
   // Content comparison (parts vs content)
-  if (prevProps.message.parts?.length !== nextProps.message.parts?.length) return false;
+  if (prevProps.message.parts?.length !== nextProps.message.parts?.length)
+    return false;
   if (prevProps.message.parts) {
     for (let i = 0; i < prevProps.message.parts.length; i++) {
       const prevPart = prevProps.message.parts[i];
@@ -643,24 +674,26 @@ const arePropsEqual = (
       }
     }
   }
-  
+
   // Key behavioral props comparison
   if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
   if (prevProps.isStreaming !== nextProps.isStreaming) return false;
   if (prevProps.showMetadata !== nextProps.showMetadata) return false;
-  if (prevProps.showReasoningTraces !== nextProps.showReasoningTraces) return false;
-  if (prevProps.showSourceCitations !== nextProps.showSourceCitations) return false;
+  if (prevProps.showReasoningTraces !== nextProps.showReasoningTraces)
+    return false;
+  if (prevProps.showSourceCitations !== nextProps.showSourceCitations)
+    return false;
   if (prevProps.compactView !== nextProps.compactView) return false;
   if (prevProps.enableStreaming !== nextProps.enableStreaming) return false;
-  
+
   // Only compare className if they've actually changed
   if (prevProps.className !== nextProps.className) return false;
-  
+
   // Stream parts comparison for streaming messages
   if (prevProps.streamParts !== nextProps.streamParts) return false;
-  
+
   return true;
 };
 
 // Export the memoized component for performance optimization
-export default memo(ConciergusMessageItem, arePropsEqual); 
+export default memo(ConciergusMessageItem, arePropsEqual);

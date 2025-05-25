@@ -4,7 +4,7 @@
  */
 
 import { MiddlewareFunction, MiddlewareContext } from './MiddlewarePipeline';
-import { 
+import {
   ValidationEngine,
   validationEngine,
   ValidationResult,
@@ -12,7 +12,7 @@ import {
   ValidationSchema,
   DataType,
   ValidationSeverity,
-  type ValidationRule
+  type ValidationRule,
 } from '../security/ValidationEngine';
 import { SecureErrorHandler } from '../security/SecureErrorHandler';
 import { getSecurityCore } from '../security/SecurityCore';
@@ -34,12 +34,15 @@ export interface ValidationMiddlewareOptions {
   continueOnWarnings?: boolean;
   logValidationErrors?: boolean;
   customSchemas?: ValidationSchema[];
-  endpointSchemas?: Record<string, {
-    body?: string;
-    query?: string;
-    params?: string;
-    headers?: string;
-  }>;
+  endpointSchemas?: Record<
+    string,
+    {
+      body?: string;
+      query?: string;
+      params?: string;
+      headers?: string;
+    }
+  >;
   onValidationError?: (
     context: MiddlewareContext,
     result: ValidationResult,
@@ -62,10 +65,10 @@ export function createValidationMiddleware(
   options: ValidationMiddlewareOptions = {}
 ): MiddlewareFunction {
   const engine = options.engine || validationEngine;
-  
+
   // Register custom schemas if provided
   if (options.customSchemas) {
-    options.customSchemas.forEach(schema => {
+    options.customSchemas.forEach((schema) => {
       engine.registerSchema(schema);
     });
   }
@@ -79,7 +82,7 @@ export function createValidationMiddleware(
           'validation.url': context.request.url,
           'validation.method': context.request.method,
           'validation.request_id': context.request.id,
-          'validation.strict_mode': options.strictMode || false
+          'validation.strict_mode': options.strictMode || false,
         });
 
         try {
@@ -87,18 +90,26 @@ export function createValidationMiddleware(
             endpoint: context.request.url,
             method: context.request.method,
             userRole: context.user?.roles?.[0],
-            securityLevel: getSecurityCore().getConfig().level
+            securityLevel: getSecurityCore().getConfig().level,
           };
 
           // Get schemas for this endpoint
           const endpointKey = `${context.request.method}:${context.request.url}`;
-          const endpointSchemas = options.endpointSchemas?.[endpointKey] || 
-                                 findMatchingEndpointSchema(endpointKey, options.endpointSchemas || {}) ||
-                                 options.schemas || {};
+          const endpointSchemas =
+            options.endpointSchemas?.[endpointKey] ||
+            findMatchingEndpointSchema(
+              endpointKey,
+              options.endpointSchemas || {}
+            ) ||
+            options.schemas ||
+            {};
 
           let totalErrors = 0;
           let totalThreats = 0;
-          let allValidationResults: Array<{ source: string; result: ValidationResult }> = [];
+          const allValidationResults: Array<{
+            source: string;
+            result: ValidationResult;
+          }> = [];
 
           // Validate request body
           if (context.request.body && endpointSchemas.body) {
@@ -108,11 +119,11 @@ export function createValidationMiddleware(
               endpointSchemas.body,
               { ...validationContext, dataSource: 'body' }
             );
-            
+
             allValidationResults.push({ source: 'body', result });
             totalErrors += result.errors.length;
             totalThreats += result.metadata.securityThreatsDetected;
-            
+
             if (result.valid && result.sanitizedData) {
               context.request.body = result.sanitizedData;
             }
@@ -127,20 +138,26 @@ export function createValidationMiddleware(
               endpointSchemas.query,
               { ...validationContext, dataSource: 'query' }
             );
-            
+
             allValidationResults.push({ source: 'query', result });
             totalErrors += result.errors.length;
             totalThreats += result.metadata.securityThreatsDetected;
-            
+
             if (result.valid && result.sanitizedData) {
               // Update URL with sanitized query params
-              context.request.url = updateUrlWithSanitizedQuery(context.request.url, result.sanitizedData);
+              context.request.url = updateUrlWithSanitizedQuery(
+                context.request.url,
+                result.sanitizedData
+              );
             }
           }
 
           // Validate URL parameters (path params)
           if (endpointSchemas.params) {
-            const pathParams = extractPathParams(context.request.url, endpointKey);
+            const pathParams = extractPathParams(
+              context.request.url,
+              endpointKey
+            );
             if (Object.keys(pathParams).length > 0) {
               const result = await validateDataSource(
                 engine,
@@ -148,7 +165,7 @@ export function createValidationMiddleware(
                 endpointSchemas.params,
                 { ...validationContext, dataSource: 'params' }
               );
-              
+
               allValidationResults.push({ source: 'params', result });
               totalErrors += result.errors.length;
               totalThreats += result.metadata.securityThreatsDetected;
@@ -157,18 +174,20 @@ export function createValidationMiddleware(
 
           // Validate critical headers
           if (endpointSchemas.headers) {
-            const criticalHeaders = extractCriticalHeaders(context.request.headers);
+            const criticalHeaders = extractCriticalHeaders(
+              context.request.headers
+            );
             const result = await validateDataSource(
               engine,
               criticalHeaders,
               endpointSchemas.headers,
               { ...validationContext, dataSource: 'headers' }
             );
-            
+
             allValidationResults.push({ source: 'headers', result });
             totalErrors += result.errors.length;
             totalThreats += result.metadata.securityThreatsDetected;
-            
+
             if (result.valid && result.sanitizedData) {
               // Update headers with sanitized values
               Object.assign(context.request.headers, result.sanitizedData);
@@ -179,7 +198,7 @@ export function createValidationMiddleware(
           span?.setAttributes({
             'validation.total_errors': totalErrors,
             'validation.total_threats': totalThreats,
-            'validation.sources_validated': allValidationResults.length
+            'validation.sources_validated': allValidationResults.length,
           });
 
           // Record metrics
@@ -191,21 +210,21 @@ export function createValidationMiddleware(
               endpoint: context.request.url,
               method: context.request.method,
               errors: totalErrors,
-              threats: totalThreats
+              threats: totalThreats,
             }
           );
 
           // Handle security threats
           if (totalThreats > 0) {
             span?.setAttributes({
-              'validation.security_threats_detected': true
+              'validation.security_threats_detected': true,
             });
-            
+
             if (options.onSecurityThreat) {
               options.onSecurityThreat(context, {
                 dataSource: 'multiple',
                 threatCount: totalThreats,
-                errors: allValidationResults.flatMap(r => r.result.errors)
+                errors: allValidationResults.flatMap((r) => r.result.errors),
               });
             }
 
@@ -215,24 +234,26 @@ export function createValidationMiddleware(
               totalThreats,
               {
                 endpoint: context.request.url,
-                method: context.request.method
+                method: context.request.method,
               }
             );
           }
 
           // Handle validation errors
           if (totalErrors > 0) {
-            const hasHighSeverityErrors = allValidationResults.some(r => 
-              r.result.errors.some(e => 
-                e.severity === ValidationSeverity.HIGH || 
-                e.severity === ValidationSeverity.CRITICAL
+            const hasHighSeverityErrors = allValidationResults.some((r) =>
+              r.result.errors.some(
+                (e) =>
+                  e.severity === ValidationSeverity.HIGH ||
+                  e.severity === ValidationSeverity.CRITICAL
               )
             );
 
             if (options.strictMode || hasHighSeverityErrors) {
               // Create comprehensive error response
-              const validationError = createValidationErrorResponse(allValidationResults);
-              
+              const validationError =
+                createValidationErrorResponse(allValidationResults);
+
               context.response = {
                 status: 400,
                 statusText: 'Bad Request',
@@ -240,13 +261,13 @@ export function createValidationMiddleware(
                   'Content-Type': 'application/json',
                   'X-Request-ID': context.request.id,
                   'X-Validation-Errors': String(totalErrors),
-                  'X-Security-Threats': String(totalThreats)
+                  'X-Security-Threats': String(totalThreats),
                 },
-                body: validationError
+                body: validationError,
               };
-              
+
               context.aborted = true;
-              
+
               // Call custom error handler
               if (options.onValidationError) {
                 allValidationResults.forEach(({ source, result }) => {
@@ -255,7 +276,7 @@ export function createValidationMiddleware(
                   }
                 });
               }
-              
+
               return;
             }
           }
@@ -269,7 +290,7 @@ export function createValidationMiddleware(
                 logSpan?.setAttributes({
                   'validation.endpoint': context.request.url,
                   'validation.error_count': totalErrors,
-                  'validation.threat_count': totalThreats
+                  'validation.threat_count': totalThreats,
                 });
               }
             );
@@ -280,28 +301,29 @@ export function createValidationMiddleware(
 
           // Optionally sanitize response
           if (options.sanitizeResponse && context.response?.body) {
-            context.response.body = await sanitizeResponseData(context.response.body);
+            context.response.body = await sanitizeResponseData(
+              context.response.body
+            );
           }
-
         } catch (error) {
           span?.recordException(error as Error);
-          
+
           // Handle validation engine errors gracefully
           const sanitizedError = SecureErrorHandler.sanitizeError(
             error instanceof Error ? error : new Error(String(error)),
             context.request.id
           );
-          
+
           context.response = {
             status: 500,
             statusText: 'Internal Server Error',
             headers: {
               'Content-Type': 'application/json',
-              'X-Request-ID': context.request.id
+              'X-Request-ID': context.request.id,
             },
-            body: sanitizedError
+            body: sanitizedError,
           };
-          
+
           context.aborted = true;
         }
       }
@@ -313,17 +335,20 @@ export function createValidationMiddleware(
  * Create endpoint-specific validation middleware
  */
 export function createEndpointValidationMiddleware(
-  endpointSchemas: Record<string, {
-    body?: string;
-    query?: string;
-    params?: string;
-    headers?: string;
-  }>,
+  endpointSchemas: Record<
+    string,
+    {
+      body?: string;
+      query?: string;
+      params?: string;
+      headers?: string;
+    }
+  >,
   options: Omit<ValidationMiddlewareOptions, 'endpointSchemas'> = {}
 ): MiddlewareFunction {
   return createValidationMiddleware({
     ...options,
-    endpointSchemas
+    endpointSchemas,
   });
 }
 
@@ -341,7 +366,7 @@ export function createSchemaValidationMiddleware(
 ): MiddlewareFunction {
   return createValidationMiddleware({
     ...options,
-    schemas
+    schemas,
   });
 }
 
@@ -363,19 +388,21 @@ async function validateDataSource(
       valid: true,
       sanitizedData: data,
       errors: [],
-      warnings: [{
-        field: '_schema',
-        message: `Schema '${schemaName}' not found`,
-        code: 'SCHEMA_NOT_FOUND',
-        suggestion: 'Register the schema or check schema name'
-      }],
+      warnings: [
+        {
+          field: '_schema',
+          message: `Schema '${schemaName}' not found`,
+          code: 'SCHEMA_NOT_FOUND',
+          suggestion: 'Register the schema or check schema name',
+        },
+      ],
       metadata: {
         schemasApplied: [],
         fieldsValidated: 0,
         fieldsSanitized: 0,
         securityThreatsDetected: 0,
-        processingTime: 0
-      }
+        processingTime: 0,
+      },
     };
   }
 }
@@ -383,15 +410,15 @@ async function validateDataSource(
 function extractQueryParams(url: string): Record<string, any> {
   const queryString = url.split('?')[1];
   if (!queryString) return {};
-  
+
   const params: Record<string, any> = {};
-  queryString.split('&').forEach(pair => {
+  queryString.split('&').forEach((pair) => {
     const [key, value] = pair.split('=');
     if (key) {
       params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : '';
     }
   });
-  
+
   return params;
 }
 
@@ -401,44 +428,52 @@ function extractPathParams(url: string, pattern: string): Record<string, any> {
   const pathParts = url.split('/');
   const patternParts = pattern.split('/');
   const params: Record<string, any> = {};
-  
+
   patternParts.forEach((part, index) => {
     if (part.startsWith(':') && pathParts[index]) {
       const paramName = part.slice(1);
       params[paramName] = pathParts[index];
     }
   });
-  
+
   return params;
 }
 
-function extractCriticalHeaders(headers: Record<string, string>): Record<string, any> {
+function extractCriticalHeaders(
+  headers: Record<string, string>
+): Record<string, any> {
   const criticalHeaders = [
     'authorization',
     'x-api-key',
     'x-user-id',
     'x-session-id',
     'content-type',
-    'x-csrf-token'
+    'x-csrf-token',
   ];
-  
+
   const extracted: Record<string, any> = {};
-  criticalHeaders.forEach(header => {
+  criticalHeaders.forEach((header) => {
     const value = headers[header] || headers[header.toLowerCase()];
     if (value) {
       extracted[header] = value;
     }
   });
-  
+
   return extracted;
 }
 
-function updateUrlWithSanitizedQuery(originalUrl: string, sanitizedParams: Record<string, any>): string {
+function updateUrlWithSanitizedQuery(
+  originalUrl: string,
+  sanitizedParams: Record<string, any>
+): string {
   const [baseUrl] = originalUrl.split('?');
   const queryString = Object.entries(sanitizedParams)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+    )
     .join('&');
-  
+
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 }
 
@@ -450,20 +485,18 @@ function findMatchingEndpointSchema(
   if (endpointSchemas[endpoint]) {
     return endpointSchemas[endpoint];
   }
-  
+
   // Pattern matching
   for (const [pattern, schema] of Object.entries(endpointSchemas)) {
     if (pattern.includes('*') || pattern.includes(':')) {
-      const regex = pattern
-        .replace(/\*/g, '.*')
-        .replace(/:[\w]+/g, '[^/]+');
-      
+      const regex = pattern.replace(/\*/g, '.*').replace(/:[\w]+/g, '[^/]+');
+
       if (new RegExp(`^${regex}$`).test(endpoint)) {
         return schema;
       }
     }
   }
-  
+
   return null;
 }
 
@@ -472,22 +505,22 @@ function createValidationErrorResponse(
 ): any {
   const errorsBySource: Record<string, any[]> = {};
   const threatsBySource: Record<string, number> = {};
-  
+
   validationResults.forEach(({ source, result }) => {
     if (result.errors.length > 0) {
-      errorsBySource[source] = result.errors.map(error => ({
+      errorsBySource[source] = result.errors.map((error) => ({
         field: error.field,
         message: error.message,
         code: error.code,
-        severity: error.severity
+        severity: error.severity,
       }));
     }
-    
+
     if (result.metadata.securityThreatsDetected > 0) {
       threatsBySource[source] = result.metadata.securityThreatsDetected;
     }
   });
-  
+
   return {
     error: 'Validation failed',
     code: 'VALIDATION_ERROR',
@@ -495,30 +528,36 @@ function createValidationErrorResponse(
       errors: errorsBySource,
       securityThreats: threatsBySource,
       totalErrors: Object.values(errorsBySource).flat().length,
-      totalThreats: Object.values(threatsBySource).reduce((sum, count) => sum + count, 0)
+      totalThreats: Object.values(threatsBySource).reduce(
+        (sum, count) => sum + count,
+        0
+      ),
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 
 async function sanitizeResponseData(data: any): Promise<any> {
   if (typeof data === 'string') {
     // Basic response sanitization - remove potential XSS
-    return data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    return data.replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+      ''
+    );
   }
-  
+
   if (typeof data === 'object' && data !== null) {
     if (Array.isArray(data)) {
-      return Promise.all(data.map(item => sanitizeResponseData(item)));
+      return Promise.all(data.map((item) => sanitizeResponseData(item)));
     }
-    
+
     const sanitized: any = {};
     for (const [key, value] of Object.entries(data)) {
       sanitized[key] = await sanitizeResponseData(value);
     }
     return sanitized;
   }
-  
+
   return data;
 }
 
@@ -529,12 +568,12 @@ async function sanitizeResponseData(data: any): Promise<any> {
 // Standard API validation
 export const standardApiValidation = createValidationMiddleware({
   schemas: {
-    query: 'api_query_params'
+    query: 'api_query_params',
   },
   strictMode: false,
   continueOnWarnings: true,
   logValidationErrors: true,
-  sanitizeResponse: true
+  sanitizeResponse: true,
 });
 
 // Strict validation for sensitive endpoints
@@ -552,27 +591,27 @@ export const strictValidation = createValidationMiddleware({
           'threat.endpoint': context.request.url,
           'threat.method': context.request.method,
           'threat.count': threatDetails.threatCount,
-          'threat.source': threatDetails.dataSource
+          'threat.source': threatDetails.dataSource,
         });
       }
     );
-  }
+  },
 });
 
 // User input validation
 export const userInputValidation = createValidationMiddleware({
   schemas: {
-    body: 'user_input'
+    body: 'user_input',
   },
   strictMode: true,
   sanitizeResponse: false,
-  logValidationErrors: true
+  logValidationErrors: true,
 });
 
 // AI prompt validation
 export const aiPromptValidation = createValidationMiddleware({
   schemas: {
-    body: 'ai_prompt'
+    body: 'ai_prompt',
   },
   strictMode: true,
   continueOnWarnings: false,
@@ -585,8 +624,8 @@ export const aiPromptValidation = createValidationMiddleware({
       threatDetails.threatCount,
       {
         endpoint: context.request.url,
-        user_id: context.user?.id || 'anonymous'
+        user_id: context.user?.id || 'anonymous',
       }
     );
-  }
-}); 
+  },
+});

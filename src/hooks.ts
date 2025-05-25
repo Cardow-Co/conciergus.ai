@@ -17,10 +17,6 @@ export * from './context/ConciergusStreamingHooks';
 export * from './context/ConciergusVoiceHooks';
 
 // Re-export core context and config types for hook usage
-export type {
-  ConciergusConfig
-} from './context/ConciergusContext';
+export type { ConciergusConfig } from './context/ConciergusContext';
 
-export type {
-  EnhancedConciergusContextValue
-} from './context/EnhancedConciergusContext'; 
+export type { EnhancedConciergusContextValue } from './context/EnhancedConciergusContext';

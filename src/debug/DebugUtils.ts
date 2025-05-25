@@ -32,7 +32,13 @@ export interface DebugLogEntry {
   id: string;
   timestamp: number;
   level: DebugConfig['level'];
-  category: 'request' | 'response' | 'error' | 'performance' | 'config' | 'general';
+  category:
+    | 'request'
+    | 'response'
+    | 'error'
+    | 'performance'
+    | 'config'
+    | 'general';
   message: string;
   data?: any;
   stackTrace?: string;
@@ -65,11 +71,13 @@ export class ConciergusDebugUtils {
       enableMemoryTracking: true,
       maxLogEntries: 1000,
       persistLogs: false,
-      ...config
+      ...config,
     };
   }
 
-  public static getInstance(config?: Partial<DebugConfig>): ConciergusDebugUtils {
+  public static getInstance(
+    config?: Partial<DebugConfig>
+  ): ConciergusDebugUtils {
     if (!ConciergusDebugUtils.instance) {
       ConciergusDebugUtils.instance = new ConciergusDebugUtils(config);
     }
@@ -79,7 +87,9 @@ export class ConciergusDebugUtils {
   // Configuration methods
   public updateConfig(config: Partial<DebugConfig>): void {
     this.config = { ...this.config, ...config };
-    this.log('info', 'config', 'Debug configuration updated', { config: this.config });
+    this.log('info', 'config', 'Debug configuration updated', {
+      config: this.config,
+    });
   }
 
   public getConfig(): DebugConfig {
@@ -106,7 +116,8 @@ export class ConciergusDebugUtils {
       message,
       data,
       ...(context && { context }),
-      ...(level === 'error' && new Error().stack && { stackTrace: new Error().stack })
+      ...(level === 'error' &&
+        new Error().stack && { stackTrace: new Error().stack }),
     };
 
     this.logs.push(entry);
@@ -121,34 +132,70 @@ export class ConciergusDebugUtils {
     }
   }
 
-  public error(category: DebugLogEntry['category'], message: string, error?: Error, context?: Record<string, any>): void {
-    this.log('error', category, message, {
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
-    }, context);
+  public error(
+    category: DebugLogEntry['category'],
+    message: string,
+    error?: Error,
+    context?: Record<string, any>
+  ): void {
+    this.log(
+      'error',
+      category,
+      message,
+      {
+        error: error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : undefined,
+      },
+      context
+    );
   }
 
-  public warn(category: DebugLogEntry['category'], message: string, data?: any, context?: Record<string, any>): void {
+  public warn(
+    category: DebugLogEntry['category'],
+    message: string,
+    data?: any,
+    context?: Record<string, any>
+  ): void {
     this.log('warn', category, message, data, context);
   }
 
-  public info(category: DebugLogEntry['category'], message: string, data?: any, context?: Record<string, any>): void {
+  public info(
+    category: DebugLogEntry['category'],
+    message: string,
+    data?: any,
+    context?: Record<string, any>
+  ): void {
     this.log('info', category, message, data, context);
   }
 
-  public debug(category: DebugLogEntry['category'], message: string, data?: any, context?: Record<string, any>): void {
+  public debug(
+    category: DebugLogEntry['category'],
+    message: string,
+    data?: any,
+    context?: Record<string, any>
+  ): void {
     this.log('debug', category, message, data, context);
   }
 
-  public trace(category: DebugLogEntry['category'], message: string, data?: any, context?: Record<string, any>): void {
+  public trace(
+    category: DebugLogEntry['category'],
+    message: string,
+    data?: any,
+    context?: Record<string, any>
+  ): void {
     this.log('trace', category, message, data, context);
   }
 
   // Performance profiling methods
-  public startPerformanceProfile(operation: string, metadata?: Record<string, any>): string {
+  public startPerformanceProfile(
+    operation: string,
+    metadata?: Record<string, any>
+  ): string {
     if (!this.config.enabled || !this.config.enablePerformanceProfiler) {
       return '';
     }
@@ -159,8 +206,8 @@ export class ConciergusDebugUtils {
       attributes: {
         'conciergus.operation': operation,
         'conciergus.profile_id': profileId,
-        ...metadata
-      }
+        ...metadata,
+      },
     });
 
     this.activeSpans.set(profileId, {
@@ -168,15 +215,22 @@ export class ConciergusDebugUtils {
       startTime: performance.now(),
       startMemory: this.getMemoryUsage(),
       operation,
-      metadata
+      metadata,
     });
 
-    this.debug('performance', `Started profiling: ${operation}`, { profileId, metadata });
+    this.debug('performance', `Started profiling: ${operation}`, {
+      profileId,
+      metadata,
+    });
     return profileId;
   }
 
   public endPerformanceProfile(profileId: string): PerformanceMetrics | null {
-    if (!this.config.enabled || !this.config.enablePerformanceProfiler || !profileId) {
+    if (
+      !this.config.enabled ||
+      !this.config.enablePerformanceProfiler ||
+      !profileId
+    ) {
       return null;
     }
 
@@ -197,16 +251,16 @@ export class ConciergusDebugUtils {
       memory: {
         used: endMemory.used,
         total: endMemory.total,
-        percentage: (endMemory.used / endMemory.total) * 100
+        percentage: (endMemory.used / endMemory.total) * 100,
       },
-      metadata: profile.metadata
+      metadata: profile.metadata,
     };
 
     // End OpenTelemetry span
     profile.span.setAttributes({
       'conciergus.duration_ms': duration,
       'conciergus.memory_used_mb': endMemory.used,
-      'conciergus.memory_percentage': metrics.memory.percentage
+      'conciergus.memory_percentage': metrics.memory.percentage,
     });
     profile.span.end();
 
@@ -215,7 +269,7 @@ export class ConciergusDebugUtils {
 
     this.debug('performance', `Completed profiling: ${profile.operation}`, {
       duration: `${duration.toFixed(2)}ms`,
-      memoryDelta: `${(endMemory.used - profile.startMemory.used).toFixed(2)}MB`
+      memoryDelta: `${(endMemory.used - profile.startMemory.used).toFixed(2)}MB`,
     });
 
     return metrics;
@@ -232,7 +286,7 @@ export class ConciergusDebugUtils {
       method: context.request.method,
       headers: this.sanitizeHeaders(context.request.headers),
       timestamp: Date.now(),
-      requestId: `req-${Date.now()}`
+      requestId: `req-${Date.now()}`,
     });
   }
 
@@ -245,7 +299,7 @@ export class ConciergusDebugUtils {
       status: context.response?.status,
       headers: this.sanitizeHeaders(context.response?.headers),
       duration: context.response?.duration || 0,
-      requestId: `req-${Date.now()}`
+      requestId: `req-${Date.now()}`,
     });
   }
 
@@ -255,7 +309,7 @@ export class ConciergusDebugUtils {
       isValid: true,
       errors: [],
       warnings: [],
-      suggestions: []
+      suggestions: [],
     };
 
     if (!this.config.enabled || !this.config.enableConfigValidation) {
@@ -274,18 +328,22 @@ export class ConciergusDebugUtils {
 
     // Performance suggestions
     if (!config.telemetryConfig) {
-      result.suggestions.push('Consider enabling telemetry for better observability');
+      result.suggestions.push(
+        'Consider enabling telemetry for better observability'
+      );
     }
 
     if (!config.middleware || config.middleware.length === 0) {
-      result.suggestions.push('Consider adding middleware for request processing');
+      result.suggestions.push(
+        'Consider adding middleware for request processing'
+      );
     }
 
     this.info('config', 'Configuration validation completed', {
       isValid: result.isValid,
       errorCount: result.errors.length,
       warningCount: result.warnings.length,
-      suggestionCount: result.suggestions.length
+      suggestionCount: result.suggestions.length,
     });
 
     return result;
@@ -297,7 +355,7 @@ export class ConciergusDebugUtils {
       const memory = (performance as any).memory;
       return {
         used: memory.usedJSHeapSize / 1024 / 1024, // MB
-        total: memory.totalJSHeapSize / 1024 / 1024 // MB
+        total: memory.totalJSHeapSize / 1024 / 1024, // MB
       };
     }
 
@@ -314,7 +372,7 @@ export class ConciergusDebugUtils {
     this.debug('performance', `Memory usage for ${operation}`, {
       used: `${memory.used.toFixed(2)}MB`,
       total: `${memory.total.toFixed(2)}MB`,
-      percentage: `${((memory.used / memory.total) * 100).toFixed(1)}%`
+      percentage: `${((memory.used / memory.total) * 100).toFixed(1)}%`,
     });
   }
 
@@ -329,13 +387,17 @@ export class ConciergusDebugUtils {
 
     if (filter) {
       if (filter.level) {
-        filteredLogs = filteredLogs.filter(log => log.level === filter.level);
+        filteredLogs = filteredLogs.filter((log) => log.level === filter.level);
       }
       if (filter.category) {
-        filteredLogs = filteredLogs.filter(log => log.category === filter.category);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.category === filter.category
+        );
       }
       if (filter.since) {
-        filteredLogs = filteredLogs.filter(log => log.timestamp >= filter.since!);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.timestamp >= filter.since!
+        );
       }
       if (filter.limit) {
         filteredLogs = filteredLogs.slice(-filter.limit);
@@ -345,11 +407,14 @@ export class ConciergusDebugUtils {
     return filteredLogs;
   }
 
-  public getPerformanceMetrics(operation?: string, limit?: number): PerformanceMetrics[] {
+  public getPerformanceMetrics(
+    operation?: string,
+    limit?: number
+  ): PerformanceMetrics[] {
     let metrics = [...this.performanceMetrics];
 
     if (operation) {
-      metrics = metrics.filter(m => m.operation === operation);
+      metrics = metrics.filter((m) => m.operation === operation);
     }
 
     if (limit) {
@@ -377,15 +442,15 @@ export class ConciergusDebugUtils {
 
     // CSV format
     const headers = ['timestamp', 'level', 'category', 'message', 'data'];
-    const rows = this.logs.map(log => [
+    const rows = this.logs.map((log) => [
       new Date(log.timestamp).toISOString(),
       log.level,
       log.category,
       log.message,
-      JSON.stringify(log.data || {})
+      JSON.stringify(log.data || {}),
     ]);
 
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    return [headers, ...rows].map((row) => row.join(',')).join('\n');
   }
 
   public exportPerformanceMetrics(): string {
@@ -403,13 +468,13 @@ export class ConciergusDebugUtils {
   private outputToConsole(entry: DebugLogEntry): void {
     const timestamp = new Date(entry.timestamp).toISOString();
     const prefix = `[Conciergus:${entry.category}]`;
-    
+
     const styles = {
       error: 'color: #ff4444; font-weight: bold;',
       warn: 'color: #ffaa00; font-weight: bold;',
       info: 'color: #4444ff;',
       debug: 'color: #888888;',
-      trace: 'color: #cccccc;'
+      trace: 'color: #cccccc;',
     };
 
     if (typeof window !== 'undefined' && console[entry.level]) {
@@ -422,28 +487,28 @@ export class ConciergusDebugUtils {
     }
   }
 
-private persistLog(entry: DebugLogEntry): void {
-   try {
-     if (typeof window !== 'undefined' && window.localStorage) {
-       const key = `conciergus_debug_logs_${new Date().toDateString()}`;
-       const existing = localStorage.getItem(key);
-       const logs = existing ? JSON.parse(existing) : [];
-       logs.push(entry);
-      
-      // Check and clean up old logs if approaching quota
-      if (logs.length > 100) {
-        logs.shift(); // Remove oldest entry
+  private persistLog(entry: DebugLogEntry): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const key = `conciergus_debug_logs_${new Date().toDateString()}`;
+        const existing = localStorage.getItem(key);
+        const logs = existing ? JSON.parse(existing) : [];
+        logs.push(entry);
+
+        // Check and clean up old logs if approaching quota
+        if (logs.length > 100) {
+          logs.shift(); // Remove oldest entry
+        }
+
+        localStorage.setItem(key, JSON.stringify(logs));
+
+        // Clean up logs older than 7 days
+        this.cleanupOldLogs();
       }
-      
-       localStorage.setItem(key, JSON.stringify(logs));
-      
-      // Clean up logs older than 7 days
-      this.cleanupOldLogs();
-     }
-   } catch (error) {
-    console.warn('Failed to persist debug log:', error);
-   }
- }
+    } catch (error) {
+      console.warn('Failed to persist debug log:', error);
+    }
+  }
 
   private trimLogs(): void {
     if (this.logs.length > this.config.maxLogEntries) {
@@ -451,18 +516,25 @@ private persistLog(entry: DebugLogEntry): void {
     }
   }
 
-  private sanitizeHeaders(headers?: Record<string, string>): Record<string, string> {
+  private sanitizeHeaders(
+    headers?: Record<string, string>
+  ): Record<string, string> {
     if (!headers) return {};
-    
+
     const sanitized = { ...headers };
-    const sensitiveKeys = ['authorization', 'x-api-key', 'cookie', 'set-cookie'];
-    
+    const sensitiveKeys = [
+      'authorization',
+      'x-api-key',
+      'cookie',
+      'set-cookie',
+    ];
+
     for (const key of sensitiveKeys) {
       if (sanitized[key.toLowerCase()]) {
         sanitized[key.toLowerCase()] = '[REDACTED]';
       }
     }
-    
+
     return sanitized;
   }
 
@@ -470,7 +542,7 @@ private persistLog(entry: DebugLogEntry): void {
     // More flexible validation supporting various API key formats
     // Allow base64 characters, dots, and longer keys
     return apiKey.length >= minLength && /^[a-zA-Z0-9_\-+/=.]+$/.test(apiKey);
-   }
+  }
 
   private isValidModelName(model: string): boolean {
     // Basic validation for model names
@@ -501,7 +573,7 @@ export function useConciergusDebug(config?: Partial<DebugConfig>) {
     getMetrics: debugUtils.getPerformanceMetrics.bind(debugUtils),
     clearLogs: debugUtils.clearLogs.bind(debugUtils),
     exportLogs: debugUtils.exportLogs.bind(debugUtils),
-    config: debugUtils.getConfig()
+    config: debugUtils.getConfig(),
   };
 }
 
@@ -522,7 +594,7 @@ export const debugUtils = {
   ): Promise<T> => {
     const debug = ConciergusDebugUtils.getInstance();
     const profileId = debug.startPerformanceProfile(operation, metadata);
-    
+
     try {
       const result = await fn();
       debug.endPerformanceProfile(profileId);
@@ -542,7 +614,7 @@ export const debugUtils = {
   ): T => {
     const debug = ConciergusDebugUtils.getInstance();
     const profileId = debug.startPerformanceProfile(operation, metadata);
-    
+
     try {
       const result = fn();
       debug.endPerformanceProfile(profileId);
@@ -563,7 +635,7 @@ export const debugUtils = {
     return ((...args: Parameters<T>) => {
       const debug = ConciergusDebugUtils.getInstance();
       debug.debug('general', `Calling ${operation}`, { args, metadata });
-      
+
       try {
         const result = fn(...args);
         debug.debug('general', `Completed ${operation}`, { result });
@@ -573,12 +645,16 @@ export const debugUtils = {
         throw error;
       }
     }) as T;
-  }
+  },
 };
 
 // Performance monitoring utilities
 export class PerformanceMonitor {
-  private static metrics: { name: string; duration: number; timestamp: number }[] = [];
+  private static metrics: {
+    name: string;
+    duration: number;
+    timestamp: number;
+  }[] = [];
 
   static measure<T>(name: string, fn: () => T): T {
     const start = performance.now();
@@ -589,7 +665,11 @@ export class PerformanceMonitor {
       return result;
     } catch (error) {
       const duration = performance.now() - start;
-      this.metrics.push({ name: `${name}_error`, duration, timestamp: Date.now() });
+      this.metrics.push({
+        name: `${name}_error`,
+        duration,
+        timestamp: Date.now(),
+      });
       throw error;
     }
   }
@@ -603,7 +683,11 @@ export class PerformanceMonitor {
       return result;
     } catch (error) {
       const duration = performance.now() - start;
-      this.metrics.push({ name: `${name}_error`, duration, timestamp: Date.now() });
+      this.metrics.push({
+        name: `${name}_error`,
+        duration,
+        timestamp: Date.now(),
+      });
       throw error;
     }
   }
@@ -621,7 +705,11 @@ export class PerformanceMonitor {
 export class MemoryMonitor {
   private static warningCallbacks: Array<(usage: any) => void> = [];
 
-  static getCurrentUsage(): { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } | null {
+  static getCurrentUsage(): {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  } | null {
     if (typeof window !== 'undefined' && 'memory' in performance) {
       return (performance as any).memory;
     }
@@ -669,37 +757,38 @@ export class NetworkMonitor {
     }
 
     const originalFetch = window.fetch;
-    
+
     window.fetch = async (...args) => {
       const start = performance.now();
-      const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
+      const url =
+        typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
       const method = args[1]?.method || 'GET';
-      
+
       try {
         const response = await originalFetch(...args);
         const duration = performance.now() - start;
-        
+
         this.requests.push({
           url,
           method,
           duration,
           status: response.status,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
-        
+
         return response;
       } catch (error) {
         const duration = performance.now() - start;
-        
+
         this.requests.push({
           url,
           method,
           duration,
           status: 0,
           error: true,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
-        
+
         throw error;
       }
     };
@@ -718,13 +807,18 @@ export class NetworkMonitor {
       return { totalRequests: 0, errorRate: 0, averageDuration: 0 };
     }
 
-    const errors = this.requests.filter(req => req.error || req.status >= 400).length;
-    const totalDuration = this.requests.reduce((sum, req) => sum + req.duration, 0);
+    const errors = this.requests.filter(
+      (req) => req.error || req.status >= 400
+    ).length;
+    const totalDuration = this.requests.reduce(
+      (sum, req) => sum + req.duration,
+      0
+    );
 
     return {
       totalRequests: this.requests.length,
       errorRate: errors / this.requests.length,
-      averageDuration: totalDuration / this.requests.length
+      averageDuration: totalDuration / this.requests.length,
     };
   }
 
@@ -783,10 +877,12 @@ export function initializeDebugging(options: {
       clearMetrics: () => {
         PerformanceMonitor.clearMetrics();
         NetworkMonitor.clearStats();
-      }
+      },
     };
-    ConciergusLogger.debug('Debug console commands available: window.conciergusDebug');
+    ConciergusLogger.debug(
+      'Debug console commands available: window.conciergusDebug'
+    );
   }
 }
 
-export default ConciergusDebugUtils; 
+export default ConciergusDebugUtils;

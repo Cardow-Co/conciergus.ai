@@ -39,30 +39,39 @@ for (const [role, elements] of roleElementMap) {
 }
 
 const roles = new Map([
-  ['alert', { 
-    baseConcepts: [],
-    relatedConcepts: [],
-    requiredContextRole: [],
-    requiredOwnedElements: [],
-    requiredProps: {},
-    superClass: [['roletype', 'structure', 'section', 'status']]
-  }],
-  ['region', {
-    baseConcepts: [],
-    relatedConcepts: [],
-    requiredContextRole: [],
-    requiredOwnedElements: [],
-    requiredProps: {},
-    superClass: [['roletype', 'structure', 'section']]
-  }],
-  ['button', {
-    baseConcepts: [],
-    relatedConcepts: [],
-    requiredContextRole: [],
-    requiredOwnedElements: [],
-    requiredProps: {},
-    superClass: [['roletype', 'widget', 'command']]
-  }],
+  [
+    'alert',
+    {
+      baseConcepts: [],
+      relatedConcepts: [],
+      requiredContextRole: [],
+      requiredOwnedElements: [],
+      requiredProps: {},
+      superClass: [['roletype', 'structure', 'section', 'status']],
+    },
+  ],
+  [
+    'region',
+    {
+      baseConcepts: [],
+      relatedConcepts: [],
+      requiredContextRole: [],
+      requiredOwnedElements: [],
+      requiredProps: {},
+      superClass: [['roletype', 'structure', 'section']],
+    },
+  ],
+  [
+    'button',
+    {
+      baseConcepts: [],
+      relatedConcepts: [],
+      requiredContextRole: [],
+      requiredOwnedElements: [],
+      requiredProps: {},
+      superClass: [['roletype', 'widget', 'command']],
+    },
+  ],
 ]);
 
 module.exports = {
@@ -70,4 +79,4 @@ module.exports = {
   roleElementMap,
   roles,
   elementRoles: elementRoleMap,
-}; 
+};

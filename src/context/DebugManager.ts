@@ -63,24 +63,50 @@ export class DebugManager {
   }
 
   // Logging methods
-  debug(message: string, data?: any, source = 'system', category = 'debug'): void {
+  debug(
+    message: string,
+    data?: any,
+    source = 'system',
+    category = 'debug'
+  ): void {
     this.log('debug', message, data, source, category);
   }
 
-  info(message: string, data?: any, source = 'system', category = 'info'): void {
+  info(
+    message: string,
+    data?: any,
+    source = 'system',
+    category = 'info'
+  ): void {
     this.log('info', message, data, source, category);
   }
 
-  warn(message: string, data?: any, source = 'system', category = 'warning'): void {
+  warn(
+    message: string,
+    data?: any,
+    source = 'system',
+    category = 'warning'
+  ): void {
     this.log('warn', message, data, source, category);
   }
 
-  error(message: string, data?: any, source = 'system', category = 'error'): void {
+  error(
+    message: string,
+    data?: any,
+    source = 'system',
+    category = 'error'
+  ): void {
     this.log('error', message, data, source, category);
     this.errorCount++;
   }
 
-  private log(level: DebugLog['level'], message: string, data?: any, source = 'system', category = 'general'): void {
+  private log(
+    level: DebugLog['level'],
+    message: string,
+    data?: any,
+    source = 'system',
+    category = 'general'
+  ): void {
     if (!this.shouldLog(level)) return;
 
     const logEntry: DebugLog = {
@@ -139,8 +165,9 @@ export class DebugManager {
 
     // Check error rate
     const recentErrors = this.logs.filter(
-      log => log.level === 'error' && 
-      Date.now() - log.timestamp.getTime() < 5 * 60 * 1000 // Last 5 minutes
+      (log) =>
+        log.level === 'error' &&
+        Date.now() - log.timestamp.getTime() < 5 * 60 * 1000 // Last 5 minutes
     );
 
     if (recentErrors.length > 10) {
@@ -154,7 +181,9 @@ export class DebugManager {
     // Check response times
     const recentResponseTimes = this.responseTimes.slice(-50);
     if (recentResponseTimes.length > 0) {
-      const avgResponseTime = recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length;
+      const avgResponseTime =
+        recentResponseTimes.reduce((a, b) => a + b, 0) /
+        recentResponseTimes.length;
       if (avgResponseTime > 10000) {
         issues.push('High response times detected');
         components.performance = 'critical';
@@ -166,13 +195,17 @@ export class DebugManager {
 
     // Check memory usage
     const memoryUsage = this.getMemoryUsage();
-    if (memoryUsage.total > 100 * 1024 * 1024) { // 100MB
+    if (memoryUsage.total > 100 * 1024 * 1024) {
+      // 100MB
       issues.push('High memory usage');
       components.cost = 'warning';
     }
 
-    const overall = issues.some(issue => issue.includes('critical')) ? 'critical' :
-                   issues.length > 0 ? 'warning' : 'healthy';
+    const overall = issues.some((issue) => issue.includes('critical'))
+      ? 'critical'
+      : issues.length > 0
+        ? 'warning'
+        : 'healthy';
 
     return {
       overall,
@@ -185,13 +218,16 @@ export class DebugManager {
   // System diagnostics
   getDiagnostics(): SystemDiagnostics {
     const uptime = Date.now() - this.startTime.getTime();
-    const errorRate = this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0;
-    const averageResponseTime = this.responseTimes.length > 0 
-      ? this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length 
-      : 0;
+    const errorRate =
+      this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0;
+    const averageResponseTime =
+      this.responseTimes.length > 0
+        ? this.responseTimes.reduce((a, b) => a + b, 0) /
+          this.responseTimes.length
+        : 0;
 
     const lastError = this.logs
-      .filter(log => log.level === 'error')
+      .filter((log) => log.level === 'error')
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
 
     return {
@@ -239,23 +275,33 @@ export class DebugManager {
 
     if (filters) {
       if (filters.level) {
-        filteredLogs = filteredLogs.filter(log => log.level === filters.level);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.level === filters.level
+        );
       }
       if (filters.category) {
-        filteredLogs = filteredLogs.filter(log => log.category === filters.category);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.category === filters.category
+        );
       }
       if (filters.source) {
-        filteredLogs = filteredLogs.filter(log => log.source === filters.source);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.source === filters.source
+        );
       }
       if (filters.since) {
-        filteredLogs = filteredLogs.filter(log => log.timestamp >= filters.since!);
+        filteredLogs = filteredLogs.filter(
+          (log) => log.timestamp >= filters.since!
+        );
       }
       if (filters.limit) {
         filteredLogs = filteredLogs.slice(-filters.limit);
       }
     }
 
-    return filteredLogs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return filteredLogs.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    );
   }
 
   clearLogs(): void {
@@ -266,7 +312,12 @@ export class DebugManager {
   // Configuration management
   updateConfig(newConfig: Partial<DebugConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.info('Debug configuration updated', newConfig, 'debug-manager', 'admin');
+    this.info(
+      'Debug configuration updated',
+      newConfig,
+      'debug-manager',
+      'admin'
+    );
   }
 
   getConfig(): DebugConfig {
@@ -276,17 +327,26 @@ export class DebugManager {
   // Export functionality
   exportLogs(format: 'json' | 'csv' = 'json'): string {
     if (format === 'csv') {
-      const headers = ['timestamp', 'level', 'category', 'source', 'message', 'data'];
+      const headers = [
+        'timestamp',
+        'level',
+        'category',
+        'source',
+        'message',
+        'data',
+      ];
       const csvRows = [
         headers.join(','),
-        ...this.logs.map(log => [
-          log.timestamp.toISOString(),
-          log.level,
-          log.category,
-          log.source,
-          `"${log.message.replace(/"/g, '""')}"`,
-          log.data ? `"${JSON.stringify(log.data).replace(/"/g, '""')}"` : '',
-        ].join(','))
+        ...this.logs.map((log) =>
+          [
+            log.timestamp.toISOString(),
+            log.level,
+            log.category,
+            log.source,
+            `"${log.message.replace(/"/g, '""')}"`,
+            log.data ? `"${JSON.stringify(log.data).replace(/"/g, '""')}"` : '',
+          ].join(',')
+        ),
       ];
       return csvRows.join('\n');
     }
@@ -297,13 +357,17 @@ export class DebugManager {
   exportDiagnostics(): string {
     const diagnostics = this.getDiagnostics();
     const health = this.checkSystemHealth();
-    
-    return JSON.stringify({
-      diagnostics,
-      health,
-      config: this.config,
-      exportTime: new Date().toISOString(),
-    }, null, 2);
+
+    return JSON.stringify(
+      {
+        diagnostics,
+        health,
+        config: this.config,
+        exportTime: new Date().toISOString(),
+      },
+      null,
+      2
+    );
   }
 
   // System reset
@@ -315,4 +379,4 @@ export class DebugManager {
     this.startTime = new Date();
     this.info('Debug manager reset', undefined, 'debug-manager', 'admin');
   }
-} 
+}

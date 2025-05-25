@@ -25,6 +25,4 @@ export * from './context/ConciergusAISDK5Hooks';
 export * from './context/ConciergusAgentHooks';
 
 // Re-export key types and utilities for gateway usage
-export type {
-  ConciergusConfig
-} from './context/ConciergusContext'; 
+export type { ConciergusConfig } from './context/ConciergusContext';

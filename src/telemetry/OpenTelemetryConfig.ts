@@ -1,18 +1,21 @@
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import {
+  WebTracerProvider,
+  BatchSpanProcessor,
+  SimpleSpanProcessor,
+  ConsoleSpanExporter,
+  TraceIdRatioBasedSampler,
+} from '@opentelemetry/sdk-trace-web';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
 import type { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { 
-  BatchSpanProcessor, 
-  SimpleSpanProcessor,
-  ConsoleSpanExporter,
-  TraceIdRatioBasedSampler
-} from '@opentelemetry/sdk-trace-web';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { 
+import {
+  MeterProvider,
+  PeriodicExportingMetricReader,
+} from '@opentelemetry/sdk-metrics';
+import {
   CompositePropagator,
   W3CBaggagePropagator,
   W3CTraceContextPropagator,
@@ -73,11 +76,13 @@ export class ConciergusOpenTelemetry {
 
     // Set up trace provider
     const tracerProviderConfig: any = { resource };
-    
+
     if (config.sampleRate) {
-      tracerProviderConfig.sampler = new TraceIdRatioBasedSampler(config.sampleRate);
+      tracerProviderConfig.sampler = new TraceIdRatioBasedSampler(
+        config.sampleRate
+      );
     }
-    
+
     const tracerProvider = new WebTracerProvider(tracerProviderConfig);
 
     // Configure exporters
@@ -90,20 +95,26 @@ export class ConciergusOpenTelemetry {
     if (config.traceEndpoint) {
       const traceExporter = new OTLPTraceExporter({
         url: config.traceEndpoint,
-        headers: config.apiKey ? {
-          'Authorization': `Bearer ${config.apiKey}`,
-          'api-key': config.apiKey,
-        } : {},
+        headers: config.apiKey
+          ? {
+              Authorization: `Bearer ${config.apiKey}`,
+              'api-key': config.apiKey,
+            }
+          : {},
       });
-      processors.push(new BatchSpanProcessor(traceExporter, {
-        maxQueueSize: 2048,
-        maxExportBatchSize: 512,
-        scheduledDelayMillis: 500,
-        exportTimeoutMillis: 30000,
-      }));
+      processors.push(
+        new BatchSpanProcessor(traceExporter, {
+          maxQueueSize: 2048,
+          maxExportBatchSize: 512,
+          scheduledDelayMillis: 500,
+          exportTimeoutMillis: 30000,
+        })
+      );
     }
 
-    processors.forEach(processor => (tracerProvider as any).addSpanProcessor(processor));
+    processors.forEach((processor) =>
+      (tracerProvider as any).addSpanProcessor(processor)
+    );
 
     // Configure context manager and propagators
     tracerProvider.register({
@@ -124,10 +135,12 @@ export class ConciergusOpenTelemetry {
     if (config.metricsEndpoint) {
       const metricExporter = new OTLPMetricExporter({
         url: config.metricsEndpoint,
-        headers: config.apiKey ? {
-          'Authorization': `Bearer ${config.apiKey}`,
-          'api-key': config.apiKey,
-        } : {},
+        headers: config.apiKey
+          ? {
+              Authorization: `Bearer ${config.apiKey}`,
+              'api-key': config.apiKey,
+            }
+          : {},
       });
 
       const metricReader = new PeriodicExportingMetricReader({
@@ -143,7 +156,9 @@ export class ConciergusOpenTelemetry {
 
     // Set up auto-instrumentations (simplified for compatibility)
     try {
-      const { registerInstrumentations } = await import('@opentelemetry/instrumentation');
+      const { registerInstrumentations } = await import(
+        '@opentelemetry/instrumentation'
+      );
       registerInstrumentations({
         instrumentations: [
           getWebAutoInstrumentations({
@@ -157,7 +172,7 @@ export class ConciergusOpenTelemetry {
             '@opentelemetry/instrumentation-fetch': {
               enabled: config.enableFetch !== false,
               propagateTraceHeaderCorsUrls: [
-                /^https?:\/\/*/,  // Allow all HTTPS/HTTP requests
+                /^https?:\/\/*/, // Allow all HTTPS/HTTP requests
               ],
               clearTimingResources: true,
               ignoreUrls: [
@@ -169,9 +184,7 @@ export class ConciergusOpenTelemetry {
             },
             '@opentelemetry/instrumentation-xml-http-request': {
               enabled: true,
-              propagateTraceHeaderCorsUrls: [
-                /^https?:\/\/*/,
-              ],
+              propagateTraceHeaderCorsUrls: [/^https?:\/\/*/],
             },
           }),
         ],
@@ -245,8 +258,8 @@ export class ConciergusOpenTelemetry {
         isRecording: () => false,
         spanContext: () => ({
           traceId: 'mock-trace-id',
-          spanId: 'mock-span-id'
-        })
+          spanId: 'mock-span-id',
+        }),
       };
       return fn(noOpSpan);
     }
@@ -266,9 +279,9 @@ export class ConciergusOpenTelemetry {
         return result;
       } catch (error) {
         span.recordException(error as Error);
-        span.setStatus({ 
+        span.setStatus({
           code: SpanStatusCode.ERROR,
-          message: error instanceof Error ? error.message : 'Unknown error' 
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
         throw error;
       } finally {
@@ -329,4 +342,4 @@ export const productionTelemetryConfig: Partial<TelemetryConfig> = {
   enableUserInteraction: true,
   enableDocumentLoad: true,
   enableFetch: true,
-}; 
+};

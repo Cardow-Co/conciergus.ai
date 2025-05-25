@@ -15,7 +15,7 @@ export enum RateLimitAlgorithm {
   FIXED_WINDOW = 'fixed_window',
   SLIDING_WINDOW = 'sliding_window',
   TOKEN_BUCKET = 'token_bucket',
-  LEAKY_BUCKET = 'leaky_bucket'
+  LEAKY_BUCKET = 'leaky_bucket',
 }
 
 /**
@@ -26,7 +26,7 @@ export enum RateLimitStrategy {
   USER_BASED = 'user_based',
   COMBINED = 'combined',
   API_KEY_BASED = 'api_key_based',
-  ENDPOINT_BASED = 'endpoint_based'
+  ENDPOINT_BASED = 'endpoint_based',
 }
 
 /**
@@ -36,7 +36,7 @@ export enum DDoSProtectionLevel {
   NONE = 'none',
   BASIC = 'basic',
   ADVANCED = 'advanced',
-  ENTERPRISE = 'enterprise'
+  ENTERPRISE = 'enterprise',
 }
 
 /**
@@ -120,7 +120,7 @@ export class MemoryRateLimitStorage implements RateLimitStorage {
 
   async set(key: string, value: RateLimitEntry, ttl?: number): Promise<void> {
     this.storage.set(key, value);
-    
+
     if (ttl) {
       setTimeout(() => {
         this.storage.delete(key);
@@ -174,7 +174,7 @@ export class RateLimitingEngine {
    */
   registerConfig(name: string, config: RateLimitConfig): void {
     this.configs.set(name, config);
-    
+
     ConciergusOpenTelemetry.createSpan(
       'conciergus-security',
       'rate-limit-config-registered',
@@ -184,7 +184,7 @@ export class RateLimitingEngine {
           'ratelimit.algorithm': config.algorithm,
           'ratelimit.strategy': config.strategy,
           'ratelimit.max_requests': config.maxRequests,
-          'ratelimit.window_ms': config.windowMs
+          'ratelimit.window_ms': config.windowMs,
         });
       }
     );
@@ -212,7 +212,9 @@ export class RateLimitingEngine {
       }
     } catch (error) {
       // SecurityCore not available, assume rate limiting is enabled
-      console.warn('SecurityCore not available, assuming rate limiting is enabled');
+      console.warn(
+        'SecurityCore not available, assuming rate limiting is enabled'
+      );
     }
 
     // Skip if rate limiting is disabled
@@ -225,7 +227,7 @@ export class RateLimitingEngine {
         algorithm: config.algorithm,
         strategy: config.strategy,
         identifier: 'disabled',
-        blocked: false
+        blocked: false,
       };
     }
 
@@ -238,18 +240,36 @@ export class RateLimitingEngine {
     }
 
     if (config.blacklist && this.isInList(identifier, config.blacklist)) {
-      return this.createBlockedRateLimitInfo(config, identifier, now, 'blacklisted');
+      return this.createBlockedRateLimitInfo(
+        config,
+        identifier,
+        now,
+        'blacklisted'
+      );
     }
 
     // Check for DDoS patterns
-    const ddosResult = await this.ddosDetector.checkForDDoS(identifier, context, config.ddosProtection);
+    const ddosResult = await this.ddosDetector.checkForDDoS(
+      identifier,
+      context,
+      config.ddosProtection
+    );
     if (ddosResult.detected) {
-      return this.createBlockedRateLimitInfo(config, identifier, now, 'ddos_detected');
+      return this.createBlockedRateLimitInfo(
+        config,
+        identifier,
+        now,
+        'ddos_detected'
+      );
     }
 
     // Apply rate limiting algorithm
-    const rateLimitInfo = await this.applyRateLimitAlgorithm(config, identifier, now);
-    
+    const rateLimitInfo = await this.applyRateLimitAlgorithm(
+      config,
+      identifier,
+      now
+    );
+
     // Record metrics
     ConciergusOpenTelemetry.recordMetric(
       'conciergus-security',
@@ -260,7 +280,7 @@ export class RateLimitingEngine {
         algorithm: config.algorithm,
         strategy: config.strategy,
         blocked: rateLimitInfo.blocked ? 'true' : 'false',
-        identifier: SecurityUtils.hashForLogging(identifier)
+        identifier: SecurityUtils.hashForLogging(identifier),
       }
     );
 
@@ -269,14 +289,14 @@ export class RateLimitingEngine {
       if (config.onLimitReached) {
         config.onLimitReached(context, rateLimitInfo);
       }
-      
+
       ConciergusOpenTelemetry.recordMetric(
         'conciergus-security',
         'rate_limit_blocks_total',
         1,
         {
           config: configName,
-          reason: rateLimitInfo.reason || 'limit_exceeded'
+          reason: rateLimitInfo.reason || 'limit_exceeded',
         }
       );
     }
@@ -300,19 +320,21 @@ export class RateLimitingEngine {
     switch (config.strategy) {
       case RateLimitStrategy.IP_BASED:
         return `ip:${ip}`;
-      
+
       case RateLimitStrategy.USER_BASED:
         return userId ? `user:${userId}` : `ip:${ip}`;
-      
+
       case RateLimitStrategy.COMBINED:
         return userId ? `user:${userId}:ip:${ip}` : `ip:${ip}`;
-      
+
       case RateLimitStrategy.API_KEY_BASED:
-        return apiKey ? `apikey:${SecurityUtils.hashForLogging(apiKey)}` : `ip:${ip}`;
-      
+        return apiKey
+          ? `apikey:${SecurityUtils.hashForLogging(apiKey)}`
+          : `ip:${ip}`;
+
       case RateLimitStrategy.ENDPOINT_BASED:
         return `endpoint:${endpoint}:ip:${ip}`;
-      
+
       default:
         return `ip:${ip}`;
     }
@@ -322,20 +344,24 @@ export class RateLimitingEngine {
    * Extract IP address from context
    */
   private extractIP(context: any): string {
-    return context.request?.ip ||
-           context.request?.headers?.['x-forwarded-for'] ||
-           context.request?.headers?.['x-real-ip'] ||
-           context.request?.connection?.remoteAddress ||
-           context.request?.socket?.remoteAddress ||
-           'unknown';
+    return (
+      context.request?.ip ||
+      context.request?.headers?.['x-forwarded-for'] ||
+      context.request?.headers?.['x-real-ip'] ||
+      context.request?.connection?.remoteAddress ||
+      context.request?.socket?.remoteAddress ||
+      'unknown'
+    );
   }
 
   /**
    * Check if identifier is in a list
    */
   private isInList(identifier: string, list: string[]): boolean {
-    const ip = identifier.includes('ip:') ? identifier.split('ip:')[1] : identifier;
-    return list.some(pattern => {
+    const ip = identifier.includes('ip:')
+      ? identifier.split('ip:')[1]
+      : identifier;
+    return list.some((pattern) => {
       if (pattern.includes('*')) {
         const regex = new RegExp(pattern.replace(/\*/g, '.*'));
         return regex.test(ip || '');
@@ -355,16 +381,16 @@ export class RateLimitingEngine {
     switch (config.algorithm) {
       case RateLimitAlgorithm.FIXED_WINDOW:
         return this.applyFixedWindow(config, identifier, now);
-      
+
       case RateLimitAlgorithm.SLIDING_WINDOW:
         return this.applySlidingWindow(config, identifier, now);
-      
+
       case RateLimitAlgorithm.TOKEN_BUCKET:
         return this.applyTokenBucket(config, identifier, now);
-      
+
       case RateLimitAlgorithm.LEAKY_BUCKET:
         return this.applyLeakyBucket(config, identifier, now);
-      
+
       default:
         return this.applyFixedWindow(config, identifier, now);
     }
@@ -389,7 +415,7 @@ export class RateLimitingEngine {
         count: 1,
         firstRequest: now,
         lastRequest: now,
-        resetTime
+        resetTime,
       };
     } else {
       entry.count++;
@@ -409,7 +435,7 @@ export class RateLimitingEngine {
       algorithm: config.algorithm,
       strategy: config.strategy,
       identifier,
-      blocked
+      blocked,
     };
   }
 
@@ -430,14 +456,16 @@ export class RateLimitingEngine {
         firstRequest: now,
         lastRequest: now,
         resetTime: now + config.windowMs,
-        requests: []
+        requests: [],
       };
     }
 
     // Remove requests outside the window
     const windowStart = now - config.windowMs;
-    entry.requests = (entry.requests || []).filter(time => time > windowStart);
-    
+    entry.requests = (entry.requests || []).filter(
+      (time) => time > windowStart
+    );
+
     // Add current request
     entry.requests.push(now);
     entry.count = entry.requests.length;
@@ -448,7 +476,9 @@ export class RateLimitingEngine {
     const remaining = Math.max(0, config.maxRequests - entry.count);
     const blocked = entry.count > config.maxRequests;
     const oldestRequest = entry.requests[0];
-    const resetTime = oldestRequest ? oldestRequest + config.windowMs : now + config.windowMs;
+    const resetTime = oldestRequest
+      ? oldestRequest + config.windowMs
+      : now + config.windowMs;
 
     return {
       limit: config.maxRequests,
@@ -458,7 +488,7 @@ export class RateLimitingEngine {
       algorithm: config.algorithm,
       strategy: config.strategy,
       identifier,
-      blocked
+      blocked,
     };
   }
 
@@ -473,7 +503,8 @@ export class RateLimitingEngine {
     const key = `token:${identifier}`;
     let entry = await this.storage.get(key);
 
-    const refillRate = config.refillRate || config.maxRequests / (config.windowMs / 1000);
+    const refillRate =
+      config.refillRate || config.maxRequests / (config.windowMs / 1000);
     const bucketSize = config.burstLimit || config.maxRequests;
 
     if (!entry) {
@@ -483,7 +514,7 @@ export class RateLimitingEngine {
         lastRefill: now,
         firstRequest: now,
         lastRequest: now,
-        resetTime: now + config.windowMs
+        resetTime: now + config.windowMs,
       };
     }
 
@@ -512,7 +543,7 @@ export class RateLimitingEngine {
       algorithm: config.algorithm,
       strategy: config.strategy,
       identifier,
-      blocked: !hasTokens
+      blocked: !hasTokens,
     };
   }
 
@@ -544,7 +575,7 @@ export class RateLimitingEngine {
       algorithm: config.algorithm,
       strategy: config.strategy,
       identifier,
-      blocked: false
+      blocked: false,
     };
   }
 
@@ -566,7 +597,7 @@ export class RateLimitingEngine {
       strategy: config.strategy,
       identifier,
       blocked: true,
-      reason
+      reason,
     };
   }
 
@@ -584,7 +615,7 @@ export class RateLimitingEngine {
       totalChecks: 0,
       totalBlocks: 0,
       activeKeys: 0,
-      ddosDetections: 0
+      ddosDetections: 0,
     };
   }
 
@@ -593,8 +624,14 @@ export class RateLimitingEngine {
    */
   async resetRateLimit(identifier: string): Promise<void> {
     // Handle both raw identifiers and already-formatted identifiers
-    const formattedId = identifier.includes(':') ? identifier : `ip:${identifier}`;
-    const keys = [`fixed:${formattedId}`, `sliding:${formattedId}`, `token:${formattedId}`];
+    const formattedId = identifier.includes(':')
+      ? identifier
+      : `ip:${identifier}`;
+    const keys = [
+      `fixed:${formattedId}`,
+      `sliding:${formattedId}`,
+      `token:${formattedId}`,
+    ];
     for (const key of keys) {
       await this.storage.delete(key);
     }
@@ -625,21 +662,23 @@ class DDoSDetector {
 
     const pattern = this.getOrCreatePattern(identifier);
     const now = Date.now();
-    
+
     // Update pattern with current request
     pattern.requestTimes.push(now);
     pattern.lastRequest = now;
-    
+
     // Clean old requests (older than 1 minute)
-    pattern.requestTimes = pattern.requestTimes.filter(time => now - time < 60000);
-    
+    pattern.requestTimes = pattern.requestTimes.filter(
+      (time) => now - time < 60000
+    );
+
     // Calculate DDoS score
     const score = this.calculateDDoSScore(pattern, context, protectionLevel);
     pattern.ddosScore = score;
-    
+
     const threshold = this.getDDoSThreshold(protectionLevel);
     const detected = score >= threshold;
-    
+
     if (detected) {
       ConciergusOpenTelemetry.createSpan(
         'conciergus-security',
@@ -650,24 +689,24 @@ class DDoSDetector {
             'ddos.score': score,
             'ddos.threshold': threshold,
             'ddos.protection_level': protectionLevel,
-            'ddos.request_count': pattern.requestTimes.length
+            'ddos.request_count': pattern.requestTimes.length,
           });
         }
       );
     }
-    
+
     const result = {
       detected,
-      score
+      score,
     };
-    
+
     if (detected) {
       return {
         ...result,
-        reason: `DDoS pattern detected (score: ${score})`
+        reason: `DDoS pattern detected (score: ${score})`,
       };
     }
-    
+
     return result;
   }
 
@@ -678,7 +717,7 @@ class DDoSDetector {
         requestTimes: [],
         firstSeen: Date.now(),
         lastRequest: Date.now(),
-        ddosScore: 0
+        ddosScore: 0,
       });
     }
     return this.patterns.get(identifier)!;
@@ -691,46 +730,60 @@ class DDoSDetector {
   ): number {
     let score = 0;
     const now = Date.now();
-    
+
     // Request frequency score (0-40 points)
     const requestsPerMinute = pattern.requestTimes.length;
     score += Math.min(40, requestsPerMinute / 10);
-    
+
     // Request pattern score (0-30 points)
     if (requestsPerMinute > 5) {
       const intervals = [];
       for (let i = 1; i < pattern.requestTimes.length; i++) {
         const currentTime = pattern.requestTimes[i];
-        const previousTime = pattern.requestTimes[i-1];
+        const previousTime = pattern.requestTimes[i - 1];
         if (currentTime !== undefined && previousTime !== undefined) {
           intervals.push(currentTime - previousTime);
         }
       }
-      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      const uniformity = intervals.filter(interval => Math.abs(interval - avgInterval) < 100).length / intervals.length;
+      const avgInterval =
+        intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const uniformity =
+        intervals.filter((interval) => Math.abs(interval - avgInterval) < 100)
+          .length / intervals.length;
       score += uniformity * 30; // Very uniform intervals indicate automation
     }
-    
+
     // User agent and headers score (0-20 points)
     const userAgent = context.request?.headers?.['user-agent'];
-    if (!userAgent || userAgent.includes('bot') || userAgent.includes('crawler')) {
+    if (
+      !userAgent ||
+      userAgent.includes('bot') ||
+      userAgent.includes('crawler')
+    ) {
       score += 10;
     }
-    
+
     // Missing common headers
     const commonHeaders = ['accept', 'accept-language', 'accept-encoding'];
-    const missingHeaders = commonHeaders.filter(header => !context.request?.headers?.[header]);
+    const missingHeaders = commonHeaders.filter(
+      (header) => !context.request?.headers?.[header]
+    );
     score += missingHeaders.length * 3;
-    
+
     // Advanced protection checks
-    if (protectionLevel === DDoSProtectionLevel.ADVANCED || protectionLevel === DDoSProtectionLevel.ENTERPRISE) {
+    if (
+      protectionLevel === DDoSProtectionLevel.ADVANCED ||
+      protectionLevel === DDoSProtectionLevel.ENTERPRISE
+    ) {
       // Burst detection (0-10 points)
-      const recentRequests = pattern.requestTimes.filter(time => now - time < 5000); // Last 5 seconds
+      const recentRequests = pattern.requestTimes.filter(
+        (time) => now - time < 5000
+      ); // Last 5 seconds
       if (recentRequests.length > 20) {
         score += 10;
       }
     }
-    
+
     return Math.min(100, score);
   }
 
@@ -761,11 +814,11 @@ export function createSecureRateLimitingEngine(
   storage?: RateLimitStorage
 ): RateLimitingEngine {
   const engine = new RateLimitingEngine(storage);
-  
+
   // Handle SecurityCore singleton issues by providing safe defaults
   let config: any = {};
   let securityLevel = 'standard';
-  
+
   try {
     const securityCore = getSecurityCore();
     const coreConfig = securityCore?.getConfig();
@@ -775,16 +828,18 @@ export function createSecureRateLimitingEngine(
     }
   } catch (error) {
     // SecurityCore not available, use safe defaults
-    console.warn('SecurityCore not available, using default rate limiting configuration');
+    console.warn(
+      'SecurityCore not available, using default rate limiting configuration'
+    );
   }
-  
+
   // Provide safe defaults if rateLimiting config is missing
   const rateLimitingConfig = config.rateLimiting || {
     windowMs: 60000,
     maxRequests: 100,
-    skipSuccessfulRequests: false
+    skipSuccessfulRequests: false,
   };
-  
+
   // Register default configurations based on security level
   const defaultConfig: RateLimitConfig = {
     algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
@@ -792,24 +847,25 @@ export function createSecureRateLimitingEngine(
     windowMs: rateLimitingConfig.windowMs,
     maxRequests: rateLimitingConfig.maxRequests,
     skipSuccessfulRequests: rateLimitingConfig.skipSuccessfulRequests,
-    ddosProtection: (securityLevel === 'enterprise')
-      ? DDoSProtectionLevel.ENTERPRISE
-      : (securityLevel === 'strict')
-      ? DDoSProtectionLevel.ADVANCED
-      : DDoSProtectionLevel.BASIC
+    ddosProtection:
+      securityLevel === 'enterprise'
+        ? DDoSProtectionLevel.ENTERPRISE
+        : securityLevel === 'strict'
+          ? DDoSProtectionLevel.ADVANCED
+          : DDoSProtectionLevel.BASIC,
   };
-  
+
   engine.registerConfig('default', defaultConfig);
-  
+
   // Register stricter config for sensitive endpoints
   engine.registerConfig('sensitive', {
     ...defaultConfig,
     algorithm: RateLimitAlgorithm.TOKEN_BUCKET,
     maxRequests: Math.floor(defaultConfig.maxRequests / 2),
-    ddosProtection: DDoSProtectionLevel.ENTERPRISE
+    ddosProtection: DDoSProtectionLevel.ENTERPRISE,
   });
-  
+
   return engine;
 }
 
-// All exports are already defined inline above 
+// All exports are already defined inline above

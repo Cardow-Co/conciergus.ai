@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ConciergusContext } from '../context/ConciergusContext';
-import type { ConciergusConfig, MiddlewareArray } from '../context/ConciergusContext';
+import type {
+  ConciergusConfig,
+  MiddlewareArray,
+} from '../context/ConciergusContext';
 import { EnhancedConciergusContext } from '../context/EnhancedConciergusContext';
 import { GatewayProvider, useGateway } from '../context/GatewayProvider';
 import type { GatewayConfig } from '../context/GatewayConfig';
-import { ConciergusErrorBoundary, ErrorCategory } from '../errors/ErrorBoundary';
+import {
+  ConciergusErrorBoundary,
+  ErrorCategory,
+} from '../errors/ErrorBoundary';
 import ConciergusMetadataDisplay from './ConciergusMetadataDisplay';
 import ConciergusModelSwitcher from './ConciergusModelSwitcher';
 import type { TelemetryEvent } from './ConciergusMetadataDisplay';
@@ -69,18 +75,18 @@ export interface ConciergusChatWidgetProps {
   onOpenChange: (open: boolean) => void;
   className?: string;
   children?: React.ReactNode;
-  
+
   // === Slot Components ===
   triggerComponent?: React.ReactNode;
   headerComponent?: React.ReactNode;
   footerComponent?: React.ReactNode;
-  
+
   // === AI SDK 5 ChatStore Integration ===
   /** ChatStore instance for AI SDK 5 state management */
   chatStore?: ChatStore;
   /** Chat session ID for multiple chat support */
   chatId?: string;
-  
+
   // === Advanced AI SDK 5 Features ===
   /** Enable structured object streaming */
   enableObjectStreaming?: boolean;
@@ -90,7 +96,7 @@ export interface ConciergusChatWidgetProps {
   agentWorkflowConfig?: AgentWorkflowConfig;
   /** RAG (Retrieval Augmented Generation) configuration */
   ragConfig?: RAGConfig;
-  
+
   // === Enterprise Features ===
   /** Conciergus configuration for AI SDK 5 features */
   config?: ConciergusConfig;
@@ -103,12 +109,15 @@ export interface ConciergusChatWidgetProps {
   /** Enable debug mode for verbose logging */
   enableDebug?: boolean;
   /** Custom error boundary component */
-  errorBoundary?: React.ComponentType<{ error: Error; errorInfo?: React.ErrorInfo }>;
+  errorBoundary?: React.ComponentType<{
+    error: Error;
+    errorInfo?: React.ErrorInfo;
+  }>;
   /** Middleware configuration for request/response processing */
   middleware?: MiddlewareArray;
   /** Rate limiting configuration */
   rateLimitingConfig?: RateLimitingConfig;
-  
+
   // === AI Gateway Integration ===
   /** AI Gateway configuration for unified model access */
   gatewayConfig?: GatewayConfig;
@@ -120,7 +129,7 @@ export interface ConciergusChatWidgetProps {
   enableAutoModelSwitching?: boolean;
   /** Maximum retry attempts for failed requests */
   maxRetryAttempts?: number;
-  
+
   // === Enhanced Error Handling ===
   /** Enable enhanced error boundary with gateway integration */
   enableEnhancedErrorHandling?: boolean;
@@ -130,7 +139,7 @@ export interface ConciergusChatWidgetProps {
   errorReportingEndpoint?: string;
   /** Enable error telemetry reporting */
   enableErrorTelemetry?: boolean;
-  
+
   // === Accessibility & Responsive Design ===
   /** Accessibility configuration */
   accessibilityConfig?: AccessibilityConfig;
@@ -144,7 +153,7 @@ export interface ConciergusChatWidgetProps {
     tablet?: number;
     desktop?: number;
   };
-  
+
   // === Event Handlers ===
   /** Callback when model is changed */
   onModelChange?: (model: string) => void;
@@ -158,10 +167,14 @@ export interface ConciergusChatWidgetProps {
   onWorkflowStep?: (step: any, result: any) => void;
   /** Callback when RAG retrieval occurs */
   onRAGRetrieval?: (query: string, results: any[]) => void;
-  
+
   // === Gateway Event Handlers ===
   /** Callback when gateway model fallback occurs */
-  onGatewayFallback?: (fromModel: string, toModel: string, reason: string) => void;
+  onGatewayFallback?: (
+    fromModel: string,
+    toModel: string,
+    reason: string
+  ) => void;
   /** Callback when gateway authentication fails */
   onGatewayAuthFailure?: (error: Error) => void;
   /** Callback when gateway rate limit is hit */
@@ -177,7 +190,11 @@ interface GatewayErrorHandlerProps {
   errorReportingEndpoint?: string;
   maxRetryAttempts: number;
   onError?: (error: Error, source?: string) => void;
-  onGatewayFallback?: (fromModel: string, toModel: string, reason: string) => void;
+  onGatewayFallback?: (
+    fromModel: string,
+    toModel: string,
+    reason: string
+  ) => void;
   onGatewayAuthFailure?: (error: Error) => void;
   onGatewayRateLimit?: (modelId: string, retryAfter?: number) => void;
 }
@@ -211,11 +228,14 @@ const GatewayErrorHandler: React.FC<GatewayErrorHandlerProps> = ({
           const fallbackModel = error.context?.fallbackModel || 'fallback';
           onGatewayFallback(currentModel, fallbackModel, error.message);
         }
-        
-        if (error.category === ErrorCategory.AUTHENTICATION && onGatewayAuthFailure) {
+
+        if (
+          error.category === ErrorCategory.AUTHENTICATION &&
+          onGatewayAuthFailure
+        ) {
           onGatewayAuthFailure(error);
         }
-        
+
         if (error.category === ErrorCategory.RATE_LIMIT && onGatewayRateLimit) {
           const modelId = error.context?.modelId || 'unknown';
           const retryAfter = error.context?.retryAfter;
@@ -263,22 +283,22 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   onOpenChange,
   className,
   children,
-  
+
   // Slot components
   triggerComponent,
   headerComponent,
   footerComponent,
-  
+
   // AI SDK 5 ChatStore integration
   chatStore,
   chatId,
-  
+
   // Advanced AI SDK 5 features
   enableObjectStreaming = false,
   generativeUIConfig,
   agentWorkflowConfig,
   ragConfig,
-  
+
   // Enterprise features
   config = {},
   enableModelSwitching = false,
@@ -288,26 +308,30 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   errorBoundary,
   middleware,
   rateLimitingConfig,
-  
+
   // AI Gateway integration
   gatewayConfig,
   enableGatewayFallbacks = false,
   defaultFallbackChain = 'premium',
   enableAutoModelSwitching = false,
   maxRetryAttempts = 3,
-  
+
   // Enhanced error handling
   enableEnhancedErrorHandling = true,
-  autoHandleErrorCategories = [ErrorCategory.NETWORK, ErrorCategory.AI_PROVIDER, ErrorCategory.RATE_LIMIT],
+  autoHandleErrorCategories = [
+    ErrorCategory.NETWORK,
+    ErrorCategory.AI_PROVIDER,
+    ErrorCategory.RATE_LIMIT,
+  ],
   errorReportingEndpoint,
   enableErrorTelemetry = true,
-  
+
   // Accessibility & responsive design
   accessibilityConfig = {},
   enableResponsiveDesign = true,
   enableTouchOptimizations = true,
   customBreakpoints,
-  
+
   // Event handlers
   onModelChange,
   onTelemetryEvent,
@@ -315,7 +339,7 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   onCostThreshold,
   onWorkflowStep,
   onRAGRetrieval,
-  
+
   // Gateway event handlers
   onGatewayFallback,
   onGatewayAuthFailure,
@@ -334,24 +358,30 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
     highContrast: false,
   });
   const [currentModel, setCurrentModel] = useState<string | undefined>();
-  
+
   // Memoize accessibility config to prevent infinite loops
-  const memoizedAccessibilityConfig = useMemo(() => accessibilityConfig || {}, [
-    accessibilityConfig?.enableReducedMotion,
-    accessibilityConfig?.enableHighContrast,
-    accessibilityConfig?.enableScreenReader,
-    accessibilityConfig?.enableKeyboardNavigation,
-    accessibilityConfig?.enableVoiceControl,
-    accessibilityConfig?.ariaDescriptions,
-    accessibilityConfig?.focusManagement,
-  ]);
+  const memoizedAccessibilityConfig = useMemo(
+    () => accessibilityConfig || {},
+    [
+      accessibilityConfig?.enableReducedMotion,
+      accessibilityConfig?.enableHighContrast,
+      accessibilityConfig?.enableScreenReader,
+      accessibilityConfig?.enableKeyboardNavigation,
+      accessibilityConfig?.enableVoiceControl,
+      accessibilityConfig?.ariaDescriptions,
+      accessibilityConfig?.focusManagement,
+    ]
+  );
 
   // Memoize custom breakpoints to prevent infinite loops
-  const memoizedBreakpoints = useMemo(() => customBreakpoints || {}, [
-    customBreakpoints?.mobile,
-    customBreakpoints?.tablet,
-    customBreakpoints?.desktop,
-  ]);
+  const memoizedBreakpoints = useMemo(
+    () => customBreakpoints || {},
+    [
+      customBreakpoints?.mobile,
+      customBreakpoints?.tablet,
+      customBreakpoints?.desktop,
+    ]
+  );
 
   // Initialize responsive state after mount to avoid SSR mismatch
   useEffect(() => {
@@ -363,24 +393,28 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
     const updateResponsiveState = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       // Use custom breakpoints if provided, otherwise use defaults
       const mobileBreakpoint = memoizedBreakpoints?.mobile ?? 768;
       const tabletBreakpoint = memoizedBreakpoints?.tablet ?? 1024;
       const desktopBreakpoint = memoizedBreakpoints?.desktop ?? 1024;
-      
+
       const isMobile = width < mobileBreakpoint;
       const isTablet = width >= mobileBreakpoint && width < tabletBreakpoint;
       const isDesktop = width >= desktopBreakpoint;
       const isLandscape = width > height;
-      const hasTouch = enableTouchOptimizations && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-      
+      const hasTouch =
+        enableTouchOptimizations &&
+        ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
       // Check for accessibility preferences
-      const prefersReducedMotion = memoizedAccessibilityConfig.enableReducedMotion ?? 
+      const prefersReducedMotion =
+        memoizedAccessibilityConfig.enableReducedMotion ??
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const highContrast = memoizedAccessibilityConfig.enableHighContrast ?? 
+      const highContrast =
+        memoizedAccessibilityConfig.enableHighContrast ??
         window.matchMedia('(prefers-contrast: high)').matches;
-      
+
       setResponsive({
         isMobile,
         isTablet,
@@ -393,33 +427,38 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
         highContrast,
       });
     };
-    
+
     // Set initial state
     updateResponsiveState();
-    
+
     // Listen for changes
     window.addEventListener('resize', updateResponsiveState);
     window.addEventListener('orientationchange', updateResponsiveState);
-    
+
     // Listen for accessibility preference changes
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const contrastQuery = window.matchMedia('(prefers-contrast: high)');
-    
+
     motionQuery.addEventListener('change', updateResponsiveState);
     contrastQuery.addEventListener('change', updateResponsiveState);
-    
+
     return () => {
       window.removeEventListener('resize', updateResponsiveState);
       window.removeEventListener('orientationchange', updateResponsiveState);
       motionQuery.removeEventListener('change', updateResponsiveState);
       contrastQuery.removeEventListener('change', updateResponsiveState);
     };
-  }, [enableResponsiveDesign, enableTouchOptimizations, memoizedBreakpoints, memoizedAccessibilityConfig]);
+  }, [
+    enableResponsiveDesign,
+    enableTouchOptimizations,
+    memoizedBreakpoints,
+    memoizedAccessibilityConfig,
+  ]);
 
   // Enhanced configuration with ChatStore integration and new features
   const enhancedConfig: ConciergusConfig = {
     ...config,
-    
+
     // ChatStore configuration
     chatStoreConfig: {
       enablePersistence: true,
@@ -427,31 +466,36 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
       ...config.chatStoreConfig,
       // Override with chatStore properties if provided
       ...(chatStore && {
-        ...(chatStore.maxSteps !== undefined && { maxSteps: chatStore.maxSteps }),
+        ...(chatStore.maxSteps !== undefined && {
+          maxSteps: chatStore.maxSteps,
+        }),
         ...(chatStore.chats !== undefined && { chats: chatStore.chats }),
-        ...(chatStore.messageMetadataSchema !== undefined && { 
-          messageMetadataSchema: chatStore.messageMetadataSchema 
+        ...(chatStore.messageMetadataSchema !== undefined && {
+          messageMetadataSchema: chatStore.messageMetadataSchema,
         }),
       }),
     },
-    
+
     // Advanced AI SDK 5 features
-    enableObjectStreaming: enableObjectStreaming ?? config.enableObjectStreaming ?? false,
-    enableGenerativeUI: generativeUIConfig?.enabled ?? config.enableGenerativeUI ?? false,
-    enableAgentWorkflows: agentWorkflowConfig?.enabled ?? config.enableAgentWorkflows ?? false,
+    enableObjectStreaming:
+      enableObjectStreaming ?? config.enableObjectStreaming ?? false,
+    enableGenerativeUI:
+      generativeUIConfig?.enabled ?? config.enableGenerativeUI ?? false,
+    enableAgentWorkflows:
+      agentWorkflowConfig?.enabled ?? config.enableAgentWorkflows ?? false,
     enableRAG: ragConfig?.enabled ?? config.enableRAG ?? false,
-    
+
     // UI configuration - props override config values
     showMessageMetadata: showMessageMetadata ?? config.showMessageMetadata,
     showReasoningTraces: config.showReasoningTraces ?? false,
     showSourceCitations: config.showSourceCitations ?? false,
     enableDebug: enableDebug || showTelemetry || config.enableDebug || false,
-    
+
     // Enterprise features
     ...(middleware && { middleware }),
     ...(rateLimitingConfig && { rateLimitConfig: rateLimitingConfig }),
     ...(errorBoundary && { errorBoundary }),
-    
+
     // Event handlers - props override config values
     ...(onModelChange && { onModelChange }),
     ...(onTelemetryEvent && { onTelemetryEvent }),
@@ -460,7 +504,11 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
   };
 
   // Gateway integration wrapper component
-  const GatewayIntegratedWidget = ({ children }: { children: React.ReactNode }) => {
+  const GatewayIntegratedWidget = ({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) => {
     if (!gatewayConfig && !enableGatewayFallbacks) {
       return <>{children}</>;
     }
@@ -468,7 +516,9 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
     return (
       <GatewayProvider
         {...(gatewayConfig && { initialConfig: gatewayConfig })}
-        {...(currentModel || config.defaultModel ? { defaultModel: currentModel || config.defaultModel } : {})}
+        {...(currentModel || config.defaultModel
+          ? { defaultModel: currentModel || config.defaultModel }
+          : {})}
         defaultChain={defaultFallbackChain}
       >
         <GatewayAwareContent>{children}</GatewayAwareContent>
@@ -488,7 +538,7 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: 50,
   };
-  
+
   // Enhanced responsive styles based on device type and accessibility preferences
   const getResponsiveContentStyle = (): React.CSSProperties => {
     const baseStyle: React.CSSProperties = {
@@ -498,7 +548,9 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
       flexDirection: 'column',
       overflow: 'hidden',
       zIndex: 51,
-      transition: responsive.prefersReducedMotion ? 'none' : 'all 0.3s ease-in-out',
+      transition: responsive.prefersReducedMotion
+        ? 'none'
+        : 'all 0.3s ease-in-out',
     };
 
     if (responsive.isMobile) {
@@ -567,21 +619,27 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
           <Dialog.Portal>
             <div data-chat-widget-root className={className}>
               <Dialog.Overlay data-chat-widget-overlay style={overlayStyle} />
-                        <Dialog.Content
-            data-chat-widget-content
-            style={getResponsiveContentStyle()}
-            data-gateway-enabled={gatewayConfig || enableGatewayFallbacks}
-            data-enhanced-error-handling={enableEnhancedErrorHandling}
-            data-auto-model-switching={enableAutoModelSwitching}
-            data-device-type={responsive.isMobile ? 'mobile' : responsive.isTablet ? 'tablet' : 'desktop'}
-            data-has-touch={responsive.hasTouch}
-            data-reduced-motion={responsive.prefersReducedMotion}
-            data-high-contrast={responsive.highContrast}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="chat-widget-title"
-            aria-describedby="chat-widget-description"
-          >
+              <Dialog.Content
+                data-chat-widget-content
+                style={getResponsiveContentStyle()}
+                data-gateway-enabled={gatewayConfig || enableGatewayFallbacks}
+                data-enhanced-error-handling={enableEnhancedErrorHandling}
+                data-auto-model-switching={enableAutoModelSwitching}
+                data-device-type={
+                  responsive.isMobile
+                    ? 'mobile'
+                    : responsive.isTablet
+                      ? 'tablet'
+                      : 'desktop'
+                }
+                data-has-touch={responsive.hasTouch}
+                data-reduced-motion={responsive.prefersReducedMotion}
+                data-high-contrast={responsive.highContrast}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="chat-widget-title"
+                aria-describedby="chat-widget-description"
+              >
                 <ConciergusContext.Provider value={enhancedConfig}>
                   {/* Enhanced header with model switching */}
                   {headerComponent && (
@@ -589,29 +647,36 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
                       {headerComponent}
                       {enableModelSwitching && (
                         <div className="model-switcher" data-model-switcher>
-                                                  <ConciergusModelSwitcher
-                          {...(currentModel || config.defaultModel ? { currentModel: currentModel || config.defaultModel } : {})}
-                          onModelChange={(modelId) => {
-                            setCurrentModel(modelId);
-                            // Call both prop and config handlers
-                            onModelChange?.(modelId);
-                            config.onModelChange?.(modelId);
-                          }}
-                          compact={responsive.isMobile}
-                          showPerformanceIndicators={enableDebug || config.enableDebug || false}
-                          aria-label="Model selector"
-                          role="combobox"
-                          aria-expanded="false"
-                          aria-haspopup="listbox"
-                        />
+                          <ConciergusModelSwitcher
+                            {...(currentModel || config.defaultModel
+                              ? {
+                                  currentModel:
+                                    currentModel || config.defaultModel,
+                                }
+                              : {})}
+                            onModelChange={(modelId) => {
+                              setCurrentModel(modelId);
+                              // Call both prop and config handlers
+                              onModelChange?.(modelId);
+                              config.onModelChange?.(modelId);
+                            }}
+                            compact={responsive.isMobile}
+                            showPerformanceIndicators={
+                              enableDebug || config.enableDebug || false
+                            }
+                            aria-label="Model selector"
+                            role="combobox"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                          />
                         </div>
                       )}
                     </div>
                   )}
-                  
+
                   {/* Main chat content with ChatStore context */}
-                  <div 
-                    data-chat-widget-body 
+                  <div
+                    data-chat-widget-body
                     className="chat-widget-body"
                     data-chat-id={chatId}
                     data-chat-store={chatStore ? 'enabled' : 'disabled'}
@@ -625,27 +690,32 @@ export const ConciergusChatWidget: React.FC<ConciergusChatWidgetProps> = ({
                   >
                     {children}
                   </div>
-                  
+
                   {/* Enhanced footer with telemetry */}
                   {footerComponent && (
                     <div data-chat-widget-footer className="chat-widget-footer">
                       {footerComponent}
                       {showTelemetry && (
-                        <div className="telemetry-display" data-telemetry-display>
-                                                  <ConciergusMetadataDisplay
-                          compact={responsive.isMobile}
-                          showUsageStats={true}
-                          showPerformanceMetrics={true}
-                          showCostTracking={true}
-                          showErrorRates={true}
-                          realTimeUpdates={true}
-                          {...(config.telemetryConfig?.enabled && { costWarningThreshold: 1.0 })}
-                          refreshInterval={5000}
-                          {...(currentModel && { modelId: currentModel })}
-                          aria-label="Telemetry and performance metrics"
-                          role="region"
-                          aria-live="polite"
-                        />
+                        <div
+                          className="telemetry-display"
+                          data-telemetry-display
+                        >
+                          <ConciergusMetadataDisplay
+                            compact={responsive.isMobile}
+                            showUsageStats={true}
+                            showPerformanceMetrics={true}
+                            showCostTracking={true}
+                            showErrorRates={true}
+                            realTimeUpdates={true}
+                            {...(config.telemetryConfig?.enabled && {
+                              costWarningThreshold: 1.0,
+                            })}
+                            refreshInterval={5000}
+                            {...(currentModel && { modelId: currentModel })}
+                            aria-label="Telemetry and performance metrics"
+                            role="region"
+                            aria-live="polite"
+                          />
                         </div>
                       )}
                     </div>

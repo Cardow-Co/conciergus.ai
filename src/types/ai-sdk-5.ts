@@ -39,8 +39,14 @@ export interface MessageMetadata {
   /** AI model used for generation */
   model?: string;
   /** Finish reason for the response */
-  finishReason?: 'stop' | 'length' | 'content-filter' | 'tool-calls' | 'function-call' | 'cancelled';
-  
+  finishReason?:
+    | 'stop'
+    | 'length'
+    | 'content-filter'
+    | 'tool-calls'
+    | 'function-call'
+    | 'cancelled';
+
   // === Token Usage ===
   /** Total tokens used in the conversation */
   totalTokens?: number;
@@ -50,7 +56,7 @@ export interface MessageMetadata {
   outputTokens?: number;
   /** Estimated cost in USD */
   cost?: number;
-  
+
   // === Provider Information ===
   /** AI provider (openai, anthropic, etc.) */
   provider?: string;
@@ -58,7 +64,7 @@ export interface MessageMetadata {
   modelVersion?: string;
   /** API endpoint used */
   endpoint?: string;
-  
+
   // === Timestamps ===
   /** Request timestamp */
   timestamp?: Date | string;
@@ -66,7 +72,7 @@ export interface MessageMetadata {
   firstTokenTime?: number;
   /** Average time between tokens */
   averageTokenTime?: number;
-  
+
   // === Quality Metrics ===
   /** Response confidence score (0-1) */
   confidence?: number;
@@ -74,7 +80,7 @@ export interface MessageMetadata {
   perplexity?: number;
   /** Relevance score for RAG responses */
   relevance?: number;
-  
+
   // === Extensible Metadata ===
   /** Custom metadata fields */
   [key: string]: any;
@@ -88,25 +94,25 @@ export interface MessageMetadata {
  * Comprehensive stream part types for AI SDK 5
  * Supports all current and future stream part types
  */
-export type StreamPartType = 
-  | 'text-delta'           // Incremental text updates
-  | 'reasoning'            // AI reasoning steps
-  | 'reasoning-signature'  // Reasoning step signatures
-  | 'redacted-reasoning'   // Sensitive reasoning content
-  | 'source'               // RAG source citations
-  | 'file'                 // File attachments
-  | 'tool-call'            // Function/tool invocations
+export type StreamPartType =
+  | 'text-delta' // Incremental text updates
+  | 'reasoning' // AI reasoning steps
+  | 'reasoning-signature' // Reasoning step signatures
+  | 'redacted-reasoning' // Sensitive reasoning content
+  | 'source' // RAG source citations
+  | 'file' // File attachments
+  | 'tool-call' // Function/tool invocations
   | 'tool-call-streaming-start' // Tool call start
-  | 'tool-call-delta'      // Tool call argument streaming
-  | 'tool-result'          // Tool execution results
-  | 'step-start'           // Workflow step start
-  | 'step-finish'          // Workflow step completion
-  | 'finish'               // Stream completion
-  | 'error'                // Error handling
-  | 'metadata'             // Metadata updates
-  | 'object-start'         // Structured object start
-  | 'object-delta'         // Structured object updates
-  | 'object-finish';       // Structured object completion
+  | 'tool-call-delta' // Tool call argument streaming
+  | 'tool-result' // Tool execution results
+  | 'step-start' // Workflow step start
+  | 'step-finish' // Workflow step completion
+  | 'finish' // Stream completion
+  | 'error' // Error handling
+  | 'metadata' // Metadata updates
+  | 'object-start' // Structured object start
+  | 'object-delta' // Structured object updates
+  | 'object-finish'; // Structured object completion
 
 /**
  * Enhanced stream part interface with comprehensive type safety
@@ -114,11 +120,11 @@ export type StreamPartType =
 export interface EnhancedStreamPart {
   /** Stream part type */
   type: StreamPartType;
-  
+
   // === Text Streaming ===
   /** Incremental text content */
   textDelta?: string;
-  
+
   // === Reasoning ===
   /** Reasoning content */
   reasoning?: string;
@@ -126,11 +132,11 @@ export interface EnhancedStreamPart {
   signature?: string;
   /** Redacted reasoning data */
   data?: string;
-  
+
   // === Sources ===
   /** Source citation information */
   source?: Source;
-  
+
   // === Files ===
   /** Base64 encoded file data */
   base64?: string;
@@ -142,7 +148,7 @@ export interface EnhancedStreamPart {
   fileName?: string;
   /** File size in bytes */
   fileSize?: number;
-  
+
   // === Tool Calls ===
   /** Tool call identifier */
   toolCallId?: string;
@@ -154,7 +160,7 @@ export interface EnhancedStreamPart {
   argsTextDelta?: string;
   /** Tool execution result */
   result?: any;
-  
+
   // === Workflow Steps ===
   /** Step identifier */
   stepId?: string;
@@ -164,7 +170,7 @@ export interface EnhancedStreamPart {
   input?: any;
   /** Step output data */
   output?: any;
-  
+
   // === Stream Control ===
   /** Finish reason */
   finishReason?: string;
@@ -172,11 +178,11 @@ export interface EnhancedStreamPart {
   usage?: TokenUsage;
   /** Error information */
   error?: Error;
-  
+
   // === Metadata ===
   /** Additional metadata */
   metadata?: Record<string, any>;
-  
+
   // === Structured Objects ===
   /** Object type for structured streaming */
   objectType?: string;
@@ -184,7 +190,7 @@ export interface EnhancedStreamPart {
   object?: any;
   /** Object delta for incremental updates */
   objectDelta?: any;
-  
+
   // === Extensibility ===
   /** Additional fields for future stream types */
   [key: string]: any;
@@ -237,14 +243,14 @@ export interface StreamingState {
 /**
  * Streaming type enumeration
  */
-export type StreamingType = 
-  | 'text'       // Text content streaming
-  | 'object'     // Structured object streaming
-  | 'tool'       // Tool call streaming
-  | 'reasoning'  // Reasoning trace streaming
-  | 'file'       // File streaming
-  | 'loading'    // Loading state
-  | 'error';     // Error state
+export type StreamingType =
+  | 'text' // Text content streaming
+  | 'object' // Structured object streaming
+  | 'tool' // Tool call streaming
+  | 'reasoning' // Reasoning trace streaming
+  | 'file' // File streaming
+  | 'loading' // Loading state
+  | 'error'; // Error state
 
 // ==========================================
 // REASONING AND EXPLAINABILITY
@@ -283,17 +289,17 @@ export interface ReasoningStep {
 /**
  * Types of reasoning steps
  */
-export type ReasoningType = 
-  | 'thinking'     // Internal reasoning
-  | 'analysis'     // Data analysis
-  | 'conclusion'   // Final conclusion
-  | 'hypothesis'   // Hypothesis formation
+export type ReasoningType =
+  | 'thinking' // Internal reasoning
+  | 'analysis' // Data analysis
+  | 'conclusion' // Final conclusion
+  | 'hypothesis' // Hypothesis formation
   | 'verification' // Fact checking
-  | 'synthesis'    // Information synthesis
-  | 'reflection'   // Self-reflection
-  | 'planning'     // Action planning
-  | 'evaluation'   // Option evaluation
-  | 'critique';    // Critical analysis
+  | 'synthesis' // Information synthesis
+  | 'reflection' // Self-reflection
+  | 'planning' // Action planning
+  | 'evaluation' // Option evaluation
+  | 'critique'; // Critical analysis
 
 // ==========================================
 // SOURCE CITATIONS AND RAG
@@ -337,23 +343,23 @@ export interface Source {
 /**
  * Source types for RAG and citations
  */
-export type SourceType = 
-  | 'web'           // Web pages
-  | 'document'      // PDF, Word, etc.
+export type SourceType =
+  | 'web' // Web pages
+  | 'document' // PDF, Word, etc.
   | 'knowledge_base' // Internal KB
-  | 'database'      // Database records
-  | 'api'           // API responses
-  | 'file'          // Local files
-  | 'email'         // Email content
-  | 'chat'          // Chat history
-  | 'code'          // Code repositories
-  | 'wiki'          // Wiki pages
-  | 'news'          // News articles
-  | 'academic'      // Academic papers
-  | 'legal'         // Legal documents
-  | 'manual'        // User manuals
+  | 'database' // Database records
+  | 'api' // API responses
+  | 'file' // Local files
+  | 'email' // Email content
+  | 'chat' // Chat history
+  | 'code' // Code repositories
+  | 'wiki' // Wiki pages
+  | 'news' // News articles
+  | 'academic' // Academic papers
+  | 'legal' // Legal documents
+  | 'manual' // User manuals
   | 'specification' // Technical specs
-  | 'other';        // Other sources
+  | 'other'; // Other sources
 
 // ==========================================
 // TOOL CALLS AND FUNCTION EXECUTION
@@ -386,14 +392,14 @@ export interface ToolCall {
 /**
  * Tool call execution states
  */
-export type ToolCallState = 
-  | 'pending'        // Waiting to execute
+export type ToolCallState =
+  | 'pending' // Waiting to execute
   | 'streaming-start' // Starting to stream
-  | 'streaming'      // Currently streaming
-  | 'call'           // Executing
-  | 'result'         // Completed with result
-  | 'error'          // Failed with error
-  | 'cancelled';     // Cancelled execution
+  | 'streaming' // Currently streaming
+  | 'call' // Executing
+  | 'result' // Completed with result
+  | 'error' // Failed with error
+  | 'cancelled'; // Cancelled execution
 
 // ==========================================
 // STRUCTURED OBJECTS
@@ -418,10 +424,10 @@ export interface StructuredObject {
 /**
  * Structured object states
  */
-export type StructuredObjectState = 
+export type StructuredObjectState =
   | 'streaming' // Currently being streamed
-  | 'complete'  // Fully received
-  | 'error';    // Error in streaming
+  | 'complete' // Fully received
+  | 'error'; // Error in streaming
 
 // ==========================================
 // PERFORMANCE AND TELEMETRY
@@ -510,20 +516,20 @@ export interface TelemetryData {
 /**
  * Telemetry event types
  */
-export type TelemetryEventType = 
-  | 'message_sent'       // User sent message
-  | 'message_received'   // AI response received
-  | 'stream_started'     // Streaming started
-  | 'stream_completed'   // Streaming completed
-  | 'stream_error'       // Streaming error
-  | 'tool_called'        // Tool was called
-  | 'tool_completed'     // Tool execution completed
-  | 'reasoning_step'     // Reasoning step completed
-  | 'source_cited'       // Source was cited
-  | 'error_occurred'     // Error occurred
+export type TelemetryEventType =
+  | 'message_sent' // User sent message
+  | 'message_received' // AI response received
+  | 'stream_started' // Streaming started
+  | 'stream_completed' // Streaming completed
+  | 'stream_error' // Streaming error
+  | 'tool_called' // Tool was called
+  | 'tool_completed' // Tool execution completed
+  | 'reasoning_step' // Reasoning step completed
+  | 'source_cited' // Source was cited
+  | 'error_occurred' // Error occurred
   | 'performance_metric' // Performance data
-  | 'cost_tracked'       // Cost tracking data
-  | 'user_feedback';     // User feedback
+  | 'cost_tracked' // Cost tracking data
+  | 'user_feedback'; // User feedback
 
 /**
  * Geolocation interface
@@ -561,7 +567,7 @@ export interface EnhancedMessageListProps {
   loadingComponent?: ReactNode;
   /** Empty state component */
   emptyComponent?: ReactNode;
-  
+
   // === Display Options ===
   /** Show message metadata */
   showMetadata?: boolean;
@@ -573,7 +579,7 @@ export interface EnhancedMessageListProps {
   showCost?: boolean;
   /** Show performance metrics */
   showPerformance?: boolean;
-  
+
   // === Custom Renderers ===
   /** Custom metadata renderer */
   metadataRenderer?: ComponentType<MessageMetadataProps>;
@@ -581,7 +587,7 @@ export interface EnhancedMessageListProps {
   reasoningRenderer?: ComponentType<ReasoningTraceProps>;
   /** Custom sources renderer */
   sourcesRenderer?: ComponentType<SourcesDisplayProps>;
-  
+
   // === Virtualization ===
   /** Virtualization component for performance */
   virtualizationComponent?: ComponentType<VirtualizationProps>;
@@ -589,19 +595,19 @@ export interface EnhancedMessageListProps {
   enableVirtualization?: boolean;
   /** Estimated item height for virtualization */
   estimatedItemHeight?: number;
-  
+
   // === Streaming ===
   /** Enable streaming support */
   enableStreaming?: boolean;
   /** Streaming indicator component */
   streamingIndicator?: ComponentType<StreamingIndicatorProps>;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Events ===
   /** Message click handler */
   onMessageClick?: (message: EnhancedUIMessage) => void;
@@ -609,7 +615,7 @@ export interface EnhancedMessageListProps {
   onMessageSelect?: (messageIds: string[]) => void;
   /** Scroll event handler */
   onScroll?: (scrollTop: number, scrollHeight: number) => void;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -625,7 +631,7 @@ export interface EnhancedMessageItemProps {
   className?: string;
   /** Message index in list */
   index?: number;
-  
+
   // === Display Options ===
   /** Show message metadata */
   showMetadata?: boolean;
@@ -637,15 +643,17 @@ export interface EnhancedMessageItemProps {
   showCost?: boolean;
   /** Show performance metrics */
   showPerformance?: boolean;
-  
+
   // === Streaming ===
   /** Is this message currently streaming */
   isStreaming?: boolean;
   /** Stream parts for real-time updates */
-  streamParts?: AsyncIterable<EnhancedStreamPart> | ReadableStream<EnhancedStreamPart>;
+  streamParts?:
+    | AsyncIterable<EnhancedStreamPart>
+    | ReadableStream<EnhancedStreamPart>;
   /** Enable smooth scrolling during streaming */
   enableSmoothScrolling?: boolean;
-  
+
   // === Events ===
   /** Click handler */
   onClick?: (message: EnhancedUIMessage) => void;
@@ -655,7 +663,7 @@ export interface EnhancedMessageItemProps {
   onStreamError?: (error: Error) => void;
   /** Token update handler */
   onTokenUpdate?: (tokenCount: number) => void;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -767,45 +775,72 @@ export type TextStreamPart = EnhancedStreamPart;
 /**
  * Re-export for backward compatibility
  */
-export type { 
+export type {
   EnhancedUIMessage as UIMessageWithMetadata,
   EnhancedStreamPart as StreamPart,
   EnhancedMessageListProps as MessageListProps,
-  EnhancedMessageItemProps as MessageItemProps
+  EnhancedMessageItemProps as MessageItemProps,
 };
 
 /**
  * Union type of all possible AI SDK 5 event types
  */
-export type AISDKEvent = 
+export type AISDKEvent =
   | { type: 'stream-start'; data: { streamId: string; messageId?: string } }
-  | { type: 'stream-part'; data: { streamId: string; part: EnhancedStreamPart } }
-  | { type: 'stream-complete'; data: { streamId: string; message: EnhancedUIMessage } }
+  | {
+      type: 'stream-part';
+      data: { streamId: string; part: EnhancedStreamPart };
+    }
+  | {
+      type: 'stream-complete';
+      data: { streamId: string; message: EnhancedUIMessage };
+    }
   | { type: 'stream-error'; data: { streamId: string; error: Error } }
   | { type: 'tool-call'; data: { toolCall: ToolCall } }
   | { type: 'tool-result'; data: { toolCall: ToolCall; result: any } }
   | { type: 'reasoning-step'; data: { step: ReasoningStep } }
   | { type: 'source-cited'; data: { source: Source } }
-  | { type: 'metadata-update'; data: { messageId: string; metadata: MessageMetadata } }
+  | {
+      type: 'metadata-update';
+      data: { messageId: string; metadata: MessageMetadata };
+    }
   | { type: 'telemetry-event'; data: TelemetryData };
 
 /**
  * Type guard utilities for stream parts
  */
-export const isTextDelta = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'text-delta'; textDelta: string } =>
+export const isTextDelta = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & { type: 'text-delta'; textDelta: string } =>
   part.type === 'text-delta' && typeof part.textDelta === 'string';
 
-export const isToolCall = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'tool-call'; toolCallId: string; toolName: string } =>
-  part.type === 'tool-call' && typeof part.toolCallId === 'string' && typeof part.toolName === 'string';
+export const isToolCall = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & {
+  type: 'tool-call';
+  toolCallId: string;
+  toolName: string;
+} =>
+  part.type === 'tool-call' &&
+  typeof part.toolCallId === 'string' &&
+  typeof part.toolName === 'string';
 
-export const isReasoning = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'reasoning'; reasoning: string } =>
+export const isReasoning = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & { type: 'reasoning'; reasoning: string } =>
   part.type === 'reasoning' && typeof part.reasoning === 'string';
 
-export const isSource = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'source'; source: Source } =>
+export const isSource = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & { type: 'source'; source: Source } =>
   part.type === 'source' && typeof part.source === 'object';
 
-export const isFinish = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'finish'; finishReason: string } =>
+export const isFinish = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & { type: 'finish'; finishReason: string } =>
   part.type === 'finish' && typeof part.finishReason === 'string';
 
-export const isError = (part: EnhancedStreamPart): part is EnhancedStreamPart & { type: 'error'; error: Error } =>
-  part.type === 'error' && part.error instanceof Error; 
+export const isError = (
+  part: EnhancedStreamPart
+): part is EnhancedStreamPart & { type: 'error'; error: Error } =>
+  part.type === 'error' && part.error instanceof Error;

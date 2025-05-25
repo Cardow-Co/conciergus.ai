@@ -14,12 +14,24 @@ export type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png' | 'svg';
 /**
  * CDN providers
  */
-export type CDNProvider = 'cloudflare' | 'aws-cloudfront' | 'vercel' | 'netlify' | 'custom';
+export type CDNProvider =
+  | 'cloudflare'
+  | 'aws-cloudfront'
+  | 'vercel'
+  | 'netlify'
+  | 'custom';
 
 /**
  * Asset types
  */
-export type AssetType = 'image' | 'font' | 'css' | 'js' | 'audio' | 'video' | 'document';
+export type AssetType =
+  | 'image'
+  | 'font'
+  | 'css'
+  | 'js'
+  | 'audio'
+  | 'video'
+  | 'document';
 
 /**
  * Asset optimization configuration
@@ -149,7 +161,7 @@ export class AssetOptimizer extends EventEmitter {
     super();
     this.config = config;
     this.performanceMonitor = PerformanceMonitor.getInstance();
-    
+
     if (this.config.monitoring.enableMetrics) {
       this.initializeMonitoring();
     }
@@ -162,14 +174,17 @@ export class AssetOptimizer extends EventEmitter {
     if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
       this.observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        
+
         for (const entry of entries) {
           if (entry.entryType === 'resource') {
             this.recordAssetLoadTime(entry as PerformanceResourceTiming);
           } else if (entry.entryType === 'largest-contentful-paint') {
             this.recordCoreWebVital('lcp', entry.startTime);
           } else if (entry.entryType === 'first-input') {
-            this.recordCoreWebVital('fid', (entry as any).processingStart - entry.startTime);
+            this.recordCoreWebVital(
+              'fid',
+              (entry as any).processingStart - entry.startTime
+            );
           } else if (entry.entryType === 'layout-shift') {
             if (!(entry as any).hadRecentInput) {
               this.recordCoreWebVital('cls', (entry as any).value);
@@ -178,8 +193,13 @@ export class AssetOptimizer extends EventEmitter {
         }
       });
 
-      this.observer.observe({ 
-        entryTypes: ['resource', 'largest-contentful-paint', 'first-input', 'layout-shift'] 
+      this.observer.observe({
+        entryTypes: [
+          'resource',
+          'largest-contentful-paint',
+          'first-input',
+          'layout-shift',
+        ],
       });
     }
   }
@@ -187,18 +207,15 @@ export class AssetOptimizer extends EventEmitter {
   /**
    * Optimize image URL with CDN parameters
    */
-  optimizeImageUrl(src: string, options: ImageOptimizationOptions = {}): string {
+  optimizeImageUrl(
+    src: string,
+    options: ImageOptimizationOptions = {}
+  ): string {
     if (!this.config.cdn.enabled) {
       return src;
     }
 
-    const {
-      width,
-      height,
-      quality,
-      format,
-      fit = 'cover',
-    } = options;
+    const { width, height, quality, format, fit = 'cover' } = options;
 
     let optimizedUrl = this.buildCDNUrl(src);
     const params = new URLSearchParams();
@@ -240,7 +257,8 @@ export class AssetOptimizer extends EventEmitter {
     }
 
     if (params.toString()) {
-      optimizedUrl += (optimizedUrl.includes('?') ? '&' : '?') + params.toString();
+      optimizedUrl +=
+        (optimizedUrl.includes('?') ? '&' : '?') + params.toString();
     }
 
     return optimizedUrl;
@@ -249,7 +267,10 @@ export class AssetOptimizer extends EventEmitter {
   /**
    * Generate responsive image srcset
    */
-  generateResponsiveSrcSet(src: string, options: Omit<ImageOptimizationOptions, 'width'> = {}): string {
+  generateResponsiveSrcSet(
+    src: string,
+    options: Omit<ImageOptimizationOptions, 'width'> = {}
+  ): string {
     if (!this.config.images.enableResponsive) {
       return '';
     }
@@ -268,13 +289,17 @@ export class AssetOptimizer extends EventEmitter {
   /**
    * Generate sizes attribute for responsive images
    */
-  generateSizes(breakpoints?: Array<{ minWidth: string; size: string }>): string {
+  generateSizes(
+    breakpoints?: Array<{ minWidth: string; size: string }>
+  ): string {
     if (!breakpoints) {
       // Default responsive sizes
       return '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
     }
 
-    const sizesEntries = breakpoints.map(bp => `(min-width: ${bp.minWidth}) ${bp.size}`);
+    const sizesEntries = breakpoints.map(
+      (bp) => `(min-width: ${bp.minWidth}) ${bp.size}`
+    );
     sizesEntries.push('100vw'); // Default fallback
 
     return sizesEntries.join(', ');
@@ -312,7 +337,10 @@ export class AssetOptimizer extends EventEmitter {
    * Prefetch assets for next navigation
    */
   prefetchAsset(src: string): void {
-    if (!this.config.caching.enablePrefetch || typeof document === 'undefined') {
+    if (
+      !this.config.caching.enablePrefetch ||
+      typeof document === 'undefined'
+    ) {
       return;
     }
 
@@ -387,7 +415,7 @@ export class AssetOptimizer extends EventEmitter {
     let hash = 0;
     for (let i = 0; i < input.length; i++) {
       const char = input.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -449,8 +477,8 @@ export class AssetOptimizer extends EventEmitter {
       this.performanceMonitor.recordMetric(
         'asset_load_time' as any,
         loadTime,
-        { 
-          url, 
+        {
+          url,
           type: this.getAssetType(url),
           size: entry.transferSize,
           cached: entry.transferSize === 0,
@@ -467,8 +495,10 @@ export class AssetOptimizer extends EventEmitter {
    */
   private getAssetType(url: string): AssetType {
     const extension = this.getFileExtension(url).toLowerCase();
-    
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'].includes(extension)) {
+
+    if (
+      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'].includes(extension)
+    ) {
       return 'image';
     } else if (['woff', 'woff2', 'ttf', 'otf'].includes(extension)) {
       return 'font';
@@ -481,14 +511,17 @@ export class AssetOptimizer extends EventEmitter {
     } else if (['mp4', 'webm', 'avi'].includes(extension)) {
       return 'video';
     }
-    
+
     return 'document';
   }
 
   /**
    * Record Core Web Vital
    */
-  private recordCoreWebVital(metric: 'lcp' | 'fid' | 'cls', value: number): void {
+  private recordCoreWebVital(
+    metric: 'lcp' | 'fid' | 'cls',
+    value: number
+  ): void {
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         `core_web_vital_${metric}` as any,
@@ -508,17 +541,24 @@ export class AssetOptimizer extends EventEmitter {
     const assets = Array.from(this.assetCache.values());
     const totalAssets = assets.length;
     const totalSize = assets.reduce((sum, asset) => sum + asset.size, 0);
-    const optimizedSize = assets.reduce((sum, asset) => sum + (asset.optimizedSize || asset.size), 0);
-    const compressionRatio = totalSize > 0 ? (totalSize - optimizedSize) / totalSize : 0;
+    const optimizedSize = assets.reduce(
+      (sum, asset) => sum + (asset.optimizedSize || asset.size),
+      0
+    );
+    const compressionRatio =
+      totalSize > 0 ? (totalSize - optimizedSize) / totalSize : 0;
 
     // Calculate average load time
     const loadTimes = Array.from(this.loadTimeCache.values()).flat();
-    const averageLoadTime = loadTimes.length > 0 
-      ? loadTimes.reduce((sum, time) => sum + time, 0) / loadTimes.length 
-      : 0;
+    const averageLoadTime =
+      loadTimes.length > 0
+        ? loadTimes.reduce((sum, time) => sum + time, 0) / loadTimes.length
+        : 0;
 
     // Calculate cache hit rate
-    const cachedAssets = assets.filter(asset => asset.cacheStatus === 'hit').length;
+    const cachedAssets = assets.filter(
+      (asset) => asset.cacheStatus === 'hit'
+    ).length;
     const cacheHitRate = totalAssets > 0 ? cachedAssets / totalAssets : 0;
 
     return {
@@ -546,11 +586,11 @@ export class AssetOptimizer extends EventEmitter {
 
     // Set cache-control based on asset type and configuration
     let cacheControl = `public, max-age=${cacheHeaders.maxAge}`;
-    
+
     if (cacheHeaders.immutable) {
       cacheControl += ', immutable';
     }
-    
+
     if (cacheHeaders.staleWhileRevalidate > 0) {
       cacheControl += `, stale-while-revalidate=${cacheHeaders.staleWhileRevalidate}`;
     }
@@ -609,4 +649,4 @@ export class AssetOptimizer extends EventEmitter {
     this.clearCache();
     this.emit('shutdown');
   }
-} 
+}

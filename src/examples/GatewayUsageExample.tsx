@@ -1,12 +1,12 @@
 import React from 'react';
 import { generateText, streamText } from 'ai';
-import { 
-  GatewayProvider, 
-  useGateway, 
-  useGatewayModel, 
-  useSmartModel, 
+import {
+  GatewayProvider,
+  useGateway,
+  useGatewayModel,
+  useSmartModel,
   useCostOptimizedModel,
-  GatewayAuthStatus
+  GatewayAuthStatus,
 } from '../context/GatewayProvider';
 import { AISDKTelemetryIntegration } from '../telemetry/AISDKTelemetryIntegration';
 
@@ -28,7 +28,7 @@ export function BasicGatewayExample() {
         {
           prompt: 'Explain quantum computing in simple terms.',
           model: model.modelId || 'unknown',
-          operationType: 'basic-example'
+          operationType: 'basic-example',
         }
       );
 
@@ -39,7 +39,9 @@ export function BasicGatewayExample() {
       });
       setResponse(text);
     } catch (error) {
-      setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setResponse(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ export function SmartModelExample() {
         model: model.modelId || 'unknown',
         operationType: 'smart-model-example',
         capabilities: requirements.capabilities,
-        costTier: requirements.costTier
+        costTier: requirements.costTier,
       }
     );
 
@@ -105,16 +107,25 @@ export function SmartModelExample() {
         <h4>Requirements:</h4>
         <label>
           Capabilities:
-          <select 
-            multiple 
+          <select
+            multiple
             value={requirements.capabilities}
             onChange={(e) => {
-              const validCapabilities = ['text', 'vision', 'function_calling', 'reasoning'] as const;
-              const values = Array.from(e.target.selectedOptions, option => option.value)
-                .filter(v => validCapabilities.includes(v as any)) as typeof validCapabilities[number][];
-              setRequirements(prev => ({ 
-                ...prev, 
-                capabilities: values 
+              const validCapabilities = [
+                'text',
+                'vision',
+                'function_calling',
+                'reasoning',
+              ] as const;
+              const values = Array.from(
+                e.target.selectedOptions,
+                (option) => option.value
+              ).filter((v) =>
+                validCapabilities.includes(v as any)
+              ) as (typeof validCapabilities)[number][];
+              setRequirements((prev) => ({
+                ...prev,
+                capabilities: values,
               }));
             }}
           >
@@ -126,12 +137,14 @@ export function SmartModelExample() {
         </label>
         <label>
           Cost Tier:
-          <select 
-            value={requirements.costTier} 
-            onChange={(e) => setRequirements(prev => ({ 
-              ...prev, 
-              costTier: e.target.value as typeof requirements.costTier 
-            }))}
+          <select
+            value={requirements.costTier}
+            onChange={(e) =>
+              setRequirements((prev) => ({
+                ...prev,
+                costTier: e.target.value as typeof requirements.costTier,
+              }))
+            }
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -163,7 +176,9 @@ export function CostOptimizationExample() {
     maxTokens: 4000,
   });
 
-  const [prompt, setPrompt] = React.useState('Write a short story about a robot.');
+  const [prompt, setPrompt] = React.useState(
+    'Write a short story about a robot.'
+  );
   const [response, setResponse] = React.useState<string>('');
 
   const handleGenerate = async () => {
@@ -175,7 +190,7 @@ export function CostOptimizationExample() {
         model: model.modelId || 'unknown',
         operationType: 'cost-optimization-example',
         estimatedCost,
-        maxTokens: 4000
+        maxTokens: 4000,
       }
     );
 
@@ -191,8 +206,12 @@ export function CostOptimizationExample() {
     <div className="cost-optimization-example">
       <h3>Cost-Optimized Model Selection</h3>
       <div className="model-info">
-        <p><strong>Recommended Model:</strong> {modelId}</p>
-        <p><strong>Estimated Cost Score:</strong> {estimatedCost}/10</p>
+        <p>
+          <strong>Recommended Model:</strong> {modelId}
+        </p>
+        <p>
+          <strong>Estimated Cost Score:</strong> {estimatedCost}/10
+        </p>
       </div>
       <textarea
         value={prompt}
@@ -219,7 +238,7 @@ export function CostOptimizationExample() {
 export function FallbackChainExample() {
   const { availableChains, currentChain, setCurrentChain } = useGateway();
   const [selectedChain, setSelectedChain] = React.useState(currentChain);
-  
+
   const handleChainChange = (chainName: string) => {
     setSelectedChain(chainName);
     setCurrentChain(chainName);
@@ -231,8 +250,8 @@ export function FallbackChainExample() {
       <div className="chain-selector">
         <label>
           Select Fallback Chain:
-          <select 
-            value={selectedChain} 
+          <select
+            value={selectedChain}
             onChange={(e) => handleChainChange(e.target.value)}
           >
             {Object.entries(availableChains).map(([key, chain]) => (
@@ -252,7 +271,10 @@ export function FallbackChainExample() {
                 <li key={index}>{modelId}</li>
               ))}
             </ol>
-            <p><strong>Use Case:</strong> {availableChains[selectedChain].useCase}</p>
+            <p>
+              <strong>Use Case:</strong>{' '}
+              {availableChains[selectedChain].useCase}
+            </p>
           </div>
         )}
       </div>
@@ -265,32 +287,43 @@ export function FallbackChainExample() {
  * Shows authentication and configuration status
  */
 export function GatewayStatusExample() {
-  const { 
-    isAuthenticated, 
-    authGuidance, 
-    config, 
-    currentModel, 
+  const {
+    isAuthenticated,
+    authGuidance,
+    config,
+    currentModel,
     currentChain,
     telemetryEnabled,
-    setTelemetryEnabled
+    setTelemetryEnabled,
   } = useGateway();
 
   return (
     <div className="gateway-status-example">
       <h3>Gateway Status & Configuration</h3>
-      
+
       <GatewayAuthStatus />
-      
+
       <div className="status-details">
         <h4>Current Configuration:</h4>
         <ul>
-          <li><strong>Current Model:</strong> {currentModel}</li>
-          <li><strong>Current Chain:</strong> {currentChain}</li>
-          <li><strong>Cost Optimization:</strong> {config.costOptimization ? 'Enabled' : 'Disabled'}</li>
-          <li><strong>Retry Attempts:</strong> {config.retryAttempts}</li>
-          <li><strong>Timeout:</strong> {config.timeout}ms</li>
+          <li>
+            <strong>Current Model:</strong> {currentModel}
+          </li>
+          <li>
+            <strong>Current Chain:</strong> {currentChain}
+          </li>
+          <li>
+            <strong>Cost Optimization:</strong>{' '}
+            {config.costOptimization ? 'Enabled' : 'Disabled'}
+          </li>
+          <li>
+            <strong>Retry Attempts:</strong> {config.retryAttempts}
+          </li>
+          <li>
+            <strong>Timeout:</strong> {config.timeout}ms
+          </li>
         </ul>
-        
+
         <label className="telemetry-toggle">
           <input
             type="checkbox"
@@ -322,23 +355,27 @@ export function StreamingExample() {
       const telemetrySettings = telemetryIntegration.generateTelemetrySettings(
         'streamText',
         {
-          prompt: 'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
+          prompt:
+            'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
           model: model.modelId || 'unknown',
-          operationType: 'streaming-example'
+          operationType: 'streaming-example',
         }
       );
 
       const result = await streamText({
         model,
-        prompt: 'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
+        prompt:
+          'Write a detailed explanation of how neural networks work, including the key concepts and applications.',
         experimental_telemetry: telemetrySettings,
       });
 
       for await (const chunk of result.textStream) {
-        setStreamedText(prev => prev + chunk);
+        setStreamedText((prev) => prev + chunk);
       }
     } catch (error) {
-      setStreamedText(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStreamedText(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setIsStreaming(false);
     }
@@ -352,12 +389,14 @@ export function StreamingExample() {
       </button>
       <div className="streamed-content">
         <h4>Streamed Response:</h4>
-        <div style={{ 
-          border: '1px solid #ccc', 
-          padding: '10px', 
-          minHeight: '100px',
-          whiteSpace: 'pre-wrap'
-        }}>
+        <div
+          style={{
+            border: '1px solid #ccc',
+            padding: '10px',
+            minHeight: '100px',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
           {streamedText}
           {isStreaming && <span className="cursor">|</span>}
         </div>
@@ -384,27 +423,27 @@ export function GatewayUsageApp() {
     >
       <div className="gateway-usage-app">
         <h1>AI Gateway Usage Examples</h1>
-        
+
         <div className="example-section">
           <GatewayStatusExample />
         </div>
-        
+
         <div className="example-section">
           <BasicGatewayExample />
         </div>
-        
+
         <div className="example-section">
           <SmartModelExample />
         </div>
-        
+
         <div className="example-section">
           <CostOptimizationExample />
         </div>
-        
+
         <div className="example-section">
           <FallbackChainExample />
         </div>
-        
+
         <div className="example-section">
           <StreamingExample />
         </div>
@@ -413,4 +452,4 @@ export function GatewayUsageApp() {
   );
 }
 
-export default GatewayUsageApp; 
+export default GatewayUsageApp;

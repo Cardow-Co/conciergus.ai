@@ -75,24 +75,34 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
   // Get step type icon
   const getStepIcon = (type?: string) => {
     switch (type) {
-      case 'thinking': return '🤔';
-      case 'analysis': return '🔍';
-      case 'conclusion': return '💡';
-      case 'observation': return '👁️';
-      case 'planning': return '📋';
-      default: return '🧠';
+      case 'thinking':
+        return '🤔';
+      case 'analysis':
+        return '🔍';
+      case 'conclusion':
+        return '💡';
+      case 'observation':
+        return '👁️';
+      case 'planning':
+        return '📋';
+      default:
+        return '🧠';
     }
   };
 
   // Get confidence indicator
   const getConfidenceIndicator = (confidence?: number) => {
     if (!confidence || !showConfidence) return null;
-    
-    const level = confidence > 0.8 ? 'high' : confidence > 0.5 ? 'medium' : 'low';
+
+    const level =
+      confidence > 0.8 ? 'high' : confidence > 0.5 ? 'medium' : 'low';
     const percentage = Math.round(confidence * 100);
-    
+
     return (
-      <span className={`confidence-indicator ${level}`} title={`Confidence: ${percentage}%`}>
+      <span
+        className={`confidence-indicator ${level}`}
+        title={`Confidence: ${percentage}%`}
+      >
         {percentage}%
       </span>
     );
@@ -101,14 +111,14 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
   // Render individual reasoning step
   const renderReasoningStep = (step: ReasoningStep, index: number) => {
     const isStepExpanded = expandedSteps.has(index);
-    
+
     return (
-      <div 
-        key={index} 
+      <div
+        key={index}
         className={`reasoning-step ${step.type || 'thinking'} ${isStepExpanded ? 'expanded' : 'collapsed'}`}
         onClick={() => onStepClick?.(step, index)}
       >
-        <div 
+        <div
           className="reasoning-step-header"
           onClick={(e) => {
             e.stopPropagation();
@@ -131,7 +141,7 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
                 [{step.signature}]
               </span>
             )}
-            <button 
+            <button
               className="step-toggle"
               onClick={(e) => {
                 e.stopPropagation();
@@ -242,7 +252,7 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
             Reasoning ({reasoningSteps.length} steps)
           </span>
           {collapsible && (
-            <button 
+            <button
               className="compact-toggle"
               onClick={() => setIsExpanded(!isExpanded)}
               aria-label={isExpanded ? 'Hide reasoning' : 'Show reasoning'}
@@ -255,12 +265,13 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
           <div className="compact-content">
             {reasoningSteps.map((step, index) => (
               <div key={index} className="compact-step">
-                <span className="compact-step-icon">{getStepIcon(step.type)}</span>
+                <span className="compact-step-icon">
+                  {getStepIcon(step.type)}
+                </span>
                 <span className="compact-step-text">
-                  {step.content.length > 100 
-                    ? `${step.content.substring(0, 100)}...` 
-                    : step.content
-                  }
+                  {step.content.length > 100
+                    ? `${step.content.substring(0, 100)}...`
+                    : step.content}
                 </span>
               </div>
             ))}
@@ -274,7 +285,7 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
   return (
     <div className={`reasoning-trace detailed ${className}`} {...rest}>
       {collapsible ? (
-        <details 
+        <details
           className="reasoning-details-container"
           open={isExpanded}
           onToggle={(e) => setIsExpanded((e.target as HTMLDetailsElement).open)}
@@ -291,7 +302,11 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
                   e.stopPropagation();
                   toggleAllSteps();
                 }}
-                title={expandedSteps.size === reasoningSteps.length ? 'Collapse all' : 'Expand all'}
+                title={
+                  expandedSteps.size === reasoningSteps.length
+                    ? 'Collapse all'
+                    : 'Expand all'
+                }
               >
                 {expandedSteps.size === reasoningSteps.length ? '⊟' : '⊞'}
               </button>
@@ -299,7 +314,9 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
           </summary>
           <div className="reasoning-content">
             <div className="reasoning-steps">
-              {reasoningSteps.map((step, index) => renderReasoningStep(step, index))}
+              {reasoningSteps.map((step, index) =>
+                renderReasoningStep(step, index)
+              )}
             </div>
             {renderDetails()}
           </div>
@@ -314,7 +331,11 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
               <button
                 className="expand-all-btn"
                 onClick={toggleAllSteps}
-                title={expandedSteps.size === reasoningSteps.length ? 'Collapse all' : 'Expand all'}
+                title={
+                  expandedSteps.size === reasoningSteps.length
+                    ? 'Collapse all'
+                    : 'Expand all'
+                }
               >
                 {expandedSteps.size === reasoningSteps.length ? '⊟' : '⊞'}
               </button>
@@ -322,7 +343,9 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
           </div>
           <div className="reasoning-content">
             <div className="reasoning-steps">
-              {reasoningSteps.map((step, index) => renderReasoningStep(step, index))}
+              {reasoningSteps.map((step, index) =>
+                renderReasoningStep(step, index)
+              )}
             </div>
             {renderDetails()}
           </div>
@@ -332,4 +355,4 @@ export const ReasoningTrace: FC<ReasoningTraceProps> = ({
   );
 };
 
-export default ReasoningTrace; 
+export default ReasoningTrace;

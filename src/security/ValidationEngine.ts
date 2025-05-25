@@ -14,7 +14,7 @@ import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
 export enum ValidationLibrary {
   ZOD = 'zod',
   JOI = 'joi',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
 /**
@@ -32,7 +32,7 @@ export enum DataType {
   AI_PROMPT = 'ai_prompt',
   USER_INPUT = 'user_input',
   HTML_CONTENT = 'html_content',
-  JSON_DATA = 'json_data'
+  JSON_DATA = 'json_data',
 }
 
 /**
@@ -42,7 +42,7 @@ export enum ValidationSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 /**
@@ -131,7 +131,11 @@ export interface ValidationWarning {
  * Schema adapter interface
  */
 export interface SchemaAdapter {
-  validate(data: any, schema: any, context: ValidationContext): Promise<ValidationResult>;
+  validate(
+    data: any,
+    schema: any,
+    context: ValidationContext
+  ): Promise<ValidationResult>;
   compile(schema: ValidationSchema): any;
   library: ValidationLibrary;
 }
@@ -142,7 +146,11 @@ export interface SchemaAdapter {
 export class CustomSchemaAdapter implements SchemaAdapter {
   library = ValidationLibrary.CUSTOM;
 
-  async validate(data: any, schema: ValidationSchema, context: ValidationContext): Promise<ValidationResult> {
+  async validate(
+    data: any,
+    schema: ValidationSchema,
+    context: ValidationContext
+  ): Promise<ValidationResult> {
     const startTime = Date.now();
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -154,9 +162,11 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     // Validate each field in the schema
     for (const [fieldName, rule] of Object.entries(schema.fields)) {
       fieldsValidated++;
-      const fieldPath = context.fieldPath ? `${context.fieldPath}.${fieldName}` : fieldName;
+      const fieldPath = context.fieldPath
+        ? `${context.fieldPath}.${fieldName}`
+        : fieldName;
       const fieldValue = this.getNestedValue(data, fieldName);
-      
+
       try {
         const fieldResult = await this.validateField(
           fieldName,
@@ -164,18 +174,18 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           rule,
           { ...context, fieldPath }
         );
-        
+
         if (fieldResult.error) {
           errors.push(fieldResult.error);
           if (fieldResult.securityThreat) {
             securityThreatsDetected++;
           }
         }
-        
+
         if (fieldResult.warning) {
           warnings.push(fieldResult.warning);
         }
-        
+
         if (fieldResult.sanitized) {
           fieldsSanitized++;
           this.setNestedValue(sanitizedData, fieldName, fieldResult.value);
@@ -187,7 +197,7 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           field: fieldName,
           message: `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
           code: 'VALIDATION_ERROR',
-          severity: ValidationSeverity.HIGH
+          severity: ValidationSeverity.HIGH,
         });
       }
     }
@@ -195,18 +205,18 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     // Check for unknown fields if strict mode
     if (schema.strict) {
       const unknownFields = this.findUnknownFields(data, schema.fields);
-      unknownFields.forEach(field => {
+      unknownFields.forEach((field) => {
         errors.push({
           field,
           message: 'Unknown field not allowed in strict mode',
           code: 'UNKNOWN_FIELD',
-          severity: ValidationSeverity.MEDIUM
+          severity: ValidationSeverity.MEDIUM,
         });
       });
     } else if (schema.allowAdditionalFields) {
       // Copy additional fields if allowed
       const additionalFields = this.findUnknownFields(data, schema.fields);
-      additionalFields.forEach(field => {
+      additionalFields.forEach((field) => {
         const value = this.getNestedValue(data, field);
         // Sanitize additional fields by default
         if (schema.sanitizeByDefault) {
@@ -231,8 +241,8 @@ export class CustomSchemaAdapter implements SchemaAdapter {
         fieldsValidated,
         fieldsSanitized,
         securityThreatsDetected,
-        processingTime
-      }
+        processingTime,
+      },
     };
   }
 
@@ -256,7 +266,10 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     securityThreat?: boolean;
   }> {
     // Check if required field is missing
-    if (rule.required && (value === undefined || value === null || value === '')) {
+    if (
+      rule.required &&
+      (value === undefined || value === null || value === '')
+    ) {
       return {
         valid: false,
         value,
@@ -265,8 +278,8 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           field: fieldName,
           message: 'Field is required',
           code: 'REQUIRED_FIELD',
-          severity: rule.severity || ValidationSeverity.MEDIUM
-        }
+          severity: rule.severity || ValidationSeverity.MEDIUM,
+        },
       };
     }
 
@@ -280,12 +293,16 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     let securityThreat = false;
 
     // Apply sanitization first if enabled
-    if (rule.sanitize || rule.type === DataType.USER_INPUT || rule.type === DataType.AI_PROMPT) {
+    if (
+      rule.sanitize ||
+      rule.type === DataType.USER_INPUT ||
+      rule.type === DataType.AI_PROMPT
+    ) {
       const sanitized = await this.sanitizeValue(value, rule.type, context);
       if (sanitized !== value) {
         processedValue = sanitized;
         wasSanitized = true;
-        
+
         // Check if sanitization removed potential security threats
         if (this.detectSecurityThreat(value, sanitized)) {
           securityThreat = true;
@@ -304,17 +321,21 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           field: fieldName,
           message: typeValidation.message || `Invalid ${rule.type} format`,
           code: 'TYPE_ERROR',
-          severity: rule.severity || ValidationSeverity.MEDIUM
+          severity: rule.severity || ValidationSeverity.MEDIUM,
         },
-        securityThreat
+        securityThreat,
       };
     }
 
     // Length validation for strings and arrays
     if (rule.minLength !== undefined || rule.maxLength !== undefined) {
-      const length = typeof processedValue === 'string' ? processedValue.length : 
-                    Array.isArray(processedValue) ? processedValue.length : 0;
-      
+      const length =
+        typeof processedValue === 'string'
+          ? processedValue.length
+          : Array.isArray(processedValue)
+            ? processedValue.length
+            : 0;
+
       if (rule.minLength !== undefined && length < rule.minLength) {
         return {
           valid: false,
@@ -324,12 +345,12 @@ export class CustomSchemaAdapter implements SchemaAdapter {
             field: fieldName,
             message: `Value too short (minimum: ${rule.minLength})`,
             code: 'MIN_LENGTH',
-            severity: rule.severity || ValidationSeverity.LOW
+            severity: rule.severity || ValidationSeverity.LOW,
           },
-          securityThreat
+          securityThreat,
         };
       }
-      
+
       if (rule.maxLength !== undefined && length > rule.maxLength) {
         return {
           valid: false,
@@ -339,9 +360,9 @@ export class CustomSchemaAdapter implements SchemaAdapter {
             field: fieldName,
             message: `Value too long (maximum: ${rule.maxLength})`,
             code: 'MAX_LENGTH',
-            severity: rule.severity || ValidationSeverity.MEDIUM
+            severity: rule.severity || ValidationSeverity.MEDIUM,
           },
-          securityThreat
+          securityThreat,
         };
       }
     }
@@ -357,9 +378,9 @@ export class CustomSchemaAdapter implements SchemaAdapter {
             field: fieldName,
             message: 'Value does not match required pattern',
             code: 'PATTERN_ERROR',
-            severity: rule.severity || ValidationSeverity.MEDIUM
+            severity: rule.severity || ValidationSeverity.MEDIUM,
           },
-          securityThreat
+          securityThreat,
         };
       }
     }
@@ -374,9 +395,9 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           field: fieldName,
           message: `Value must be one of: ${rule.enum.join(', ')}`,
           code: 'ENUM_ERROR',
-          severity: rule.severity || ValidationSeverity.MEDIUM
+          severity: rule.severity || ValidationSeverity.MEDIUM,
         },
-        securityThreat
+        securityThreat,
       };
     }
 
@@ -390,11 +411,14 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           sanitized: wasSanitized,
           error: {
             field: fieldName,
-            message: typeof customResult === 'string' ? customResult : 'Custom validation failed',
+            message:
+              typeof customResult === 'string'
+                ? customResult
+                : 'Custom validation failed',
             code: 'CUSTOM_ERROR',
-            severity: rule.severity || ValidationSeverity.MEDIUM
+            severity: rule.severity || ValidationSeverity.MEDIUM,
           },
-          securityThreat
+          securityThreat,
         };
       }
     }
@@ -403,11 +427,15 @@ export class CustomSchemaAdapter implements SchemaAdapter {
       valid: true,
       value: processedValue,
       sanitized: wasSanitized,
-      securityThreat
+      securityThreat,
     };
   }
 
-  private async sanitizeValue(value: any, type: DataType, context: ValidationContext): Promise<any> {
+  private async sanitizeValue(
+    value: any,
+    type: DataType,
+    context: ValidationContext
+  ): Promise<any> {
     if (value === null || value === undefined) {
       return value;
     }
@@ -416,19 +444,19 @@ export class CustomSchemaAdapter implements SchemaAdapter {
       case DataType.STRING:
       case DataType.USER_INPUT:
         return SecurityUtils.sanitizeInput(String(value));
-      
+
       case DataType.HTML_CONTENT:
         return SecurityUtils.sanitizeHtml(String(value));
-      
+
       case DataType.AI_PROMPT:
         return SecurityUtils.sanitizeAiPrompt(String(value));
-      
+
       case DataType.EMAIL:
         return SecurityUtils.sanitizeInput(String(value)).toLowerCase().trim();
-      
+
       case DataType.URL:
         return SecurityUtils.sanitizeInput(String(value)).trim();
-      
+
       case DataType.JSON_DATA:
         if (typeof value === 'string') {
           try {
@@ -439,18 +467,18 @@ export class CustomSchemaAdapter implements SchemaAdapter {
           }
         }
         return this.deepSanitizeObject(value);
-      
+
       case DataType.OBJECT:
         return this.deepSanitizeObject(value);
-      
+
       case DataType.ARRAY:
         if (Array.isArray(value)) {
-          return value.map(item => 
+          return value.map((item) =>
             typeof item === 'string' ? SecurityUtils.sanitizeInput(item) : item
           );
         }
         return value;
-      
+
       default:
         return value;
     }
@@ -460,54 +488,63 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     if (obj === null || obj === undefined) {
       return obj;
     }
-    
+
     if (typeof obj === 'string') {
       return SecurityUtils.sanitizeInput(obj);
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.deepSanitizeObject(item));
+      return obj.map((item) => this.deepSanitizeObject(item));
     }
-    
+
     if (typeof obj === 'object') {
       const sanitized: any = {};
       for (const [key, value] of Object.entries(obj)) {
-        sanitized[SecurityUtils.sanitizeInput(key)] = this.deepSanitizeObject(value);
+        sanitized[SecurityUtils.sanitizeInput(key)] =
+          this.deepSanitizeObject(value);
       }
       return sanitized;
     }
-    
+
     return obj;
   }
 
-  private validateType(value: any, type: DataType): { valid: boolean; message?: string } {
+  private validateType(
+    value: any,
+    type: DataType
+  ): { valid: boolean; message?: string } {
     switch (type) {
       case DataType.STRING:
       case DataType.USER_INPUT:
       case DataType.AI_PROMPT:
       case DataType.HTML_CONTENT:
         return { valid: typeof value === 'string' };
-      
+
       case DataType.NUMBER:
         return { valid: typeof value === 'number' && !isNaN(value) };
-      
+
       case DataType.BOOLEAN:
         return { valid: typeof value === 'boolean' };
-      
+
       case DataType.OBJECT:
       case DataType.JSON_DATA:
-        return { valid: typeof value === 'object' && value !== null && !Array.isArray(value) };
-      
+        return {
+          valid:
+            typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value),
+        };
+
       case DataType.ARRAY:
         return { valid: Array.isArray(value) };
-      
+
       case DataType.EMAIL:
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return { 
+        return {
           valid: typeof value === 'string' && emailRegex.test(value),
-          message: 'Invalid email format'
+          message: 'Invalid email format',
         };
-      
+
       case DataType.URL:
         try {
           new URL(value);
@@ -515,14 +552,15 @@ export class CustomSchemaAdapter implements SchemaAdapter {
         } catch {
           return { valid: false, message: 'Invalid URL format' };
         }
-      
+
       case DataType.UUID:
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        return { 
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return {
           valid: typeof value === 'string' && uuidRegex.test(value),
-          message: 'Invalid UUID format'
+          message: 'Invalid UUID format',
         };
-      
+
       default:
         return { valid: true };
     }
@@ -532,7 +570,7 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     if (typeof original !== 'string' || typeof sanitized !== 'string') {
       return false;
     }
-    
+
     // Check for common security threats that were removed
     const threats = [
       /<script/i,
@@ -542,10 +580,12 @@ export class CustomSchemaAdapter implements SchemaAdapter {
       /eval\s*\(/i,
       /union\s+select/i, // SQL injection
       /drop\s+table/i,
-      /delete\s+from/i
+      /delete\s+from/i,
     ];
-    
-    return threats.some(threat => threat.test(original) && !threat.test(sanitized));
+
+    return threats.some(
+      (threat) => threat.test(original) && !threat.test(sanitized)
+    );
   }
 
   private getNestedValue(obj: any, path: string): any {
@@ -564,14 +604,17 @@ export class CustomSchemaAdapter implements SchemaAdapter {
     target[lastKey] = value;
   }
 
-  private findUnknownFields(data: any, schemaFields: Record<string, ValidationRule>): string[] {
+  private findUnknownFields(
+    data: any,
+    schemaFields: Record<string, ValidationRule>
+  ): string[] {
     if (!data || typeof data !== 'object') {
       return [];
     }
-    
+
     const dataKeys = Object.keys(data);
     const schemaKeys = Object.keys(schemaFields);
-    return dataKeys.filter(key => !schemaKeys.includes(key));
+    return dataKeys.filter((key) => !schemaKeys.includes(key));
   }
 }
 
@@ -593,7 +636,7 @@ export class SchemaRegistry {
   registerSchema(schema: ValidationSchema): void {
     this.schemas.set(schema.name, schema);
     this.compiledSchemas.set(schema.name, this.adapter.compile(schema));
-    
+
     ConciergusOpenTelemetry.createSpan(
       'conciergus-security',
       'schema-registered',
@@ -602,7 +645,7 @@ export class SchemaRegistry {
           'schema.name': schema.name,
           'schema.version': schema.version,
           'schema.fields_count': Object.keys(schema.fields).length,
-          'schema.strict': schema.strict || false
+          'schema.strict': schema.strict || false,
         });
       }
     );
@@ -677,7 +720,7 @@ export class ValidationEngine {
           'validation.schema': schemaName,
           'validation.endpoint': context.endpoint || 'unknown',
           'validation.method': context.method || 'unknown',
-          'validation.data_source': context.dataSource || 'unknown'
+          'validation.data_source': context.dataSource || 'unknown',
         });
 
         const schema = this.registry.getSchema(schemaName);
@@ -689,20 +732,25 @@ export class ValidationEngine {
         const securityConfig = this.securityCore.getConfig();
         const contextWithSecurity = {
           ...context,
-          securityLevel: context.securityLevel || securityConfig.level
+          securityLevel: context.securityLevel || securityConfig.level,
         };
 
         try {
-          const result = await this.adapter.validate(data, schema, contextWithSecurity);
-          
+          const result = await this.adapter.validate(
+            data,
+            schema,
+            contextWithSecurity
+          );
+
           span?.setAttributes({
             'validation.valid': result.valid,
             'validation.errors_count': result.errors.length,
             'validation.warnings_count': result.warnings.length,
             'validation.fields_validated': result.metadata.fieldsValidated,
             'validation.fields_sanitized': result.metadata.fieldsSanitized,
-            'validation.security_threats': result.metadata.securityThreatsDetected,
-            'validation.processing_time': result.metadata.processingTime
+            'validation.security_threats':
+              result.metadata.securityThreatsDetected,
+            'validation.processing_time': result.metadata.processingTime,
           });
 
           // Log security threats
@@ -713,7 +761,7 @@ export class ValidationEngine {
               result.metadata.securityThreatsDetected,
               {
                 schema: schemaName,
-                endpoint: context.endpoint || 'unknown'
+                endpoint: context.endpoint || 'unknown',
               }
             );
           }
@@ -727,7 +775,7 @@ export class ValidationEngine {
               {
                 schema: schemaName,
                 endpoint: context.endpoint || 'unknown',
-                error_count: result.errors.length
+                error_count: result.errors.length,
               }
             );
           }
@@ -776,10 +824,10 @@ export class ValidationEngine {
           required: true,
           maxLength: 10000,
           sanitize: true,
-          severity: ValidationSeverity.HIGH
-        }
+          severity: ValidationSeverity.HIGH,
+        },
       },
-      sanitizeByDefault: true
+      sanitizeByDefault: true,
     });
 
     // AI prompt schema
@@ -799,27 +847,30 @@ export class ValidationEngine {
               /ignore previous instructions/i,
               /system:\s*you are now/i,
               /forget everything/i,
-              /(role|act as|pretend).*(admin|root|system)/i
+              /(role|act as|pretend).*(admin|root|system)/i,
             ];
-            
-            return !suspiciousPatterns.some(pattern => pattern.test(value)) ||
-                   'Potential prompt injection detected';
-          }
+
+            return (
+              !suspiciousPatterns.some((pattern) => pattern.test(value)) ||
+              'Potential prompt injection detected'
+            );
+          },
         },
         systemPrompt: {
           type: DataType.STRING,
           required: false,
           maxLength: 10000,
-          sanitize: true
+          sanitize: true,
         },
         temperature: {
           type: DataType.NUMBER,
           required: false,
-          custom: (value: number) => value >= 0 && value <= 2 || 'Temperature must be between 0 and 2'
-        }
+          custom: (value: number) =>
+            (value >= 0 && value <= 2) || 'Temperature must be between 0 and 2',
+        },
       },
       strict: true,
-      sanitizeByDefault: true
+      sanitizeByDefault: true,
     });
 
     // User registration schema
@@ -831,7 +882,7 @@ export class ValidationEngine {
           type: DataType.EMAIL,
           required: true,
           sanitize: true,
-          severity: ValidationSeverity.HIGH
+          severity: ValidationSeverity.HIGH,
         },
         username: {
           type: DataType.STRING,
@@ -839,7 +890,7 @@ export class ValidationEngine {
           minLength: 3,
           maxLength: 50,
           pattern: /^[a-zA-Z0-9_-]+$/,
-          sanitize: true
+          sanitize: true,
         },
         password: {
           type: DataType.STRING,
@@ -850,15 +901,15 @@ export class ValidationEngine {
             const hasLowercase = /[a-z]/.test(value);
             const hasNumbers = /\d/.test(value);
             const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(value);
-            
+
             if (!hasUppercase || !hasLowercase || !hasNumbers || !hasSymbols) {
               return 'Password must contain uppercase, lowercase, numbers, and symbols';
             }
             return true;
-          }
-        }
+          },
+        },
       },
-      strict: true
+      strict: true,
     });
 
     // API query parameters schema
@@ -869,31 +920,33 @@ export class ValidationEngine {
         limit: {
           type: DataType.NUMBER,
           required: false,
-          custom: (value: number) => value > 0 && value <= 1000 || 'Limit must be between 1 and 1000'
+          custom: (value: number) =>
+            (value > 0 && value <= 1000) || 'Limit must be between 1 and 1000',
         },
         offset: {
           type: DataType.NUMBER,
           required: false,
-          custom: (value: number) => value >= 0 || 'Offset must be non-negative'
+          custom: (value: number) =>
+            value >= 0 || 'Offset must be non-negative',
         },
         sort: {
           type: DataType.STRING,
           required: false,
           enum: ['asc', 'desc'],
-          sanitize: true
+          sanitize: true,
         },
         filter: {
           type: DataType.STRING,
           required: false,
           maxLength: 1000,
-          sanitize: true
-        }
+          sanitize: true,
+        },
       },
       allowAdditionalFields: false,
-      sanitizeByDefault: true
+      sanitizeByDefault: true,
     });
   }
 }
 
 // Export the main validation engine instance
-export const validationEngine = new ValidationEngine(); 
+export const validationEngine = new ValidationEngine();

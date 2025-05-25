@@ -4,9 +4,22 @@
  */
 
 // Core cache implementations
-export { RedisCache, type RedisCacheConfig, type CacheEntry, type CacheStats, type CachePattern, type InvalidationStrategy } from './RedisCache';
+export {
+  RedisCache,
+  type RedisCacheConfig,
+  type CacheEntry,
+  type CacheStats,
+  type CachePattern,
+  type InvalidationStrategy,
+} from './RedisCache';
 export { MemoryCache, type MemoryCacheConfig } from './MemoryCache';
-export { CacheManager, type CacheManagerConfig, type CacheProvider, type CacheResult, type BatchOperation } from './CacheManager';
+export {
+  CacheManager,
+  type CacheManagerConfig,
+  type CacheProvider,
+  type CacheResult,
+  type BatchOperation,
+} from './CacheManager';
 
 // Cache metrics and monitoring
 export { CacheMetrics } from './CacheMetrics';
@@ -74,7 +87,9 @@ export const DEFAULT_CACHE_MANAGER_CONFIG: CacheManagerConfig = {
 /**
  * Create a Redis cache instance with default configuration
  */
-export function createRedisCache(config?: Partial<RedisCacheConfig>): RedisCache {
+export function createRedisCache(
+  config?: Partial<RedisCacheConfig>
+): RedisCache {
   const finalConfig = {
     ...DEFAULT_REDIS_CONFIG,
     ...config,
@@ -86,7 +101,9 @@ export function createRedisCache(config?: Partial<RedisCacheConfig>): RedisCache
 /**
  * Create a memory cache instance with default configuration
  */
-export function createMemoryCache(config?: Partial<MemoryCacheConfig>): MemoryCache {
+export function createMemoryCache(
+  config?: Partial<MemoryCacheConfig>
+): MemoryCache {
   const finalConfig = {
     ...DEFAULT_MEMORY_CONFIG,
     ...config,
@@ -98,7 +115,9 @@ export function createMemoryCache(config?: Partial<MemoryCacheConfig>): MemoryCa
 /**
  * Create a cache manager instance with default configuration
  */
-export function createCacheManager(config?: Partial<CacheManagerConfig>): CacheManager {
+export function createCacheManager(
+  config?: Partial<CacheManagerConfig>
+): CacheManager {
   const finalConfig: CacheManagerConfig = {
     ...DEFAULT_CACHE_MANAGER_CONFIG,
     ...config,
@@ -146,13 +165,15 @@ export function createCacheManager(config?: Partial<CacheManagerConfig>): CacheM
 /**
  * Convenience function to create a cache manager for AI applications
  */
-export function createAICacheManager(options: {
-  enableRedis?: boolean;
-  redisUrl?: string;
-  maxMemory?: number;
-  defaultTtl?: number;
-  enableMetrics?: boolean;
-} = {}): CacheManager {
+export function createAICacheManager(
+  options: {
+    enableRedis?: boolean;
+    redisUrl?: string;
+    maxMemory?: number;
+    defaultTtl?: number;
+    enableMetrics?: boolean;
+  } = {}
+): CacheManager {
   const {
     enableRedis = true,
     redisUrl,
@@ -235,30 +256,30 @@ export const CacheKeys = {
   conversation: (sessionId: string) => `conv:${sessionId}`,
   conversationMessages: (sessionId: string) => `conv:${sessionId}:messages`,
   conversationState: (sessionId: string) => `conv:${sessionId}:state`,
-  
+
   // AI response caching
   aiResponse: (hash: string) => `ai:response:${hash}`,
   aiModel: (model: string) => `ai:model:${model}`,
   aiProvider: (provider: string) => `ai:provider:${provider}`,
-  
+
   // User session caching
   userSession: (userId: string) => `user:${userId}:session`,
   userPreferences: (userId: string) => `user:${userId}:prefs`,
   userHistory: (userId: string) => `user:${userId}:history`,
-  
+
   // Performance and analytics
   metrics: (metric: string) => `metrics:${metric}`,
   analytics: (event: string) => `analytics:${event}`,
   performance: (operation: string) => `perf:${operation}`,
-  
+
   // Security and rate limiting
   rateLimit: (identifier: string) => `rate:${identifier}`,
   securityEvent: (type: string) => `security:${type}`,
-  
+
   // Content and media
   content: (contentId: string) => `content:${contentId}`,
   media: (mediaId: string) => `media:${mediaId}`,
-  
+
   // API and gateway
   apiKey: (keyId: string) => `api:key:${keyId}`,
   gateway: (endpoint: string) => `gateway:${endpoint}`,
@@ -268,12 +289,12 @@ export const CacheKeys = {
  * Cache TTL presets (in seconds)
  */
 export const CacheTTL = {
-  SHORT: 300,      // 5 minutes
-  MEDIUM: 1800,    // 30 minutes
-  LONG: 3600,      // 1 hour
+  SHORT: 300, // 5 minutes
+  MEDIUM: 1800, // 30 minutes
+  LONG: 3600, // 1 hour
   EXTENDED: 14400, // 4 hours
-  DAILY: 86400,    // 24 hours
-  WEEKLY: 604800,  // 7 days
+  DAILY: 86400, // 24 hours
+  WEEKLY: 604800, // 7 days
 } as const;
 
 /**
@@ -296,11 +317,11 @@ export function getGlobalCacheManager(): CacheManager {
  */
 export async function initializeGlobalCache(): Promise<CacheManager> {
   const manager = getGlobalCacheManager();
-  
+
   if (!manager.isInitialized()) {
     await manager.initialize();
   }
-  
+
   return manager;
 }
 
@@ -312,4 +333,4 @@ export async function shutdownGlobalCache(): Promise<void> {
     await globalCacheManager.shutdown();
     globalCacheManager = null;
   }
-} 
+}

@@ -5,7 +5,10 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
-import { CircuitBreakerManager, getGlobalCircuitBreakerManager } from '../errors';
+import {
+  CircuitBreakerManager,
+  getGlobalCircuitBreakerManager,
+} from '../errors';
 import type { CircuitBreakerMetrics } from '../errors/CircuitBreaker';
 
 /**
@@ -16,12 +19,12 @@ export interface DashboardConfig {
   theme: 'light' | 'dark' | 'auto';
   layout: 'compact' | 'detailed' | 'minimal';
   refreshInterval: number; // milliseconds
-  
+
   // Metrics configuration
   enableRealTimeMetrics: boolean;
   enableHistoricalData: boolean;
   metricsRetentionPeriod: number; // hours
-  
+
   // Alert configuration
   enableAlerts: boolean;
   alertThresholds: {
@@ -30,7 +33,7 @@ export interface DashboardConfig {
     memoryUsage: number; // percentage
     cpu: number; // percentage
   };
-  
+
   // Integration settings
   apmProvider?: 'datadog' | 'newrelic' | 'grafana' | 'custom';
   customEndpoints?: {
@@ -38,7 +41,7 @@ export interface DashboardConfig {
     alerts: string;
     logs: string;
   };
-  
+
   // User preferences
   defaultTimeRange: '5m' | '15m' | '1h' | '6h' | '24h';
   enableNotifications: boolean;
@@ -50,7 +53,7 @@ export interface DashboardConfig {
  */
 export interface PerformanceMetrics {
   timestamp: Date;
-  
+
   // Core Web Vitals
   coreWebVitals: {
     lcp: number; // Largest Contentful Paint
@@ -59,7 +62,7 @@ export interface PerformanceMetrics {
     fcp: number; // First Contentful Paint
     ttfb: number; // Time to First Byte
   };
-  
+
   // Application performance
   performance: {
     responseTime: number;
@@ -68,7 +71,7 @@ export interface PerformanceMetrics {
     successRate: number;
     activeUsers: number;
   };
-  
+
   // System metrics
   system: {
     memoryUsage: number;
@@ -76,7 +79,7 @@ export interface PerformanceMetrics {
     networkLatency: number;
     diskIO: number;
   };
-  
+
   // Custom metrics
   custom: Record<string, number>;
 }
@@ -118,11 +121,15 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   onMetricsUpdate,
 }) => {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
-  const [historicalMetrics, setHistoricalMetrics] = useState<PerformanceMetrics[]>([]);
+  const [historicalMetrics, setHistoricalMetrics] = useState<
+    PerformanceMetrics[]
+  >([]);
   const [alerts, setAlerts] = useState<AlertData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState(config.defaultTimeRange);
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'vitals' | 'errors' | 'alerts'>('overview');
+  const [selectedTab, setSelectedTab] = useState<
+    'overview' | 'vitals' | 'errors' | 'alerts'
+  >('overview');
 
   const performanceMonitor = PerformanceMonitor.getInstance();
   const circuitBreakerManager = getGlobalCircuitBreakerManager();
@@ -132,20 +139,20 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
    */
   const collectMetrics = useCallback(async (): Promise<PerformanceMetrics> => {
     const timestamp = new Date();
-    
+
     // Get Core Web Vitals
     const coreWebVitals = await getCoreWebVitals();
-    
+
     // Get circuit breaker metrics
     const circuitBreakerMetrics = circuitBreakerManager.getAllMetrics();
     const cbStats = calculateCircuitBreakerStats(circuitBreakerMetrics);
-    
+
     // Get performance monitor data
     const perfData = performanceMonitor.getPerformanceSummary();
-    
+
     // Get system metrics (mock for demo - would integrate with real monitoring)
     const systemMetrics = await getSystemMetrics();
-    
+
     return {
       timestamp,
       coreWebVitals,
@@ -168,21 +175,27 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
     try {
       const newMetrics = await collectMetrics();
       setMetrics(newMetrics);
-      
+
       // Add to historical data
-      setHistoricalMetrics(prev => {
+      setHistoricalMetrics((prev) => {
         const updated = [...prev, newMetrics];
-        const maxRetention = Math.floor((config.metricsRetentionPeriod * 60 * 60 * 1000) / config.refreshInterval);
+        const maxRetention = Math.floor(
+          (config.metricsRetentionPeriod * 60 * 60 * 1000) /
+            config.refreshInterval
+        );
         return updated.slice(-maxRetention);
       });
-      
+
       // Check for alerts
-      const newAlerts = checkAlertThresholds(newMetrics, config.alertThresholds);
+      const newAlerts = checkAlertThresholds(
+        newMetrics,
+        config.alertThresholds
+      );
       if (newAlerts.length > 0) {
-        setAlerts(prev => [...prev, ...newAlerts]);
-        newAlerts.forEach(alert => onAlert?.(alert));
+        setAlerts((prev) => [...prev, ...newAlerts]);
+        newAlerts.forEach((alert) => onAlert?.(alert));
       }
-      
+
       onMetricsUpdate?.(newMetrics);
       setIsLoading(false);
     } catch (error) {
@@ -205,13 +218,19 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
    */
   const performanceTrend = useMemo(() => {
     if (historicalMetrics.length < 2) return 'stable';
-    
+
     const recent = historicalMetrics.slice(-10);
-    const avg = recent.reduce((sum, m) => sum + m.performance.responseTime, 0) / recent.length;
-    const previousAvg = recent.slice(0, -5).reduce((sum, m) => sum + m.performance.responseTime, 0) / Math.max(recent.length - 5, 1);
-    
+    const avg =
+      recent.reduce((sum, m) => sum + m.performance.responseTime, 0) /
+      recent.length;
+    const previousAvg =
+      recent
+        .slice(0, -5)
+        .reduce((sum, m) => sum + m.performance.responseTime, 0) /
+      Math.max(recent.length - 5, 1);
+
     const change = ((avg - previousAvg) / previousAvg) * 100;
-    
+
     if (change > 10) return 'degrading';
     if (change < -10) return 'improving';
     return 'stable';
@@ -229,8 +248,10 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       '6h': 6 * 60 * 60 * 1000,
       '24h': 24 * 60 * 60 * 1000,
     }[timeRange];
-    
-    return historicalMetrics.filter(m => now - m.timestamp.getTime() <= timeRangeMs);
+
+    return historicalMetrics.filter(
+      (m) => now - m.timestamp.getTime() <= timeRangeMs
+    );
   }, [historicalMetrics, timeRange]);
 
   if (isLoading) {
@@ -245,7 +266,14 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   }
 
   return (
-    <div className={className} style={{ ...styles.dashboard, ...style, ...(config.theme === 'dark' ? styles.darkTheme : {}) }}>
+    <div
+      className={className}
+      style={{
+        ...styles.dashboard,
+        ...style,
+        ...(config.theme === 'dark' ? styles.darkTheme : {}),
+      }}
+    >
       {/* Header */}
       <div style={styles.header}>
         <h2 style={styles.title}>Performance Dashboard</h2>
@@ -268,10 +296,10 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       </div>
 
       {/* Alert Banner */}
-      {alerts.filter(a => !a.resolved).length > 0 && (
+      {alerts.filter((a) => !a.resolved).length > 0 && (
         <div style={styles.alertBanner}>
           <span style={styles.alertIcon}>⚠️</span>
-          <span>{alerts.filter(a => !a.resolved).length} active alerts</span>
+          <span>{alerts.filter((a) => !a.resolved).length} active alerts</span>
           <button
             onClick={() => setSelectedTab('alerts')}
             style={styles.alertButton}
@@ -283,7 +311,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 
       {/* Navigation Tabs */}
       <div style={styles.tabs}>
-        {(['overview', 'vitals', 'errors', 'alerts'] as const).map(tab => (
+        {(['overview', 'vitals', 'errors', 'alerts'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setSelectedTab(tab)}
@@ -307,7 +335,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
             config={config}
           />
         )}
-        
+
         {selectedTab === 'vitals' && (
           <VitalsTab
             metrics={metrics}
@@ -315,21 +343,23 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
             config={config}
           />
         )}
-        
+
         {selectedTab === 'errors' && (
           <ErrorsTab
             circuitBreakerMetrics={circuitBreakerManager.getAllMetrics()}
             config={config}
           />
         )}
-        
+
         {selectedTab === 'alerts' && (
           <AlertsTab
             alerts={alerts}
             onResolveAlert={(alertId) => {
-              setAlerts(prev => prev.map(a => 
-                a.id === alertId ? { ...a, resolved: true } : a
-              ));
+              setAlerts((prev) =>
+                prev.map((a) =>
+                  a.id === alertId ? { ...a, resolved: true } : a
+                )
+              );
             }}
             config={config}
           />
@@ -356,9 +386,12 @@ const OverviewTab: React.FC<{
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Response Time</h3>
         <div style={styles.metric}>
-          <span style={styles.metricValue}>{metrics.performance.responseTime.toFixed(0)}ms</span>
+          <span style={styles.metricValue}>
+            {metrics.performance.responseTime.toFixed(0)}ms
+          </span>
           <span style={styles.metricTrend}>
-            {trend === 'improving' ? '↗️' : trend === 'degrading' ? '↘️' : '→'} {trend}
+            {trend === 'improving' ? '↗️' : trend === 'degrading' ? '↘️' : '→'}{' '}
+            {trend}
           </span>
         </div>
       </div>
@@ -366,10 +399,15 @@ const OverviewTab: React.FC<{
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Error Rate</h3>
         <div style={styles.metric}>
-          <span style={{
-            ...styles.metricValue,
-            color: metrics.performance.errorRate > config.alertThresholds.errorRate ? '#dc3545' : '#28a745'
-          }}>
+          <span
+            style={{
+              ...styles.metricValue,
+              color:
+                metrics.performance.errorRate > config.alertThresholds.errorRate
+                  ? '#dc3545'
+                  : '#28a745',
+            }}
+          >
             {metrics.performance.errorRate.toFixed(2)}%
           </span>
         </div>
@@ -378,7 +416,9 @@ const OverviewTab: React.FC<{
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Throughput</h3>
         <div style={styles.metric}>
-          <span style={styles.metricValue}>{metrics.performance.throughput.toFixed(0)}</span>
+          <span style={styles.metricValue}>
+            {metrics.performance.throughput.toFixed(0)}
+          </span>
           <span style={styles.metricUnit}>req/s</span>
         </div>
       </div>
@@ -386,7 +426,9 @@ const OverviewTab: React.FC<{
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Active Users</h3>
         <div style={styles.metric}>
-          <span style={styles.metricValue}>{metrics.performance.activeUsers}</span>
+          <span style={styles.metricValue}>
+            {metrics.performance.activeUsers}
+          </span>
         </div>
       </div>
 
@@ -419,7 +461,10 @@ const VitalsTab: React.FC<{
     ttfb: { good: 800, poor: 1800 },
   };
 
-  const getVitalStatus = (metric: keyof typeof vitalsThresholds, value: number) => {
+  const getVitalStatus = (
+    metric: keyof typeof vitalsThresholds,
+    value: number
+  ) => {
     const threshold = vitalsThresholds[metric];
     if (value <= threshold.good) return 'good';
     if (value <= threshold.poor) return 'needs-improvement';
@@ -429,22 +474,40 @@ const VitalsTab: React.FC<{
   return (
     <div style={styles.grid}>
       {Object.entries(metrics.coreWebVitals).map(([key, value]) => {
-        const status = getVitalStatus(key as keyof typeof vitalsThresholds, value);
+        const status = getVitalStatus(
+          key as keyof typeof vitalsThresholds,
+          value
+        );
         return (
           <div key={key} style={styles.card}>
             <h3 style={styles.cardTitle}>{key.toUpperCase()}</h3>
             <div style={styles.metric}>
-              <span style={{
-                ...styles.metricValue,
-                color: status === 'good' ? '#28a745' : status === 'needs-improvement' ? '#ffc107' : '#dc3545'
-              }}>
-                {value.toFixed(key === 'cls' ? 3 : 0)}{key === 'cls' ? '' : 'ms'}
+              <span
+                style={{
+                  ...styles.metricValue,
+                  color:
+                    status === 'good'
+                      ? '#28a745'
+                      : status === 'needs-improvement'
+                        ? '#ffc107'
+                        : '#dc3545',
+                }}
+              >
+                {value.toFixed(key === 'cls' ? 3 : 0)}
+                {key === 'cls' ? '' : 'ms'}
               </span>
               <div style={styles.vitalStatus}>
-                <span style={{
-                  ...styles.statusBadge,
-                  backgroundColor: status === 'good' ? '#28a745' : status === 'needs-improvement' ? '#ffc107' : '#dc3545'
-                }}>
+                <span
+                  style={{
+                    ...styles.statusBadge,
+                    backgroundColor:
+                      status === 'good'
+                        ? '#28a745'
+                        : status === 'needs-improvement'
+                          ? '#ffc107'
+                          : '#dc3545',
+                  }}
+                >
                   {status.replace('-', ' ')}
                 </span>
               </div>
@@ -470,11 +533,17 @@ const ErrorsTab: React.FC<{
           <h3 style={styles.cardTitle}>{name}</h3>
           <div style={styles.circuitBreakerCard}>
             <div style={styles.circuitBreakerState}>
-              <span style={{
-                ...styles.stateBadge,
-                backgroundColor: metrics.state === 'CLOSED' ? '#28a745' : 
-                               metrics.state === 'OPEN' ? '#dc3545' : '#ffc107'
-              }}>
+              <span
+                style={{
+                  ...styles.stateBadge,
+                  backgroundColor:
+                    metrics.state === 'CLOSED'
+                      ? '#28a745'
+                      : metrics.state === 'OPEN'
+                        ? '#dc3545'
+                        : '#ffc107',
+                }}
+              >
                 {metrics.state}
               </span>
             </div>
@@ -482,7 +551,9 @@ const ErrorsTab: React.FC<{
               <div>Success Rate: {metrics.successRate.toFixed(1)}%</div>
               <div>Total Calls: {metrics.totalCalls}</div>
               <div>Failed Calls: {metrics.failedCalls}</div>
-              <div>Avg Response: {metrics.averageResponseTime.toFixed(0)}ms</div>
+              <div>
+                Avg Response: {metrics.averageResponseTime.toFixed(0)}ms
+              </div>
             </div>
           </div>
         </div>
@@ -499,8 +570,8 @@ const AlertsTab: React.FC<{
   onResolveAlert: (alertId: string) => void;
   config: DashboardConfig;
 }> = ({ alerts, onResolveAlert, config }) => {
-  const activeAlerts = alerts.filter(a => !a.resolved);
-  const resolvedAlerts = alerts.filter(a => a.resolved);
+  const activeAlerts = alerts.filter((a) => !a.resolved);
+  const resolvedAlerts = alerts.filter((a) => a.resolved);
 
   return (
     <div style={styles.alertsContainer}>
@@ -509,15 +580,22 @@ const AlertsTab: React.FC<{
         {activeAlerts.length === 0 ? (
           <div style={styles.noAlerts}>No active alerts</div>
         ) : (
-          activeAlerts.map(alert => (
+          activeAlerts.map((alert) => (
             <div key={alert.id} style={styles.alertCard}>
               <div style={styles.alertHeader}>
-                <span style={{
-                  ...styles.alertType,
-                  backgroundColor: alert.type === 'critical' ? '#dc3545' : 
-                                 alert.type === 'error' ? '#fd7e14' :
-                                 alert.type === 'warning' ? '#ffc107' : '#17a2b8'
-                }}>
+                <span
+                  style={{
+                    ...styles.alertType,
+                    backgroundColor:
+                      alert.type === 'critical'
+                        ? '#dc3545'
+                        : alert.type === 'error'
+                          ? '#fd7e14'
+                          : alert.type === 'warning'
+                            ? '#ffc107'
+                            : '#17a2b8',
+                  }}
+                >
                   {alert.type}
                 </span>
                 <span style={styles.alertTime}>
@@ -545,7 +623,7 @@ const AlertsTab: React.FC<{
       {resolvedAlerts.length > 0 && (
         <div style={styles.alertsSection}>
           <h3>Recently Resolved ({resolvedAlerts.length})</h3>
-          {resolvedAlerts.slice(-5).map(alert => (
+          {resolvedAlerts.slice(-5).map((alert) => (
             <div key={alert.id} style={{ ...styles.alertCard, opacity: 0.6 }}>
               <div style={styles.alertHeader}>
                 <span style={styles.resolvedBadge}>Resolved</span>
@@ -576,7 +654,7 @@ const SimpleChart: React.FC<{
     return <div style={styles.noData}>No data available</div>;
   }
 
-  const values = data.map(d => d.performance[metric]);
+  const values = data.map((d) => d.performance[metric]);
   const max = Math.max(...values);
   const min = Math.min(...values);
   const range = max - min;
@@ -585,11 +663,13 @@ const SimpleChart: React.FC<{
     <div style={styles.chartContainer}>
       <svg width="100%" height="120" viewBox="0 0 400 120">
         <polyline
-          points={data.map((d, i) => {
-            const x = (i / (data.length - 1)) * 380 + 10;
-            const y = 100 - ((d.performance[metric] - min) / range) * 80 + 10;
-            return `${x},${y}`;
-          }).join(' ')}
+          points={data
+            .map((d, i) => {
+              const x = (i / (data.length - 1)) * 380 + 10;
+              const y = 100 - ((d.performance[metric] - min) / range) * 80 + 10;
+              return `${x},${y}`;
+            })
+            .join(' ')}
           stroke="#007bff"
           strokeWidth="2"
           fill="none"
@@ -611,7 +691,9 @@ const SimpleChart: React.FC<{
 /**
  * Get Core Web Vitals (mock implementation)
  */
-async function getCoreWebVitals(): Promise<PerformanceMetrics['coreWebVitals']> {
+async function getCoreWebVitals(): Promise<
+  PerformanceMetrics['coreWebVitals']
+> {
   // In a real implementation, this would use the Web Vitals API
   return {
     lcp: Math.random() * 3000 + 1000,
@@ -644,13 +726,22 @@ async function getActiveUsers(): Promise<number> {
 /**
  * Calculate circuit breaker statistics
  */
-function calculateCircuitBreakerStats(metrics: Record<string, CircuitBreakerMetrics>) {
-  const totalCalls = Object.values(metrics).reduce((sum, m) => sum + m.totalCalls, 0);
-  const totalFailures = Object.values(metrics).reduce((sum, m) => sum + m.failedCalls, 0);
-  
+function calculateCircuitBreakerStats(
+  metrics: Record<string, CircuitBreakerMetrics>
+) {
+  const totalCalls = Object.values(metrics).reduce(
+    (sum, m) => sum + m.totalCalls,
+    0
+  );
+  const totalFailures = Object.values(metrics).reduce(
+    (sum, m) => sum + m.failedCalls,
+    0
+  );
+
   return {
     errorRate: totalCalls > 0 ? (totalFailures / totalCalls) * 100 : 0,
-    successRate: totalCalls > 0 ? ((totalCalls - totalFailures) / totalCalls) * 100 : 100,
+    successRate:
+      totalCalls > 0 ? ((totalCalls - totalFailures) / totalCalls) * 100 : 100,
   };
 }
 
@@ -964,4 +1055,4 @@ const styles = {
   },
 };
 
-export default PerformanceDashboard; 
+export default PerformanceDashboard;

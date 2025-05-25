@@ -14,16 +14,16 @@ export interface ErrorBoundaryConfig {
   showErrorDetails: boolean;
   enableRetry: boolean;
   enableReporting: boolean;
-  
+
   // Fallback configuration
   fallbackComponent?: React.ComponentType<ErrorFallbackProps>;
   level: 'page' | 'section' | 'component';
-  
+
   // Error handling
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   onReset?: () => void;
   isolateErrors: boolean; // Prevent error propagation to parent boundaries
-  
+
   // Recovery configuration
   autoRetry: boolean;
   retryDelay: number; // milliseconds
@@ -85,12 +85,18 @@ export class ErrorBoundary extends Component<
   private retryTimer: NodeJS.Timeout | null = null;
   private name: string;
 
-  constructor(props: React.PropsWithChildren<{ config: ErrorBoundaryConfig; name?: string; userId?: string }>) {
+  constructor(
+    props: React.PropsWithChildren<{
+      config: ErrorBoundaryConfig;
+      name?: string;
+      userId?: string;
+    }>
+  ) {
     super(props);
-    
+
     this.name = props.name || 'ErrorBoundary';
     this.performanceMonitor = PerformanceMonitor.getInstance();
-    
+
     this.state = {
       hasError: false,
       error: null,
@@ -103,7 +109,7 @@ export class ErrorBoundary extends Component<
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       hasError: true,
       error,
@@ -119,17 +125,20 @@ export class ErrorBoundary extends Component<
 
     // Log error details
     this.logError(error, errorInfo);
-    
+
     // Report error if enabled
     if (this.props.config.enableReporting) {
       this.reportError(error, errorInfo);
     }
-    
+
     // Call custom error handler
     this.props.config.onError?.(error, errorInfo);
-    
+
     // Schedule auto-retry if enabled
-    if (this.props.config.autoRetry && this.state.retryCount < this.props.config.maxRetries) {
+    if (
+      this.props.config.autoRetry &&
+      this.state.retryCount < this.props.config.maxRetries
+    ) {
       this.scheduleRetry();
     }
   }
@@ -149,7 +158,8 @@ export class ErrorBoundary extends Component<
       errorInfo,
       errorId: this.state.errorId!,
       timestamp: this.state.timestamp!,
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
       url: typeof window !== 'undefined' ? window.location.href : 'unknown',
       userId: this.props.userId,
       level: this.props.config.level,
@@ -158,7 +168,7 @@ export class ErrorBoundary extends Component<
     };
 
     console.error(`[${this.name}] Error caught:`, errorDetails);
-    
+
     // Record to performance monitor
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
@@ -189,7 +199,8 @@ export class ErrorBoundary extends Component<
         errorInfo,
         errorId: this.state.errorId!,
         timestamp: this.state.timestamp!,
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
+        userAgent:
+          typeof window !== 'undefined' ? window.navigator.userAgent : 'SSR',
         url: typeof window !== 'undefined' ? window.location.href : 'unknown',
         userId: this.props.userId,
         level: this.props.config.level,
@@ -200,7 +211,7 @@ export class ErrorBoundary extends Component<
       // This would typically send to an error reporting service
       // For example: Sentry, Bugsnag, LogRocket, etc.
       console.log('Error reported:', errorDetails);
-      
+
       // Mock API call for error reporting
       if (typeof window !== 'undefined' && 'fetch' in window) {
         await fetch('/api/errors', {
@@ -209,7 +220,7 @@ export class ErrorBoundary extends Component<
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(errorDetails),
-        }).catch(reportingError => {
+        }).catch((reportingError) => {
           console.warn('Failed to report error:', reportingError);
         });
       }
@@ -236,7 +247,7 @@ export class ErrorBoundary extends Component<
    */
   private handleRetry = (): void => {
     if (this.state.retryCount < this.props.config.maxRetries) {
-      this.setState(prevState => ({
+      this.setState((prevState) => ({
         hasError: false,
         error: null,
         errorInfo: null,
@@ -246,7 +257,7 @@ export class ErrorBoundary extends Component<
       }));
 
       this.props.config.onReset?.();
-      
+
       if (this.performanceMonitor) {
         this.performanceMonitor.recordMetric(
           'error_boundary_retry' as any,
@@ -275,7 +286,7 @@ export class ErrorBoundary extends Component<
     });
 
     this.props.config.onReset?.();
-    
+
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         'error_boundary_manual_reset' as any,
@@ -288,8 +299,10 @@ export class ErrorBoundary extends Component<
 
   render(): ReactNode {
     if (this.state.hasError && this.state.error && this.state.errorInfo) {
-      const canRetry = this.props.config.enableRetry && this.state.retryCount < this.props.config.maxRetries;
-      
+      const canRetry =
+        this.props.config.enableRetry &&
+        this.state.retryCount < this.props.config.maxRetries;
+
       // Use custom fallback component if provided
       if (this.props.config.fallbackComponent) {
         const FallbackComponent = this.props.config.fallbackComponent;
@@ -326,28 +339,39 @@ export class ErrorBoundary extends Component<
             <div style={styles.errorContainer}>
               <h1 style={styles.errorTitle}>Something went wrong</h1>
               <p style={styles.errorDescription}>
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                We're sorry, but something unexpected happened. Please try
+                refreshing the page.
               </p>
-              
+
               {canRetry && (
                 <button style={styles.retryButton} onClick={this.resetError}>
-                  Try Again {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
+                  Try Again{' '}
+                  {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
                 </button>
               )}
-              
-              <button style={styles.reloadButton} onClick={() => window.location.reload()}>
+
+              <button
+                style={styles.reloadButton}
+                onClick={() => window.location.reload()}
+              >
                 Reload Page
               </button>
-              
+
               {config.showErrorDetails && (
                 <details style={styles.errorDetails}>
                   <summary>Error Details</summary>
                   <div style={styles.errorContent}>
-                    <p><strong>Error ID:</strong> {errorId}</p>
-                    <p><strong>Error:</strong> {error?.message}</p>
+                    <p>
+                      <strong>Error ID:</strong> {errorId}
+                    </p>
+                    <p>
+                      <strong>Error:</strong> {error?.message}
+                    </p>
                     <pre style={styles.errorStack}>{error?.stack}</pre>
                     {errorInfo && (
-                      <pre style={styles.componentStack}>{errorInfo.componentStack}</pre>
+                      <pre style={styles.componentStack}>
+                        {errorInfo.componentStack}
+                      </pre>
                     )}
                   </div>
                 </details>
@@ -364,19 +388,24 @@ export class ErrorBoundary extends Component<
               <p style={styles.errorDescription}>
                 This section is temporarily unavailable. Please try again.
               </p>
-              
+
               {canRetry && (
                 <button style={styles.retryButton} onClick={this.resetError}>
-                  Retry {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
+                  Retry{' '}
+                  {retryCount > 0 && `(${retryCount}/${config.maxRetries})`}
                 </button>
               )}
-              
+
               {config.showErrorDetails && (
                 <details style={styles.errorDetails}>
                   <summary>Technical Details</summary>
                   <div style={styles.errorContent}>
-                    <p><strong>Error ID:</strong> {errorId}</p>
-                    <p><strong>Error:</strong> {error?.message}</p>
+                    <p>
+                      <strong>Error ID:</strong> {errorId}
+                    </p>
+                    <p>
+                      <strong>Error:</strong> {error?.message}
+                    </p>
                   </div>
                 </details>
               )}
@@ -391,7 +420,10 @@ export class ErrorBoundary extends Component<
             <span style={styles.componentErrorText}>
               Component error
               {canRetry && (
-                <button style={styles.inlineRetryButton} onClick={this.resetError}>
+                <button
+                  style={styles.inlineRetryButton}
+                  onClick={this.resetError}
+                >
                   retry
                 </button>
               )}
@@ -421,12 +453,20 @@ export class ErrorBoundary extends Component<
 /**
  * Page-level error boundary
  */
-export const PageErrorBoundary: React.FC<React.PropsWithChildren<{
-  name?: string;
-  userId?: string;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  showErrorDetails?: boolean;
-}>> = ({ children, name = 'PageErrorBoundary', userId, onError, showErrorDetails = false }) => (
+export const PageErrorBoundary: React.FC<
+  React.PropsWithChildren<{
+    name?: string;
+    userId?: string;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+    showErrorDetails?: boolean;
+  }>
+> = ({
+  children,
+  name = 'PageErrorBoundary',
+  userId,
+  onError,
+  showErrorDetails = false,
+}) => (
   <ErrorBoundary
     config={{
       level: 'page',
@@ -449,12 +489,20 @@ export const PageErrorBoundary: React.FC<React.PropsWithChildren<{
 /**
  * Section-level error boundary
  */
-export const SectionErrorBoundary: React.FC<React.PropsWithChildren<{
-  name?: string;
-  userId?: string;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  enableAutoRetry?: boolean;
-}>> = ({ children, name = 'SectionErrorBoundary', userId, onError, enableAutoRetry = true }) => (
+export const SectionErrorBoundary: React.FC<
+  React.PropsWithChildren<{
+    name?: string;
+    userId?: string;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+    enableAutoRetry?: boolean;
+  }>
+> = ({
+  children,
+  name = 'SectionErrorBoundary',
+  userId,
+  onError,
+  enableAutoRetry = true,
+}) => (
   <ErrorBoundary
     config={{
       level: 'section',
@@ -477,12 +525,20 @@ export const SectionErrorBoundary: React.FC<React.PropsWithChildren<{
 /**
  * Component-level error boundary
  */
-export const ComponentErrorBoundary: React.FC<React.PropsWithChildren<{
-  name?: string;
-  userId?: string;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  fallback?: React.ComponentType<ErrorFallbackProps>;
-}>> = ({ children, name = 'ComponentErrorBoundary', userId, onError, fallback }) => (
+export const ComponentErrorBoundary: React.FC<
+  React.PropsWithChildren<{
+    name?: string;
+    userId?: string;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+    fallback?: React.ComponentType<ErrorFallbackProps>;
+  }>
+> = ({
+  children,
+  name = 'ComponentErrorBoundary',
+  userId,
+  onError,
+  fallback,
+}) => (
   <ErrorBoundary
     config={{
       level: 'component',
@@ -539,21 +595,27 @@ export const DetailedErrorFallback: React.FC<ErrorFallbackProps> = ({
   <div style={styles.detailedError}>
     <h3 style={styles.detailedErrorTitle}>Error Details</h3>
     <div style={styles.detailedErrorContent}>
-      <p><strong>Message:</strong> {error.message}</p>
-      <p><strong>Level:</strong> {level}</p>
-      <p><strong>Retry Count:</strong> {retryCount}</p>
-      
+      <p>
+        <strong>Message:</strong> {error.message}
+      </p>
+      <p>
+        <strong>Level:</strong> {level}
+      </p>
+      <p>
+        <strong>Retry Count:</strong> {retryCount}
+      </p>
+
       {canRetry && (
         <button style={styles.detailedRetryButton} onClick={resetError}>
           Retry Operation
         </button>
       )}
-      
+
       <details style={styles.errorDetails}>
         <summary>Stack Trace</summary>
         <pre style={styles.errorStack}>{error.stack}</pre>
       </details>
-      
+
       <details style={styles.errorDetails}>
         <summary>Component Stack</summary>
         <pre style={styles.componentStack}>{errorInfo.componentStack}</pre>
@@ -729,4 +791,4 @@ const styles = {
   },
 };
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

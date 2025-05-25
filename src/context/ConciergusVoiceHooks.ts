@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { 
+import {
   experimental_generateSpeech as generateSpeech,
   experimental_transcribe as transcribe,
   AI_NoAudioGeneratedError,
-  NoTranscriptGeneratedError
+  NoTranscriptGeneratedError,
 } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { useGateway } from './GatewayProvider';
@@ -102,30 +102,32 @@ export interface ConciergusVoiceInputHookReturn {
   // Configuration
   config: VoiceInputConfig;
   updateConfig: (updates: Partial<VoiceInputConfig>) => void;
-  
+
   // Voice Input State
   state: VoiceInputState;
-  
+
   // Voice Input Control
   startListening: () => Promise<void>;
   stopListening: () => void;
   clearTranscription: () => void;
-  
+
   // Advanced Features
   toggleContinuous: () => void;
   setLanguage: (language: string) => void;
   calibrateAudio: () => Promise<boolean>;
-  
+
   // Voice Commands
   addVoiceCommand: (command: VoiceCommand) => void;
   removeVoiceCommand: (phrase: string) => void;
   enableVoiceCommands: (enabled: boolean) => void;
-  
+
   // Analytics
   getAnalytics: () => VoiceAnalytics;
-  
+
   // Events
-  onTranscription: (callback: (text: string, confidence: number) => void) => void;
+  onTranscription: (
+    callback: (text: string, confidence: number) => void
+  ) => void;
   onVoiceCommand: (callback: (command: string) => void) => void;
   onError: (callback: (error: string) => void) => void;
 }
@@ -135,7 +137,7 @@ export function useConciergusVoiceInput(
 ): ConciergusVoiceInputHookReturn {
   const gateway = useGateway();
   const { config: conciergusConfig } = useConciergus();
-  
+
   const [config, setConfig] = useState<VoiceInputConfig>({
     enabled: true,
     continuous: false,
@@ -145,9 +147,9 @@ export function useConciergusVoiceInput(
     autoSubmitOnSilence: true,
     silenceTimeout: 2000,
     maxDuration: 60000,
-    ...initialConfig
+    ...initialConfig,
   });
-  
+
   const [state, setState] = useState<VoiceInputState>({
     isListening: false,
     isProcessing: false,
@@ -156,9 +158,19 @@ export function useConciergusVoiceInput(
     confidence: 0,
     audioLevel: 0,
     error: null,
-    supportedLanguages: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN']
+    supportedLanguages: [
+      'en-US',
+      'es-ES',
+      'fr-FR',
+      'de-DE',
+      'it-IT',
+      'pt-BR',
+      'ja-JP',
+      'ko-KR',
+      'zh-CN',
+    ],
   });
-  
+
   const [voiceCommands, setVoiceCommands] = useState<VoiceCommand[]>([]);
   const [voiceCommandsEnabled, setVoiceCommandsEnabled] = useState(false);
   const [analytics, setAnalytics] = useState<VoiceAnalytics>({
@@ -166,9 +178,9 @@ export function useConciergusVoiceInput(
     transcriptionAccuracy: 0,
     averageResponseTime: 0,
     popularCommands: [],
-    errorRate: 0
+    errorRate: 0,
   });
-  
+
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const silenceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -181,12 +193,13 @@ export function useConciergusVoiceInput(
   }>({
     onTranscription: [],
     onVoiceCommand: [],
-    onError: []
+    onError: [],
   });
 
   // Get transcription model from gateway
   const getTranscriptionModel = useCallback(() => {
-    const model = gateway.createModel?.('whisper-1') || openai.transcription('whisper-1');
+    const model =
+      gateway.createModel?.('whisper-1') || openai.transcription('whisper-1');
     return model;
   }, [gateway]);
 
@@ -194,14 +207,15 @@ export function useConciergusVoiceInput(
   const initializeAudioAnalysis = useCallback(async () => {
     try {
       if (!audioContext.current) {
-        audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContext.current = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
       }
-      
+
       if (!analyser.current) {
         analyser.current = audioContext.current.createAnalyser();
         analyser.current.fftSize = 256;
       }
-      
+
       return true;
     } catch (error) {
       console.error('Failed to initialize audio analysis:', error);
@@ -210,186 +224,213 @@ export function useConciergusVoiceInput(
   }, []);
 
   // Process voice command recognition
-  const processVoiceCommands = useCallback((text: string) => {
-    if (!voiceCommandsEnabled || voiceCommands.length === 0) return;
-    
-    const normalizedText = text.toLowerCase().trim();
-    
-    for (const command of voiceCommands) {
-      const normalizedPhrase = command.phrase.toLowerCase();
-      
-      let isMatch = false;
-      if (command.fuzzy) {
-        // Simple fuzzy matching
-        isMatch = normalizedText.includes(normalizedPhrase) || 
-                  normalizedPhrase.includes(normalizedText);
-      } else {
-        isMatch = normalizedText === normalizedPhrase;
+  const processVoiceCommands = useCallback(
+    (text: string) => {
+      if (!voiceCommandsEnabled || voiceCommands.length === 0) return;
+
+      const normalizedText = text.toLowerCase().trim();
+
+      for (const command of voiceCommands) {
+        const normalizedPhrase = command.phrase.toLowerCase();
+
+        let isMatch = false;
+        if (command.fuzzy) {
+          // Simple fuzzy matching
+          isMatch =
+            normalizedText.includes(normalizedPhrase) ||
+            normalizedPhrase.includes(normalizedText);
+        } else {
+          isMatch = normalizedText === normalizedPhrase;
+        }
+
+        if (isMatch) {
+          eventCallbacks.current.onVoiceCommand.forEach((callback) =>
+            callback(command.phrase)
+          );
+          command.action();
+          break;
+        }
       }
-      
-      if (isMatch) {
-        eventCallbacks.current.onVoiceCommand.forEach(callback => 
-          callback(command.phrase)
-        );
-        command.action();
-        break;
-      }
-    }
-  }, [voiceCommands, voiceCommandsEnabled]);
+    },
+    [voiceCommands, voiceCommandsEnabled]
+  );
 
   // Transcribe audio using AI SDK 5
-  const transcribeAudio = useCallback(async (audioBlob: Blob): Promise<{ text: string; confidence: number }> => {
-    const startTime = Date.now();
-    
-    try {
-      setState(prev => ({ ...prev, isProcessing: true, error: null }));
-      
-      const model = getTranscriptionModel();
-      
-      // Convert blob to array buffer
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      const result = await transcribe({
-        model,
-        audio: uint8Array,
-        providerOptions: {
-          openai: {
-            language: config.language.split('-')[0], // Convert 'en-US' to 'en'
-            timestampGranularities: ['word']
-          }
+  const transcribeAudio = useCallback(
+    async (audioBlob: Blob): Promise<{ text: string; confidence: number }> => {
+      const startTime = Date.now();
+
+      try {
+        setState((prev) => ({ ...prev, isProcessing: true, error: null }));
+
+        const model = getTranscriptionModel();
+
+        // Convert blob to array buffer
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        const result = await transcribe({
+          model,
+          audio: uint8Array,
+          providerOptions: {
+            openai: {
+              language: config.language.split('-')[0], // Convert 'en-US' to 'en'
+              timestampGranularities: ['word'],
+            },
+          },
+        });
+
+        const text = result.text || '';
+        const confidence = 0.95; // AI SDK doesn't provide confidence, using high default
+
+        // Update analytics
+        setAnalytics((prev) => ({
+          ...prev,
+          totalInteractions: prev.totalInteractions + 1,
+          averageResponseTime:
+            (prev.averageResponseTime + (Date.now() - startTime)) / 2,
+        }));
+
+        // Call transcription callbacks
+        eventCallbacks.current.onTranscription.forEach((callback) =>
+          callback(text, confidence)
+        );
+
+        // Process voice commands
+        processVoiceCommands(text);
+
+        if (conciergusConfig.enableDebug && gateway.debugManager) {
+          gateway.debugManager.info(
+            'Voice transcription completed',
+            {
+              text,
+              confidence,
+              duration: Date.now() - startTime,
+            },
+            'Voice',
+            'transcription'
+          );
         }
-      });
-      
-      const text = result.text || '';
-      const confidence = 0.95; // AI SDK doesn't provide confidence, using high default
-      
-      // Update analytics
-      setAnalytics(prev => ({
-        ...prev,
-        totalInteractions: prev.totalInteractions + 1,
-        averageResponseTime: (prev.averageResponseTime + (Date.now() - startTime)) / 2
-      }));
-      
-      // Call transcription callbacks
-      eventCallbacks.current.onTranscription.forEach(callback => 
-        callback(text, confidence)
-      );
-      
-      // Process voice commands
-      processVoiceCommands(text);
-      
-      if (conciergusConfig.enableDebug && gateway.debugManager) {
-        gateway.debugManager.info('Voice transcription completed', {
-          text,
-          confidence,
-          duration: Date.now() - startTime
-        }, 'Voice', 'transcription');
+
+        return { text, confidence };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Transcription failed';
+        setState((prev) => ({ ...prev, error: errorMessage }));
+
+        // Update analytics
+        setAnalytics((prev) => ({
+          ...prev,
+          errorRate:
+            (prev.errorRate + 1) / Math.max(prev.totalInteractions + 1, 1),
+        }));
+
+        // Call error callbacks
+        eventCallbacks.current.onError.forEach((callback) =>
+          callback(errorMessage)
+        );
+
+        if (conciergusConfig.enableDebug && gateway.debugManager) {
+          gateway.debugManager.error(
+            'Voice transcription failed',
+            { error },
+            'Voice',
+            'transcription'
+          );
+        }
+
+        throw error;
+      } finally {
+        setState((prev) => ({ ...prev, isProcessing: false }));
       }
-      
-      return { text, confidence };
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Transcription failed';
-      setState(prev => ({ ...prev, error: errorMessage }));
-      
-      // Update analytics
-      setAnalytics(prev => ({
-        ...prev,
-        errorRate: (prev.errorRate + 1) / Math.max(prev.totalInteractions + 1, 1)
-      }));
-      
-      // Call error callbacks
-      eventCallbacks.current.onError.forEach(callback => 
-        callback(errorMessage)
-      );
-      
-      if (conciergusConfig.enableDebug && gateway.debugManager) {
-        gateway.debugManager.error('Voice transcription failed', { error }, 'Voice', 'transcription');
-      }
-      
-      throw error;
-    } finally {
-      setState(prev => ({ ...prev, isProcessing: false }));
-    }
-  }, [config.language, getTranscriptionModel, processVoiceCommands, conciergusConfig.enableDebug, gateway.debugManager]);
+    },
+    [
+      config.language,
+      getTranscriptionModel,
+      processVoiceCommands,
+      conciergusConfig.enableDebug,
+      gateway.debugManager,
+    ]
+  );
 
   // Start listening for voice input
   const startListening = useCallback(async () => {
     if (!config.enabled || state.isListening) return;
-    
+
     try {
       await initializeAudioAnalysis();
-      
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: config.enableNoiseCancellation,
           noiseSuppression: config.enableNoiseCancellation,
-          autoGainControl: true
-        } 
+          autoGainControl: true,
+        },
       });
-      
+
       // Connect audio for analysis
       if (audioContext.current && analyser.current) {
         const source = audioContext.current.createMediaStreamSource(stream);
         source.connect(analyser.current);
       }
-      
+
       mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
-      
+
       mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunks.current.push(event.data);
         }
       };
-      
+
       mediaRecorder.current.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
-        
+
         try {
           const { text, confidence } = await transcribeAudio(audioBlob);
-          setState(prev => ({ 
-            ...prev, 
-            currentText: text, 
+          setState((prev) => ({
+            ...prev,
+            currentText: text,
             confidence,
-            isRecording: false 
+            isRecording: false,
           }));
         } catch (error) {
           console.error('Transcription error:', error);
         }
-        
+
         // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
-      
-      setState(prev => ({ 
-        ...prev, 
-        isListening: true, 
-        isRecording: true, 
-        error: null 
+
+      setState((prev) => ({
+        ...prev,
+        isListening: true,
+        isRecording: true,
+        error: null,
       }));
-      
+
       mediaRecorder.current.start();
-      
+
       // Set up silence detection if enabled
       if (config.autoSubmitOnSilence) {
         silenceTimer.current = setTimeout(() => {
           stopListening();
         }, config.silenceTimeout);
       }
-      
+
       // Set up max duration limit
       setTimeout(() => {
         if (state.isListening) {
           stopListening();
         }
       }, config.maxDuration);
-      
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start voice input';
-      setState(prev => ({ ...prev, error: errorMessage }));
-      eventCallbacks.current.onError.forEach(callback => callback(errorMessage));
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to start voice input';
+      setState((prev) => ({ ...prev, error: errorMessage }));
+      eventCallbacks.current.onError.forEach((callback) =>
+        callback(errorMessage)
+      );
     }
   }, [config, state.isListening, initializeAudioAnalysis, transcribeAudio]);
 
@@ -398,28 +439,33 @@ export function useConciergusVoiceInput(
     if (mediaRecorder.current && mediaRecorder.current.state !== 'inactive') {
       mediaRecorder.current.stop();
     }
-    
+
     if (silenceTimer.current) {
       clearTimeout(silenceTimer.current);
       silenceTimer.current = null;
     }
-    
-    setState(prev => ({ ...prev, isListening: false }));
+
+    setState((prev) => ({ ...prev, isListening: false }));
   }, []);
 
   // Clear current transcription
   const clearTranscription = useCallback(() => {
-    setState(prev => ({ ...prev, currentText: '', confidence: 0, error: null }));
+    setState((prev) => ({
+      ...prev,
+      currentText: '',
+      confidence: 0,
+      error: null,
+    }));
   }, []);
 
   // Toggle continuous listening mode
   const toggleContinuous = useCallback(() => {
-    setConfig(prev => ({ ...prev, continuous: !prev.continuous }));
+    setConfig((prev) => ({ ...prev, continuous: !prev.continuous }));
   }, []);
 
   // Set language for voice recognition
   const setLanguage = useCallback((language: string) => {
-    setConfig(prev => ({ ...prev, language }));
+    setConfig((prev) => ({ ...prev, language }));
   }, []);
 
   // Calibrate audio levels
@@ -435,11 +481,14 @@ export function useConciergusVoiceInput(
 
   // Voice command management
   const addVoiceCommand = useCallback((command: VoiceCommand) => {
-    setVoiceCommands(prev => [...prev.filter(c => c.phrase !== command.phrase), command]);
+    setVoiceCommands((prev) => [
+      ...prev.filter((c) => c.phrase !== command.phrase),
+      command,
+    ]);
   }, []);
 
   const removeVoiceCommand = useCallback((phrase: string) => {
-    setVoiceCommands(prev => prev.filter(c => c.phrase !== phrase));
+    setVoiceCommands((prev) => prev.filter((c) => c.phrase !== phrase));
   }, []);
 
   const enableVoiceCommands = useCallback((enabled: boolean) => {
@@ -450,9 +499,12 @@ export function useConciergusVoiceInput(
   const getAnalytics = useCallback(() => analytics, [analytics]);
 
   // Event handlers
-  const onTranscription = useCallback((callback: (text: string, confidence: number) => void) => {
-    eventCallbacks.current.onTranscription.push(callback);
-  }, []);
+  const onTranscription = useCallback(
+    (callback: (text: string, confidence: number) => void) => {
+      eventCallbacks.current.onTranscription.push(callback);
+    },
+    []
+  );
 
   const onVoiceCommand = useCallback((callback: (command: string) => void) => {
     eventCallbacks.current.onVoiceCommand.push(callback);
@@ -464,7 +516,7 @@ export function useConciergusVoiceInput(
 
   // Update configuration
   const updateConfig = useCallback((updates: Partial<VoiceInputConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    setConfig((prev) => ({ ...prev, ...updates }));
   }, []);
 
   return {
@@ -483,7 +535,7 @@ export function useConciergusVoiceInput(
     getAnalytics,
     onTranscription,
     onVoiceCommand,
-    onError
+    onError,
   };
 }
 
@@ -495,26 +547,29 @@ export interface ConciergusTTSHookReturn {
   // Configuration
   config: TTSConfig;
   updateConfig: (updates: Partial<TTSConfig>) => void;
-  
+
   // TTS State
   state: TTSState;
-  
+
   // TTS Control
-  generateSpeech: (text: string, options?: {
-    voice?: string;
-    model?: string;
-    rate?: number;
-  }) => Promise<void>;
+  generateSpeech: (
+    text: string,
+    options?: {
+      voice?: string;
+      model?: string;
+      rate?: number;
+    }
+  ) => Promise<void>;
   playAudio: () => void;
   pauseAudio: () => void;
   stopAudio: () => void;
   seekTo: (time: number) => void;
   setPlaybackRate: (rate: number) => void;
-  
+
   // Audio Management
   clearAudio: () => void;
   downloadAudio: (filename?: string) => void;
-  
+
   // Events
   onAudioGenerated: (callback: (audioBlob: Blob) => void) => void;
   onPlaybackStart: (callback: () => void) => void;
@@ -527,7 +582,7 @@ export function useConciergusTTS(
 ): ConciergusTTSHookReturn {
   const gateway = useGateway();
   const { config: conciergusConfig } = useConciergus();
-  
+
   const [config, setConfig] = useState<TTSConfig>({
     enabled: true,
     voice: conciergusConfig.defaultTTSVoice || 'alloy',
@@ -535,9 +590,9 @@ export function useConciergusTTS(
     autoPlay: true,
     model: 'tts-1',
     providerOptions: {},
-    ...initialConfig
+    ...initialConfig,
   });
-  
+
   const [state, setState] = useState<TTSState>({
     isGenerating: false,
     isPlaying: false,
@@ -546,9 +601,9 @@ export function useConciergusTTS(
     duration: 0,
     currentTime: 0,
     playbackRate: 1.0,
-    error: null
+    error: null,
   });
-  
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const eventCallbacks = useRef<{
     onAudioGenerated: ((audioBlob: Blob) => void)[];
@@ -559,12 +614,13 @@ export function useConciergusTTS(
     onAudioGenerated: [],
     onPlaybackStart: [],
     onPlaybackEnd: [],
-    onError: []
+    onError: [],
   });
 
   // Get TTS model from gateway
   const getTTSModel = useCallback(() => {
-    const model = gateway.createModel?.(config.model) || openai.speech(config.model as any);
+    const model =
+      gateway.createModel?.(config.model) || openai.speech(config.model as any);
     return model;
   }, [gateway, config.model]);
 
@@ -572,39 +628,46 @@ export function useConciergusTTS(
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
-      
+
       audioRef.current.addEventListener('loadedmetadata', () => {
-        setState(prev => ({ ...prev, duration: audioRef.current?.duration || 0 }));
-      });
-      
-      audioRef.current.addEventListener('timeupdate', () => {
-        setState(prev => ({ 
-          ...prev, 
-          currentTime: audioRef.current?.currentTime || 0 
+        setState((prev) => ({
+          ...prev,
+          duration: audioRef.current?.duration || 0,
         }));
       });
-      
+
+      audioRef.current.addEventListener('timeupdate', () => {
+        setState((prev) => ({
+          ...prev,
+          currentTime: audioRef.current?.currentTime || 0,
+        }));
+      });
+
       audioRef.current.addEventListener('play', () => {
-        setState(prev => ({ ...prev, isPlaying: true }));
-        eventCallbacks.current.onPlaybackStart.forEach(callback => callback());
+        setState((prev) => ({ ...prev, isPlaying: true }));
+        eventCallbacks.current.onPlaybackStart.forEach((callback) =>
+          callback()
+        );
       });
-      
+
       audioRef.current.addEventListener('pause', () => {
-        setState(prev => ({ ...prev, isPlaying: false }));
+        setState((prev) => ({ ...prev, isPlaying: false }));
       });
-      
+
       audioRef.current.addEventListener('ended', () => {
-        setState(prev => ({ ...prev, isPlaying: false }));
-        eventCallbacks.current.onPlaybackEnd.forEach(callback => callback());
+        setState((prev) => ({ ...prev, isPlaying: false }));
+        eventCallbacks.current.onPlaybackEnd.forEach((callback) => callback());
       });
-      
+
       audioRef.current.addEventListener('error', (e) => {
         const errorMessage = 'Audio playback error';
-        setState(prev => ({ ...prev, error: errorMessage }));
-        eventCallbacks.current.onError.forEach(callback => callback(errorMessage));
+        setState((prev) => ({ ...prev, error: errorMessage }));
+        eventCallbacks.current.onError.forEach((callback) =>
+          callback(errorMessage)
+        );
       });
     }
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -614,82 +677,101 @@ export function useConciergusTTS(
   }, []);
 
   // Generate speech using AI SDK 5
-  const generateSpeech = useCallback(async (
-    text: string, 
-    options: {
-      voice?: string;
-      model?: string;
-      rate?: number;
-    } = {}
-  ) => {
-    if (!config.enabled || !text.trim()) return;
-    
-    try {
-      setState(prev => ({ ...prev, isGenerating: true, error: null }));
-      
-      const model = getTTSModel();
-      const voice = options.voice || config.voice;
-      
-      const result = await generateSpeech({
-        model,
-        text: text.trim(),
-        voice: voice as any,
-        providerOptions: {
-          openai: {
-            ...config.providerOptions,
-            speed: options.rate || config.rate
+  const generateSpeech = useCallback(
+    async (
+      text: string,
+      options: {
+        voice?: string;
+        model?: string;
+        rate?: number;
+      } = {}
+    ) => {
+      if (!config.enabled || !text.trim()) return;
+
+      try {
+        setState((prev) => ({ ...prev, isGenerating: true, error: null }));
+
+        const model = getTTSModel();
+        const voice = options.voice || config.voice;
+
+        const result = await generateSpeech({
+          model,
+          text: text.trim(),
+          voice: voice as any,
+          providerOptions: {
+            openai: {
+              ...config.providerOptions,
+              speed: options.rate || config.rate,
+            },
+          },
+        });
+
+        const audioBlob = new Blob([result.audio], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        setState((prev) => ({
+          ...prev,
+          currentAudio: audioBlob,
+          audioUrl,
+          isGenerating: false,
+        }));
+
+        // Set up audio source
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+
+          if (config.autoPlay) {
+            await audioRef.current.play();
           }
         }
-      });
-      
-      const audioBlob = new Blob([result.audio], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      setState(prev => ({ 
-        ...prev, 
-        currentAudio: audioBlob, 
-        audioUrl,
-        isGenerating: false 
-      }));
-      
-      // Set up audio source
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        
-        if (config.autoPlay) {
-          await audioRef.current.play();
+
+        // Call audio generated callbacks
+        eventCallbacks.current.onAudioGenerated.forEach((callback) =>
+          callback(audioBlob)
+        );
+
+        if (conciergusConfig.enableDebug && gateway.debugManager) {
+          gateway.debugManager.info(
+            'TTS audio generated',
+            {
+              textLength: text.length,
+              voice,
+              model: config.model,
+            },
+            'Voice',
+            'tts'
+          );
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'TTS generation failed';
+        setState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          isGenerating: false,
+        }));
+
+        eventCallbacks.current.onError.forEach((callback) =>
+          callback(errorMessage)
+        );
+
+        if (conciergusConfig.enableDebug && gateway.debugManager) {
+          gateway.debugManager.error(
+            'TTS generation failed',
+            { error },
+            'Voice',
+            'tts'
+          );
         }
       }
-      
-      // Call audio generated callbacks
-      eventCallbacks.current.onAudioGenerated.forEach(callback => 
-        callback(audioBlob)
-      );
-      
-      if (conciergusConfig.enableDebug && gateway.debugManager) {
-        gateway.debugManager.info('TTS audio generated', {
-          textLength: text.length,
-          voice,
-          model: config.model
-        }, 'Voice', 'tts');
-      }
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'TTS generation failed';
-      setState(prev => ({ ...prev, error: errorMessage, isGenerating: false }));
-      
-      eventCallbacks.current.onError.forEach(callback => callback(errorMessage));
-      
-      if (conciergusConfig.enableDebug && gateway.debugManager) {
-        gateway.debugManager.error('TTS generation failed', { error }, 'Voice', 'tts');
-      }
-    }
-  }, [config, getTTSModel, conciergusConfig.enableDebug, gateway.debugManager]);
+    },
+    [config, getTTSModel, conciergusConfig.enableDebug, gateway.debugManager]
+  );
 
   // Audio playback controls
   const playAudio = useCallback(() => {
     if (audioRef.current && !state.isPlaying) {
-      audioRef.current.play().catch(error => {
+      audioRef.current.play().catch((error) => {
         console.error('Audio play error:', error);
       });
     }
@@ -708,18 +790,24 @@ export function useConciergusTTS(
     }
   }, []);
 
-  const seekTo = useCallback((time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(0, Math.min(time, state.duration));
-    }
-  }, [state.duration]);
+  const seekTo = useCallback(
+    (time: number) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(
+          0,
+          Math.min(time, state.duration)
+        );
+      }
+    },
+    [state.duration]
+  );
 
   const setPlaybackRate = useCallback((rate: number) => {
     const clampedRate = Math.max(0.25, Math.min(4.0, rate));
     if (audioRef.current) {
       audioRef.current.playbackRate = clampedRate;
     }
-    setState(prev => ({ ...prev, playbackRate: clampedRate }));
+    setState((prev) => ({ ...prev, playbackRate: clampedRate }));
   }, []);
 
   // Audio management
@@ -728,38 +816,44 @@ export function useConciergusTTS(
       audioRef.current.pause();
       audioRef.current.src = '';
     }
-    
+
     if (state.audioUrl) {
       URL.revokeObjectURL(state.audioUrl);
     }
-    
-    setState(prev => ({ 
-      ...prev, 
-      currentAudio: null, 
-      audioUrl: null, 
-      duration: 0, 
+
+    setState((prev) => ({
+      ...prev,
+      currentAudio: null,
+      audioUrl: null,
+      duration: 0,
       currentTime: 0,
-      isPlaying: false
+      isPlaying: false,
     }));
   }, [state.audioUrl]);
 
-  const downloadAudio = useCallback((filename = 'tts-audio.mp3') => {
-    if (state.currentAudio) {
-      const url = URL.createObjectURL(state.currentAudio);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  }, [state.currentAudio]);
+  const downloadAudio = useCallback(
+    (filename = 'tts-audio.mp3') => {
+      if (state.currentAudio) {
+        const url = URL.createObjectURL(state.currentAudio);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    },
+    [state.currentAudio]
+  );
 
   // Event handlers
-  const onAudioGenerated = useCallback((callback: (audioBlob: Blob) => void) => {
-    eventCallbacks.current.onAudioGenerated.push(callback);
-  }, []);
+  const onAudioGenerated = useCallback(
+    (callback: (audioBlob: Blob) => void) => {
+      eventCallbacks.current.onAudioGenerated.push(callback);
+    },
+    []
+  );
 
   const onPlaybackStart = useCallback((callback: () => void) => {
     eventCallbacks.current.onPlaybackStart.push(callback);
@@ -775,7 +869,7 @@ export function useConciergusTTS(
 
   // Update configuration
   const updateConfig = useCallback((updates: Partial<TTSConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+    setConfig((prev) => ({ ...prev, ...updates }));
   }, []);
 
   return {
@@ -793,7 +887,7 @@ export function useConciergusTTS(
     onAudioGenerated,
     onPlaybackStart,
     onPlaybackEnd,
-    onError
+    onError,
   };
 }
 
@@ -804,22 +898,22 @@ export function useConciergusTTS(
 export interface ConciergusVoiceHookReturn {
   // Voice Input
   voiceInput: ConciergusVoiceInputHookReturn;
-  
+
   // TTS
   tts: ConciergusTTSHookReturn;
-  
+
   // Combined Features
   isVoiceActive: boolean;
   voiceToVoice: (options?: {
     onTranscription?: (text: string) => void;
     onResponse?: (response: string) => void;
   }) => Promise<void>;
-  
+
   // Multi-language Support
   supportedLanguages: string[];
   currentLanguage: string;
   setLanguage: (language: string) => void;
-  
+
   // Voice Analytics
   getCombinedAnalytics: () => {
     voiceInput: VoiceAnalytics;
@@ -834,65 +928,82 @@ export function useConciergusVoice(
 ): ConciergusVoiceHookReturn {
   const voiceInput = useConciergusVoiceInput(voiceInputConfig);
   const tts = useConciergusTTS(ttsConfig);
-  
+
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [ttsGenerations, setTtsGenerations] = useState(0);
   const [totalTtsTime, setTotalTtsTime] = useState(0);
 
   // Combined voice-to-voice interaction
-  const voiceToVoice = useCallback(async (options: {
-    onTranscription?: (text: string) => void;
-    onResponse?: (response: string) => void;
-  } = {}) => {
-    setIsVoiceActive(true);
-    
-    try {
-      // Start voice input
-      await voiceInput.startListening();
-      
-      // Wait for transcription
-      const transcriptionPromise = new Promise<string>((resolve) => {
-        voiceInput.onTranscription((text) => {
-          options.onTranscription?.(text);
-          resolve(text);
+  const voiceToVoice = useCallback(
+    async (
+      options: {
+        onTranscription?: (text: string) => void;
+        onResponse?: (response: string) => void;
+      } = {}
+    ) => {
+      setIsVoiceActive(true);
+
+      try {
+        // Start voice input
+        await voiceInput.startListening();
+
+        // Wait for transcription
+        const transcriptionPromise = new Promise<string>((resolve) => {
+          voiceInput.onTranscription((text) => {
+            options.onTranscription?.(text);
+            resolve(text);
+          });
         });
-      });
-      
-      const transcribedText = await transcriptionPromise;
-      
-      // Here you would typically send the text to a chat API and get a response
-      // For now, we'll just generate TTS from the transcribed text
-      if (options.onResponse) {
-        options.onResponse(transcribedText);
+
+        const transcribedText = await transcriptionPromise;
+
+        // Here you would typically send the text to a chat API and get a response
+        // For now, we'll just generate TTS from the transcribed text
+        if (options.onResponse) {
+          options.onResponse(transcribedText);
+        }
+
+        // Generate TTS response
+        const startTime = Date.now();
+        await tts.generateSpeech(transcribedText);
+        const generationTime = Date.now() - startTime;
+
+        setTtsGenerations((prev) => prev + 1);
+        setTotalTtsTime((prev) => prev + generationTime);
+      } finally {
+        setIsVoiceActive(false);
       }
-      
-      // Generate TTS response
-      const startTime = Date.now();
-      await tts.generateSpeech(transcribedText);
-      const generationTime = Date.now() - startTime;
-      
-      setTtsGenerations(prev => prev + 1);
-      setTotalTtsTime(prev => prev + generationTime);
-      
-    } finally {
-      setIsVoiceActive(false);
-    }
-  }, [voiceInput, tts]);
+    },
+    [voiceInput, tts]
+  );
 
   // Multi-language support
-  const supportedLanguages = useMemo(() => voiceInput.state.supportedLanguages, [voiceInput.state.supportedLanguages]);
-  const currentLanguage = useMemo(() => voiceInput.config.language, [voiceInput.config.language]);
-  
-  const setLanguage = useCallback((language: string) => {
-    voiceInput.setLanguage(language);
-  }, [voiceInput]);
+  const supportedLanguages = useMemo(
+    () => voiceInput.state.supportedLanguages,
+    [voiceInput.state.supportedLanguages]
+  );
+  const currentLanguage = useMemo(
+    () => voiceInput.config.language,
+    [voiceInput.config.language]
+  );
+
+  const setLanguage = useCallback(
+    (language: string) => {
+      voiceInput.setLanguage(language);
+    },
+    [voiceInput]
+  );
 
   // Combined analytics
-  const getCombinedAnalytics = useCallback(() => ({
-    voiceInput: voiceInput.getAnalytics(),
-    totalTTSGenerations: ttsGenerations,
-    averageTTSGenerationTime: ttsGenerations > 0 ? totalTtsTime / ttsGenerations : 0
-  }), [voiceInput, ttsGenerations, totalTtsTime]);
+  const getCombinedAnalytics = useCallback(
+    () => ({
+      voiceInput: voiceInput.getAnalytics(),
+      totalTTSGenerations: ttsGenerations,
+      averageTTSGenerationTime:
+        ttsGenerations > 0 ? totalTtsTime / ttsGenerations : 0,
+    }),
+    [voiceInput, ttsGenerations, totalTtsTime]
+  );
 
   return {
     voiceInput,
@@ -902,6 +1013,6 @@ export function useConciergusVoice(
     supportedLanguages,
     currentLanguage,
     setLanguage,
-    getCombinedAnalytics
+    getCombinedAnalytics,
   };
-} 
+}

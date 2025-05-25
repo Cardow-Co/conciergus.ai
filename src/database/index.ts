@@ -4,8 +4,26 @@
  */
 
 // Core database components
-export { ConnectionManager, type DatabaseConnectionConfig, type ConnectionStats, type QueryResult, type DatabaseHealth, type DatabaseProvider } from './ConnectionManager';
-export { QueryOptimizer, type QueryOptimizerConfig, type QueryAnalysis, type IndexSuggestion, type QueryPerformanceMetrics, type QueryPattern, type TableSchema, type ColumnInfo, type IndexInfo, type ConstraintInfo } from './QueryOptimizer';
+export {
+  ConnectionManager,
+  type DatabaseConnectionConfig,
+  type ConnectionStats,
+  type QueryResult,
+  type DatabaseHealth,
+  type DatabaseProvider,
+} from './ConnectionManager';
+export {
+  QueryOptimizer,
+  type QueryOptimizerConfig,
+  type QueryAnalysis,
+  type IndexSuggestion,
+  type QueryPerformanceMetrics,
+  type QueryPattern,
+  type TableSchema,
+  type ColumnInfo,
+  type IndexInfo,
+  type ConstraintInfo,
+} from './QueryOptimizer';
 
 // Default configurations
 export const DEFAULT_CONNECTION_CONFIG: Partial<DatabaseConnectionConfig> = {
@@ -131,7 +149,9 @@ export function createSQLiteConnection(config: {
 /**
  * Create a query optimizer with default configuration
  */
-export function createQueryOptimizer(config?: Partial<QueryOptimizerConfig>): QueryOptimizer {
+export function createQueryOptimizer(
+  config?: Partial<QueryOptimizerConfig>
+): QueryOptimizer {
   const finalConfig: QueryOptimizerConfig = {
     ...DEFAULT_QUERY_OPTIMIZER_CONFIG,
     ...config,
@@ -178,7 +198,12 @@ export function createChatDatabase(config: {
       break;
 
     case 'postgres':
-      if (!config.postgresHost || !config.postgresDatabase || !config.postgresUsername || !config.postgresPassword) {
+      if (
+        !config.postgresHost ||
+        !config.postgresDatabase ||
+        !config.postgresUsername ||
+        !config.postgresPassword
+      ) {
         throw new Error('PostgreSQL connection details are required');
       }
       connectionManager = createPostgresConnection({
@@ -214,10 +239,14 @@ export function createChatDatabase(config: {
 /**
  * Environment-based database configuration
  */
-export function createDatabaseFromEnv(): { connectionManager: ConnectionManager; queryOptimizer: QueryOptimizer } {
+export function createDatabaseFromEnv(): {
+  connectionManager: ConnectionManager;
+  queryOptimizer: QueryOptimizer;
+} {
   // Check for Supabase configuration
   const supabaseUrl = process.env.SUPABASE_URL || process.env.DATABASE_URL;
-  const supabaseApiKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_API_KEY;
+  const supabaseApiKey =
+    process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_API_KEY;
 
   if (supabaseUrl && supabaseApiKey) {
     return createChatDatabase({
@@ -233,13 +262,21 @@ export function createDatabaseFromEnv(): { connectionManager: ConnectionManager;
   const postgresHost = process.env.POSTGRES_HOST || process.env.DB_HOST;
   const postgresDatabase = process.env.POSTGRES_DATABASE || process.env.DB_NAME;
   const postgresUsername = process.env.POSTGRES_USERNAME || process.env.DB_USER;
-  const postgresPassword = process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD;
+  const postgresPassword =
+    process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD;
 
-  if (postgresHost && postgresDatabase && postgresUsername && postgresPassword) {
+  if (
+    postgresHost &&
+    postgresDatabase &&
+    postgresUsername &&
+    postgresPassword
+  ) {
     return createChatDatabase({
       provider: 'postgres',
       postgresHost,
-      postgresPort: parseInt(process.env.POSTGRES_PORT || process.env.DB_PORT || '5432'),
+      postgresPort: parseInt(
+        process.env.POSTGRES_PORT || process.env.DB_PORT || '5432'
+      ),
       postgresDatabase,
       postgresUsername,
       postgresPassword,
@@ -263,47 +300,78 @@ export function createDatabaseFromEnv(): { connectionManager: ConnectionManager;
  */
 export const DatabaseUtils = {
   /**
-   * Generate optimized chat table schema
+   * Generate enhanced multi-agent chat table schema
    */
   generateChatSchema(): {
     conversations: string;
     messages: string;
     indexes: string[];
+    functions: string[];
+    triggers: string[];
   } {
-    return {
-      conversations: `
-        CREATE TABLE conversations (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id TEXT NOT NULL,
-          title TEXT,
-          metadata JSONB DEFAULT '{}',
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          deleted_at TIMESTAMP WITH TIME ZONE NULL
-        );
-      `,
-      messages: `
-        CREATE TABLE messages (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-          role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
-          content TEXT NOT NULL,
-          metadata JSONB DEFAULT '{}',
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          tokens INTEGER DEFAULT 0,
-          model TEXT
-        );
-      `,
-      indexes: [
-        'CREATE INDEX idx_conversations_user_id ON conversations(user_id);',
-        'CREATE INDEX idx_conversations_created_at ON conversations(created_at DESC);',
-        'CREATE INDEX idx_conversations_updated_at ON conversations(updated_at DESC);',
-        'CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);',
-        'CREATE INDEX idx_messages_created_at ON messages(created_at DESC);',
-        'CREATE INDEX idx_messages_role ON messages(role);',
-        'CREATE INDEX idx_messages_content_gin ON messages USING gin(to_tsvector(\'english\', content));',
-      ],
-    };
+    // Import enhanced schema on demand to avoid circular dependencies
+    try {
+      const {
+        ConversationSchema,
+        ConversationIndexes,
+        ConversationFunctions,
+        ConversationTriggers,
+        UtilityFunctions,
+      } = require('./ConversationSchema');
+
+      return {
+        conversations: ConversationSchema.conversations,
+        messages: ConversationSchema.messages,
+        indexes: [...ConversationIndexes],
+        functions: [
+          UtilityFunctions.updateTimestamp,
+          ...Object.values(ConversationFunctions),
+        ],
+        triggers: [...ConversationTriggers],
+      };
+    } catch (error) {
+      // Fallback to basic schema if enhanced schema is not available
+      console.warn(
+        'Enhanced conversation schema not available, using basic schema:',
+        error
+      );
+      return {
+        conversations: `
+          CREATE TABLE conversations (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id TEXT NOT NULL,
+            title TEXT,
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            deleted_at TIMESTAMP WITH TIME ZONE NULL
+          );
+        `,
+        messages: `
+          CREATE TABLE messages (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+            role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+            content TEXT NOT NULL,
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            tokens INTEGER DEFAULT 0,
+            model TEXT
+          );
+        `,
+        indexes: [
+          'CREATE INDEX idx_conversations_user_id ON conversations(user_id);',
+          'CREATE INDEX idx_conversations_created_at ON conversations(created_at DESC);',
+          'CREATE INDEX idx_conversations_updated_at ON conversations(updated_at DESC);',
+          'CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);',
+          'CREATE INDEX idx_messages_created_at ON messages(created_at DESC);',
+          'CREATE INDEX idx_messages_role ON messages(role);',
+          "CREATE INDEX idx_messages_content_gin ON messages USING gin(to_tsvector('english', content));",
+        ],
+        functions: [],
+        triggers: [],
+      };
+    }
   },
 
   /**
@@ -373,12 +441,18 @@ export const DatabaseUtils = {
 /**
  * Global database manager singleton (optional)
  */
-let globalDatabaseManager: { connectionManager: ConnectionManager; queryOptimizer: QueryOptimizer } | null = null;
+let globalDatabaseManager: {
+  connectionManager: ConnectionManager;
+  queryOptimizer: QueryOptimizer;
+} | null = null;
 
 /**
  * Get or create global database manager
  */
-export function getGlobalDatabaseManager(): { connectionManager: ConnectionManager; queryOptimizer: QueryOptimizer } {
+export function getGlobalDatabaseManager(): {
+  connectionManager: ConnectionManager;
+  queryOptimizer: QueryOptimizer;
+} {
   if (!globalDatabaseManager) {
     globalDatabaseManager = createDatabaseFromEnv();
   }
@@ -388,13 +462,16 @@ export function getGlobalDatabaseManager(): { connectionManager: ConnectionManag
 /**
  * Initialize global database manager
  */
-export async function initializeGlobalDatabase(): Promise<{ connectionManager: ConnectionManager; queryOptimizer: QueryOptimizer }> {
+export async function initializeGlobalDatabase(): Promise<{
+  connectionManager: ConnectionManager;
+  queryOptimizer: QueryOptimizer;
+}> {
   const manager = getGlobalDatabaseManager();
-  
+
   if (!manager.connectionManager) {
     await manager.connectionManager.initialize();
   }
-  
+
   return manager;
 }
 
@@ -406,4 +483,4 @@ export async function shutdownGlobalDatabase(): Promise<void> {
     await globalDatabaseManager.connectionManager.shutdown();
     globalDatabaseManager = null;
   }
-} 
+}

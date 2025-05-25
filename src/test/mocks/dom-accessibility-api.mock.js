@@ -5,4 +5,4 @@ module.exports = {
   getRole: jest.fn(() => null),
   isInaccessible: jest.fn(() => false),
   prettyDOM: jest.fn(() => ''),
-}; 
+};

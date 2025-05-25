@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
 import { useGateway } from '../context/GatewayProvider';
-import { 
-  useDebugLogs, 
-  useSystemHealth, 
-  useSystemDiagnostics, 
-  useDebugConfig 
+import {
+  useDebugLogs,
+  useSystemHealth,
+  useSystemDiagnostics,
+  useDebugConfig,
 } from '../context/DebugHooks';
-import type { DebugLog, SystemHealth, SystemDiagnostics, DebugConfig } from '../context/DebugManager';
+import type {
+  DebugLog,
+  SystemHealth,
+  SystemDiagnostics,
+  DebugConfig,
+} from '../context/DebugManager';
 
 /**
  * Admin Dashboard Props
@@ -28,19 +33,27 @@ const SystemHealthCard: FC<{
 }> = ({ health, onRefresh }) => {
   const getHealthIcon = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
-      case 'healthy': return '✅';
-      case 'warning': return '⚠️';
-      case 'critical': return '🔴';
-      default: return '❓';
+      case 'healthy':
+        return '✅';
+      case 'warning':
+        return '⚠️';
+      case 'critical':
+        return '🔴';
+      default:
+        return '❓';
     }
   };
 
   const getHealthColor = (status: 'healthy' | 'warning' | 'critical') => {
     switch (status) {
-      case 'healthy': return 'green';
-      case 'warning': return 'orange';
-      case 'critical': return 'red';
-      default: return 'gray';
+      case 'healthy':
+        return 'green';
+      case 'warning':
+        return 'orange';
+      case 'critical':
+        return 'red';
+      default:
+        return 'gray';
     }
   };
 
@@ -48,9 +61,11 @@ const SystemHealthCard: FC<{
     <div className="system-health-card">
       <div className="card-header">
         <h4>System Health</h4>
-        <button onClick={onRefresh} className="refresh-btn">🔄</button>
+        <button onClick={onRefresh} className="refresh-btn">
+          🔄
+        </button>
       </div>
-      
+
       <div className="overall-status">
         <div className={`status-indicator ${health.overall}`}>
           {getHealthIcon(health.overall)}
@@ -82,7 +97,9 @@ const SystemHealthCard: FC<{
           <h5>Issues ({health.issues.length})</h5>
           <ul className="issues-list">
             {health.issues.map((issue, index) => (
-              <li key={index} className="issue-item">{issue}</li>
+              <li key={index} className="issue-item">
+                {issue}
+              </li>
             ))}
           </ul>
         </div>
@@ -103,7 +120,7 @@ const SystemDiagnosticsView: FC<{
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
@@ -114,14 +131,16 @@ const SystemDiagnosticsView: FC<{
     const sizes = ['B', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 B';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   return (
     <div className="system-diagnostics">
       <div className="diagnostics-header">
         <h4>System Diagnostics</h4>
-        <button onClick={onRefresh} className="refresh-btn">🔄</button>
+        <button onClick={onRefresh} className="refresh-btn">
+          🔄
+        </button>
       </div>
 
       <div className="diagnostics-grid">
@@ -133,17 +152,23 @@ const SystemDiagnosticsView: FC<{
           </div>
           <div className="metric">
             <span className="label">Total Requests:</span>
-            <span className="value">{diagnostics.totalRequests.toLocaleString()}</span>
+            <span className="value">
+              {diagnostics.totalRequests.toLocaleString()}
+            </span>
           </div>
           <div className="metric">
             <span className="label">Error Rate:</span>
-            <span className={`value ${diagnostics.errorRate > 0.1 ? 'warning' : 'normal'}`}>
+            <span
+              className={`value ${diagnostics.errorRate > 0.1 ? 'warning' : 'normal'}`}
+            >
               {(diagnostics.errorRate * 100).toFixed(2)}%
             </span>
           </div>
           <div className="metric">
             <span className="label">Avg Response Time:</span>
-            <span className={`value ${diagnostics.averageResponseTime > 5000 ? 'warning' : 'normal'}`}>
+            <span
+              className={`value ${diagnostics.averageResponseTime > 5000 ? 'warning' : 'normal'}`}
+            >
               {diagnostics.averageResponseTime.toFixed(0)}ms
             </span>
           </div>
@@ -153,15 +178,21 @@ const SystemDiagnosticsView: FC<{
           <div className="card-title">Memory Usage</div>
           <div className="metric">
             <span className="label">Logs:</span>
-            <span className="value">{formatBytes(diagnostics.memoryUsage.logs)}</span>
+            <span className="value">
+              {formatBytes(diagnostics.memoryUsage.logs)}
+            </span>
           </div>
           <div className="metric">
             <span className="label">Cache:</span>
-            <span className="value">{formatBytes(diagnostics.memoryUsage.cache)}</span>
+            <span className="value">
+              {formatBytes(diagnostics.memoryUsage.cache)}
+            </span>
           </div>
           <div className="metric">
             <span className="label">Total:</span>
-            <span className="value">{formatBytes(diagnostics.memoryUsage.total)}</span>
+            <span className="value">
+              {formatBytes(diagnostics.memoryUsage.total)}
+            </span>
           </div>
           <div className="metric">
             <span className="label">Active Connections:</span>
@@ -203,7 +234,7 @@ const DebugLogsViewer: FC<{
     level: '',
     category: '',
     source: '',
-    limit: 100
+    limit: 100,
   });
 
   const handleFilterChange = (key: string, value: string | number) => {
@@ -214,21 +245,31 @@ const DebugLogsViewer: FC<{
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'error': return 'red';
-      case 'warn': return 'orange';
-      case 'info': return 'blue';
-      case 'debug': return 'gray';
-      default: return 'black';
+      case 'error':
+        return 'red';
+      case 'warn':
+        return 'orange';
+      case 'info':
+        return 'blue';
+      case 'debug':
+        return 'gray';
+      default:
+        return 'black';
     }
   };
 
   const getLevelIcon = (level: string) => {
     switch (level) {
-      case 'error': return '❌';
-      case 'warn': return '⚠️';
-      case 'info': return 'ℹ️';
-      case 'debug': return '🔍';
-      default: return '📝';
+      case 'error':
+        return '❌';
+      case 'warn':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
+      case 'debug':
+        return '🔍';
+      default:
+        return '📝';
     }
   };
 
@@ -252,8 +293,8 @@ const DebugLogsViewer: FC<{
       <div className="logs-filters">
         <div className="filter-group">
           <label>Level:</label>
-          <select 
-            value={filters.level} 
+          <select
+            value={filters.level}
             onChange={(e) => handleFilterChange('level', e.target.value)}
           >
             <option value="">All</option>
@@ -289,7 +330,9 @@ const DebugLogsViewer: FC<{
           <input
             type="number"
             value={filters.limit}
-            onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
+            onChange={(e) =>
+              handleFilterChange('limit', parseInt(e.target.value))
+            }
             min="10"
             max="1000"
             step="10"
@@ -305,7 +348,10 @@ const DebugLogsViewer: FC<{
             {logs.map((log) => (
               <div key={log.id} className={`log-entry ${log.level}`}>
                 <div className="log-header">
-                  <span className="log-level" style={{ color: getLevelColor(log.level) }}>
+                  <span
+                    className="log-level"
+                    style={{ color: getLevelColor(log.level) }}
+                  >
                     {getLevelIcon(log.level)} {log.level.toUpperCase()}
                   </span>
                   <span className="log-timestamp">
@@ -363,7 +409,10 @@ const ConfigurationPanel: FC<{
   };
 
   const handleRemoveCategory = (category: string) => {
-    handleConfigChange('categories', localConfig.categories.filter(c => c !== category));
+    handleConfigChange(
+      'categories',
+      localConfig.categories.filter((c) => c !== category)
+    );
   };
 
   return (
@@ -371,15 +420,19 @@ const ConfigurationPanel: FC<{
       <div className="config-header">
         <h4>Debug Configuration</h4>
         <div className="config-actions">
-          <button onClick={handleSave} className="save-btn">💾 Save</button>
-          <button onClick={onReset} className="reset-btn">🔄 Reset</button>
+          <button onClick={handleSave} className="save-btn">
+            💾 Save
+          </button>
+          <button onClick={onReset} className="reset-btn">
+            🔄 Reset
+          </button>
         </div>
       </div>
 
       <div className="config-form">
         <div className="form-group">
           <label>Log Level:</label>
-          <select 
+          <select
             value={localConfig.logLevel}
             onChange={(e) => handleConfigChange('logLevel', e.target.value)}
           >
@@ -395,7 +448,9 @@ const ConfigurationPanel: FC<{
           <input
             type="number"
             value={localConfig.maxLogs}
-            onChange={(e) => handleConfigChange('maxLogs', parseInt(e.target.value))}
+            onChange={(e) =>
+              handleConfigChange('maxLogs', parseInt(e.target.value))
+            }
             min="100"
             max="10000"
             step="100"
@@ -407,7 +462,9 @@ const ConfigurationPanel: FC<{
             <input
               type="checkbox"
               checked={localConfig.enableConsoleOutput}
-              onChange={(e) => handleConfigChange('enableConsoleOutput', e.target.checked)}
+              onChange={(e) =>
+                handleConfigChange('enableConsoleOutput', e.target.checked)
+              }
             />
             Enable Console Output
           </label>
@@ -418,7 +475,9 @@ const ConfigurationPanel: FC<{
             <input
               type="checkbox"
               checked={localConfig.enablePersistence}
-              onChange={(e) => handleConfigChange('enablePersistence', e.target.checked)}
+              onChange={(e) =>
+                handleConfigChange('enablePersistence', e.target.checked)
+              }
             />
             Enable Persistence
           </label>
@@ -430,7 +489,7 @@ const ConfigurationPanel: FC<{
             {localConfig.categories.map((category, index) => (
               <div key={index} className="category-item">
                 <span>{category}</span>
-                <button 
+                <button
                   onClick={() => handleRemoveCategory(category)}
                   className="remove-category-btn"
                 >
@@ -473,11 +532,13 @@ const MaintenanceTools: FC<{
   return (
     <div className="maintenance-tools">
       <h4>Maintenance Tools</h4>
-      
+
       <div className="tools-grid">
         <div className="tool-card">
           <h5>Cache Management</h5>
-          <p>Clear system cache to free up memory and resolve potential issues.</p>
+          <p>
+            Clear system cache to free up memory and resolve potential issues.
+          </p>
           <button onClick={onClearCache} className="tool-btn warning">
             🗑️ Clear Cache
           </button>
@@ -486,12 +547,16 @@ const MaintenanceTools: FC<{
         <div className="tool-card">
           <h5>System Reset</h5>
           <p>Reset all system components to their default state.</p>
-          <button 
+          <button
             onClick={() => {
-              if (confirm('Are you sure you want to reset the system? This action cannot be undone.')) {
+              if (
+                confirm(
+                  'Are you sure you want to reset the system? This action cannot be undone.'
+                )
+              ) {
                 onResetSystem();
               }
-            }} 
+            }}
             className="tool-btn danger"
           >
             🔄 Reset System
@@ -521,7 +586,7 @@ const MaintenanceTools: FC<{
             rows={4}
             className="import-textarea"
           />
-          <button 
+          <button
             onClick={handleImport}
             disabled={!importData.trim()}
             className="tool-btn"
@@ -541,31 +606,40 @@ export const AdminDashboard: FC<AdminDashboardProps> = ({
   className = '',
   defaultTab = 'overview',
   showAdvancedControls = true,
-  refreshInterval = 5000
+  refreshInterval = 5000,
 }) => {
-  const { debugManager, systemHealth, systemDiagnostics, exportSystemData } = useGateway();
-  
+  const { debugManager, systemHealth, systemDiagnostics, exportSystemData } =
+    useGateway();
+
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  
+
   // Hook into debug functionality
-  const { logs, clearLogs, exportLogs, refreshLogs } = useDebugLogs(debugManager);
+  const { logs, clearLogs, exportLogs, refreshLogs } =
+    useDebugLogs(debugManager);
   const { health, refreshHealth } = useSystemHealth(debugManager);
-  const { diagnostics, refreshDiagnostics } = useSystemDiagnostics(debugManager);
+  const { diagnostics, refreshDiagnostics } =
+    useSystemDiagnostics(debugManager);
   const { config, updateConfig, resetConfig } = useDebugConfig(debugManager);
 
   // Auto-refresh functionality
   useEffect(() => {
     if (!autoRefresh) return;
-    
+
     const interval = setInterval(() => {
       refreshHealth();
       refreshDiagnostics();
       refreshLogs();
     }, refreshInterval);
-    
+
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, refreshHealth, refreshDiagnostics, refreshLogs]);
+  }, [
+    autoRefresh,
+    refreshInterval,
+    refreshHealth,
+    refreshDiagnostics,
+    refreshLogs,
+  ]);
 
   // Maintenance actions
   const handleClearCache = useCallback(() => {
@@ -582,31 +656,37 @@ export const AdminDashboard: FC<AdminDashboardProps> = ({
     refreshDiagnostics();
   }, [debugManager, clearLogs, resetConfig, refreshHealth, refreshDiagnostics]);
 
-  const handleExportData = useCallback((format: 'json' | 'csv') => {
-    const data = exportSystemData(format);
-    const blob = new Blob([data], { 
-      type: format === 'json' ? 'application/json' : 'text/csv' 
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `admin-data-${new Date().toISOString().split('T')[0]}.${format}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [exportSystemData]);
+  const handleExportData = useCallback(
+    (format: 'json' | 'csv') => {
+      const data = exportSystemData(format);
+      const blob = new Blob([data], {
+        type: format === 'json' ? 'application/json' : 'text/csv',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `admin-data-${new Date().toISOString().split('T')[0]}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [exportSystemData]
+  );
 
-  const handleImportConfig = useCallback((configData: any) => {
-    if (configData.debugConfig) {
-      updateConfig(configData.debugConfig);
-    }
-  }, [updateConfig]);
+  const handleImportConfig = useCallback(
+    (configData: any) => {
+      if (configData.debugConfig) {
+        updateConfig(configData.debugConfig);
+      }
+    },
+    [updateConfig]
+  );
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'health', label: 'Health', icon: '❤️' },
     { id: 'logs', label: 'Logs', icon: '📝' },
     { id: 'config', label: 'Config', icon: '⚙️' },
-    { id: 'maintenance', label: 'Maintenance', icon: '🔧' }
+    { id: 'maintenance', label: 'Maintenance', icon: '🔧' },
   ];
 
   return (
@@ -623,7 +703,7 @@ export const AdminDashboard: FC<AdminDashboardProps> = ({
             />
             Auto-refresh
           </label>
-          <button 
+          <button
             onClick={() => {
               refreshHealth();
               refreshDiagnostics();
@@ -655,7 +735,10 @@ export const AdminDashboard: FC<AdminDashboardProps> = ({
           <div className="overview-tab">
             <div className="overview-grid">
               <SystemHealthCard health={health} onRefresh={refreshHealth} />
-              <SystemDiagnosticsView diagnostics={diagnostics} onRefresh={refreshDiagnostics} />
+              <SystemDiagnosticsView
+                diagnostics={diagnostics}
+                onRefresh={refreshDiagnostics}
+              />
             </div>
           </div>
         )}
@@ -697,4 +780,4 @@ export const AdminDashboard: FC<AdminDashboardProps> = ({
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

@@ -5,13 +5,13 @@
 
 // Core middleware pipeline
 export * from './MiddlewarePipeline';
-export { 
+export {
   ConciergusMiddlewarePipeline,
   createSecureMiddlewarePipeline,
-  createRateLimitingMiddleware,  // Legacy, deprecated
+  createRateLimitingMiddleware, // Legacy, deprecated
   type MiddlewareFunction,
   type MiddlewareContext,
-  type MiddlewareConfig
+  type MiddlewareConfig,
 } from './MiddlewarePipeline';
 
 // Enhanced rate limiting middleware
@@ -23,7 +23,7 @@ export {
   standardApiRateLimit,
   strictRateLimit,
   lenientRateLimit,
-  type EnhancedRateLimitOptions
+  type EnhancedRateLimitOptions,
 } from './EnhancedRateLimitingMiddleware';
 
 // Input validation middleware
@@ -36,7 +36,7 @@ export {
   strictValidation,
   userInputValidation,
   aiPromptValidation,
-  type ValidationMiddlewareOptions
+  type ValidationMiddlewareOptions,
 } from './ValidationMiddleware';
 
 // AI security middleware
@@ -47,7 +47,7 @@ export {
   strictAISecurityMiddleware,
   permissiveAISecurityMiddleware,
   enterpriseAISecurityMiddleware,
-  type AISecurityMiddlewareOptions
+  type AISecurityMiddlewareOptions,
 } from './AISecurityMiddleware';
 
 // Utility middleware functions
@@ -65,24 +65,22 @@ export function createBasicRateLimitMiddleware(
       algorithm: 'fixed_window' as any,
       strategy: 'ip_based' as any,
       windowMs,
-      maxRequests
-    }
+      maxRequests,
+    },
   });
 }
 
-export function createBasicValidationMiddleware(
-  schemas: {
-    body?: string;
-    query?: string;
-    params?: string;
-    headers?: string;
-  }
-): MiddlewareFunction {
+export function createBasicValidationMiddleware(schemas: {
+  body?: string;
+  query?: string;
+  params?: string;
+  headers?: string;
+}): MiddlewareFunction {
   return createValidationMiddleware({
     schemas,
     strictMode: false,
     logValidationErrors: true,
-    sanitizeResponse: true
+    sanitizeResponse: true,
   });
 }
 
@@ -95,6 +93,6 @@ export function createBasicAISecurityMiddleware(
     enableInputFiltering: true,
     enableOutputFiltering: true,
     enableDataLeakagePrevention: true,
-    redactSensitiveData: true
+    redactSensitiveData: true,
   });
-} 
+}

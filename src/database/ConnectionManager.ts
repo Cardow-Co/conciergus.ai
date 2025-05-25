@@ -9,7 +9,13 @@ import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
 /**
  * Database provider types
  */
-export type DatabaseProvider = 'supabase' | 'postgres' | 'mysql' | 'sqlite' | 'mongodb' | 'custom';
+export type DatabaseProvider =
+  | 'supabase'
+  | 'postgres'
+  | 'mysql'
+  | 'sqlite'
+  | 'mongodb'
+  | 'custom';
 
 /**
  * Connection configuration
@@ -23,7 +29,7 @@ export interface DatabaseConnectionConfig {
   password?: string;
   url?: string;
   ssl?: boolean | object;
-  
+
   // Connection pooling
   pool: {
     min: number;
@@ -34,7 +40,7 @@ export interface DatabaseConnectionConfig {
     reapIntervalMillis: number;
     createRetryIntervalMillis: number;
   };
-  
+
   // Health monitoring
   healthCheck: {
     enabled: boolean;
@@ -42,7 +48,7 @@ export interface DatabaseConnectionConfig {
     timeout: number; // milliseconds
     retryCount: number;
   };
-  
+
   // Performance optimization
   optimization: {
     enableQueryCache: boolean;
@@ -51,7 +57,7 @@ export interface DatabaseConnectionConfig {
     enableConnectionCompression: boolean;
     maxQueryTime: number; // milliseconds
   };
-  
+
   // Monitoring and logging
   monitoring: {
     enableMetrics: boolean;
@@ -110,7 +116,10 @@ export class ConnectionManager extends EventEmitter {
   private config: DatabaseConnectionConfig;
   private performanceMonitor: PerformanceMonitor | null = null;
   private connectionPool: any = null;
-  private queryCache = new Map<string, { result: any; timestamp: number; ttl: number }>();
+  private queryCache = new Map<
+    string,
+    { result: any; timestamp: number; ttl: number }
+  >();
   private healthCheckTimer: NodeJS.Timeout | null = null;
   private stats: ConnectionStats = {
     totalConnections: 0,
@@ -132,7 +141,7 @@ export class ConnectionManager extends EventEmitter {
     super();
     this.config = config;
     this.performanceMonitor = PerformanceMonitor.getInstance();
-    
+
     if (this.config.monitoring.enableMetrics) {
       this.setupMetrics();
     }
@@ -145,14 +154,16 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Initialize connection pool based on provider
       await this.initializeConnectionPool();
-      
+
       // Start health monitoring
       if (this.config.healthCheck.enabled) {
         this.startHealthMonitoring();
       }
-      
+
       this.emit('initialized');
-      console.log(`🚀 Database connection manager initialized (${this.config.provider})`);
+      console.log(
+        `🚀 Database connection manager initialized (${this.config.provider})`
+      );
     } catch (error) {
       this.emit('error', error);
       throw error;
@@ -180,7 +191,9 @@ export class ConnectionManager extends EventEmitter {
         await this.initializeMongoDBPool();
         break;
       default:
-        throw new Error(`Unsupported database provider: ${this.config.provider}`);
+        throw new Error(
+          `Unsupported database provider: ${this.config.provider}`
+        );
     }
   }
 
@@ -191,7 +204,7 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Dynamic import to avoid bundling if not used
       const { createClient } = await import('@supabase/supabase-js');
-      
+
       if (!this.config.url) {
         throw new Error('Supabase URL is required');
       }
@@ -231,7 +244,7 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Dynamic import to avoid bundling if not used
       const { Pool } = await import('pg');
-      
+
       this.connectionPool = new Pool({
         host: this.config.host,
         port: this.config.port || 5432,
@@ -256,14 +269,16 @@ export class ConnectionManager extends EventEmitter {
       });
 
       this.connectionPool.on('remove', () => {
-        this.stats.activeConnections = Math.max(0, this.stats.activeConnections - 1);
+        this.stats.activeConnections = Math.max(
+          0,
+          this.stats.activeConnections - 1
+        );
         this.emit('connection-removed');
       });
 
       this.connectionPool.on('error', (error: Error) => {
         this.emit('connection-error', error);
       });
-
     } catch (error) {
       console.error('Failed to initialize PostgreSQL connection pool:', error);
       throw error;
@@ -277,7 +292,7 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Dynamic import to avoid bundling if not used
       const mysql = await import('mysql2/promise');
-      
+
       this.connectionPool = mysql.createPool({
         host: this.config.host,
         port: this.config.port || 3306,
@@ -290,7 +305,6 @@ export class ConnectionManager extends EventEmitter {
         timeout: this.config.pool.createTimeoutMillis,
         idleTimeout: this.config.pool.idleTimeoutMillis,
       });
-
     } catch (error) {
       console.error('Failed to initialize MySQL connection pool:', error);
       throw error;
@@ -304,10 +318,15 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Dynamic import to avoid bundling if not used
       const Database = await import('better-sqlite3');
-      
-      this.connectionPool = new (Database.default)(this.config.database || ':memory:', {
-        verbose: this.config.monitoring.enableQueryLogging ? console.log : undefined,
-      });
+
+      this.connectionPool = new Database.default(
+        this.config.database || ':memory:',
+        {
+          verbose: this.config.monitoring.enableQueryLogging
+            ? console.log
+            : undefined,
+        }
+      );
 
       this.stats.totalConnections = 1;
       this.stats.activeConnections = 1;
@@ -324,9 +343,11 @@ export class ConnectionManager extends EventEmitter {
     try {
       // Dynamic import to avoid bundling if not used
       const { MongoClient } = await import('mongodb');
-      
-      const url = this.config.url || `mongodb://${this.config.host}:${this.config.port || 27017}/${this.config.database}`;
-      
+
+      const url =
+        this.config.url ||
+        `mongodb://${this.config.host}:${this.config.port || 27017}/${this.config.database}`;
+
       this.connectionPool = new MongoClient(url, {
         minPoolSize: this.config.pool.min,
         maxPoolSize: this.config.pool.max,
@@ -346,17 +367,24 @@ export class ConnectionManager extends EventEmitter {
   /**
    * Execute query with optimization and monitoring
    */
-  async query<T = any>(sql: string, params?: any[], options?: {
-    useCache?: boolean;
-    cacheTtl?: number;
-    timeout?: number;
-  }): Promise<QueryResult<T>> {
+  async query<T = any>(
+    sql: string,
+    params?: any[],
+    options?: {
+      useCache?: boolean;
+      cacheTtl?: number;
+      timeout?: number;
+    }
+  ): Promise<QueryResult<T>> {
     const startTime = Date.now();
     const queryId = `query_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     try {
       // Check cache first
-      if (this.config.optimization.enableQueryCache && options?.useCache !== false) {
+      if (
+        this.config.optimization.enableQueryCache &&
+        options?.useCache !== false
+      ) {
         const cached = this.getCachedQuery(sql, params);
         if (cached) {
           return {
@@ -398,7 +426,10 @@ export class ConnectionManager extends EventEmitter {
       this.recordQueryMetrics(duration, sql, true);
 
       // Cache result if enabled
-      if (this.config.optimization.enableQueryCache && options?.useCache !== false) {
+      if (
+        this.config.optimization.enableQueryCache &&
+        options?.useCache !== false
+      ) {
         this.setCachedQuery(sql, params, result, options?.cacheTtl);
       }
 
@@ -412,7 +443,6 @@ export class ConnectionManager extends EventEmitter {
           timestamp: new Date(),
         },
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.recordQueryMetrics(duration, sql, false);
@@ -424,7 +454,10 @@ export class ConnectionManager extends EventEmitter {
   /**
    * Execute Supabase query
    */
-  private async executeSupabaseQuery<T>(sql: string, params?: any[]): Promise<T> {
+  private async executeSupabaseQuery<T>(
+    sql: string,
+    params?: any[]
+  ): Promise<T> {
     if (!this.connectionPool) {
       throw new Error('Supabase client not initialized');
     }
@@ -447,7 +480,10 @@ export class ConnectionManager extends EventEmitter {
   /**
    * Execute PostgreSQL query
    */
-  private async executePostgresQuery<T>(sql: string, params?: any[]): Promise<T> {
+  private async executePostgresQuery<T>(
+    sql: string,
+    params?: any[]
+  ): Promise<T> {
     if (!this.connectionPool) {
       throw new Error('PostgreSQL pool not initialized');
     }
@@ -489,7 +525,10 @@ export class ConnectionManager extends EventEmitter {
   /**
    * Execute MongoDB query (simplified)
    */
-  private async executeMongoDBQuery<T>(operation: string, params?: any[]): Promise<T> {
+  private async executeMongoDBQuery<T>(
+    operation: string,
+    params?: any[]
+  ): Promise<T> {
     if (!this.connectionPool) {
       throw new Error('MongoDB client not initialized');
     }
@@ -497,11 +536,11 @@ export class ConnectionManager extends EventEmitter {
     // This is a simplified implementation
     // In practice, you'd parse the operation and convert to MongoDB operations
     const db = this.connectionPool.db(this.config.database);
-    
+
     // Example: operation could be "collection.find" with params
     const [collection, method] = operation.split('.');
     const coll = db.collection(collection);
-    
+
     const result = await (coll as any)[method](...(params || []));
     return result as T;
   }
@@ -512,30 +551,35 @@ export class ConnectionManager extends EventEmitter {
   private getCachedQuery(sql: string, params?: any[]): any | null {
     const key = this.generateCacheKey(sql, params);
     const cached = this.queryCache.get(key);
-    
+
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       return cached.result;
     }
-    
+
     if (cached) {
       this.queryCache.delete(key);
     }
-    
+
     return null;
   }
 
   /**
    * Set cached query result
    */
-  private setCachedQuery(sql: string, params: any[] | undefined, result: any, ttl = 300000): void {
+  private setCachedQuery(
+    sql: string,
+    params: any[] | undefined,
+    result: any,
+    ttl = 300000
+  ): void {
     const key = this.generateCacheKey(sql, params);
-    
+
     // Limit cache size
     if (this.queryCache.size >= this.config.optimization.queryCacheSize) {
       const firstKey = this.queryCache.keys().next().value;
       this.queryCache.delete(firstKey);
     }
-    
+
     this.queryCache.set(key, {
       result,
       timestamp: Date.now(),
@@ -554,25 +598,30 @@ export class ConnectionManager extends EventEmitter {
   /**
    * Record query metrics
    */
-  private recordQueryMetrics(duration: number, sql: string, success: boolean): void {
+  private recordQueryMetrics(
+    duration: number,
+    sql: string,
+    success: boolean
+  ): void {
     this.stats.totalQueries++;
-    
+
     if (!success) {
       this.stats.failedQueries++;
     }
-    
+
     if (duration > this.config.monitoring.slowQueryThreshold) {
       this.stats.slowQueries++;
     }
-    
+
     // Track query times for average calculation
     this.queryTimes.push(duration);
     if (this.queryTimes.length > 1000) {
       this.queryTimes = this.queryTimes.slice(-500);
     }
-    
-    this.stats.averageQueryTime = this.queryTimes.reduce((a, b) => a + b, 0) / this.queryTimes.length;
-    
+
+    this.stats.averageQueryTime =
+      this.queryTimes.reduce((a, b) => a + b, 0) / this.queryTimes.length;
+
     // Record to performance monitor
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
@@ -616,13 +665,13 @@ export class ConnectionManager extends EventEmitter {
    */
   async checkHealth(): Promise<DatabaseHealth> {
     const startTime = Date.now();
-    
+
     try {
       // Simple health check query
       await this.query('SELECT 1 as health_check', [], { useCache: false });
-      
+
       const latency = Date.now() - startTime;
-      
+
       return {
         status: latency < 1000 ? 'healthy' : 'degraded',
         latency,
@@ -688,4 +737,4 @@ export class ConnectionManager extends EventEmitter {
     this.clearCache();
     this.emit('shutdown');
   }
-} 
+}

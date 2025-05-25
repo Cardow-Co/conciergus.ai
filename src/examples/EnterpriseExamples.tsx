@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  UnifiedConciergusProvider,
-  useConciergus
-} from '../index';
+import { UnifiedConciergusProvider, useConciergus } from '../index';
 import {
   ConciergusErrorBoundary,
   ConciergusDebugInspector,
@@ -10,12 +7,9 @@ import {
   useConciergusDebug,
   ConciergusOpenTelemetry,
   ConciergusMiddlewarePipeline,
-  EnterpriseTelemetryManager
+  EnterpriseTelemetryManager,
 } from '../enterprise';
-import type { 
-  MiddlewareFunction,
-  TelemetryConfig 
-} from '../index';
+import type { MiddlewareFunction, TelemetryConfig } from '../index';
 import type { ConciergusConfig } from '../context/ConciergusContext';
 
 // Example 1: Complete Enterprise Setup
@@ -26,7 +20,7 @@ export const EnterpriseConciergusApp: React.FC = () => {
   const enterpriseConfig: ConciergusConfig = {
     // Basic configuration
     defaultModel: 'claude-3-sonnet-20240229',
-    
+
     // Telemetry configuration
     telemetryConfig: {
       serviceName: 'conciergus-enterprise-app',
@@ -39,12 +33,12 @@ export const EnterpriseConciergusApp: React.FC = () => {
       enableDocumentLoad: true,
       enableFetch: true,
     } as TelemetryConfig,
-    
+
     // Security settings
     rateLimitConfig: {
       maxRequests: 100,
-      windowMs: 60000
-    }
+      windowMs: 60000,
+    },
   };
 
   // Custom middleware examples
@@ -52,7 +46,9 @@ export const EnterpriseConciergusApp: React.FC = () => {
     // Request logging middleware
     async (context, next) => {
       try {
-        console.log(`🚀 Starting request: ${context.request.method} ${context.request.url}`);
+        console.log(
+          `🚀 Starting request: ${context.request.method} ${context.request.url}`
+        );
         const result = await next();
         console.log(`✅ Request completed in ${context.duration}ms`);
         return result;
@@ -61,36 +57,47 @@ export const EnterpriseConciergusApp: React.FC = () => {
         throw error;
       }
     },
-    
+
     // Performance monitoring middleware
     async (context, next) => {
       const startTime = performance.now();
       const result = await next();
       const duration = performance.now() - startTime;
-      
+
       if (duration > 5000) {
         console.warn(`⚠️ Slow request detected: ${duration}ms`);
       }
-      
+
       return result;
     },
-    
+
     // Custom authentication middleware
     async (context, next) => {
       if (!context.request.headers?.['authorization']) {
         console.warn('🔒 Request without authorization header');
       }
       return next();
-    }
+    },
   ];
 
   return (
     <ConciergusErrorBoundary
       fallback={(error, retry) => (
-        <div style={{ padding: '20px', border: '2px solid #ff4444', borderRadius: '8px' }}>
+        <div
+          style={{
+            padding: '20px',
+            border: '2px solid #ff4444',
+            borderRadius: '8px',
+          }}
+        >
           <h3>🚨 Enterprise Error Boundary</h3>
-          <p><strong>Error:</strong> {error.message}</p>
-          <button onClick={retry} style={{ marginTop: '10px', padding: '8px 16px' }}>
+          <p>
+            <strong>Error:</strong> {error.message}
+          </p>
+          <button
+            onClick={retry}
+            style={{ marginTop: '10px', padding: '8px 16px' }}
+          >
             🔄 Retry Operation
           </button>
         </div>
@@ -99,22 +106,22 @@ export const EnterpriseConciergusApp: React.FC = () => {
         console.error('Enterprise error captured:', { error, errorInfo });
       }}
     >
-      <UnifiedConciergusProvider 
+      <UnifiedConciergusProvider
         {...enterpriseConfig}
         enableEnhancedFeatures={true}
       >
         <div style={{ padding: '20px' }}>
           <h2>🏢 Enterprise Conciergus Application</h2>
-          
+
           <div style={{ marginBottom: '20px' }}>
             <button
               onClick={() => setShowDebugInspector(!showDebugInspector)}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: '#333', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px' 
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#333',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
               }}
             >
               {showDebugInspector ? 'Hide' : 'Show'} Debug Inspector
@@ -125,7 +132,7 @@ export const EnterpriseConciergusApp: React.FC = () => {
           <TelemetryDemo />
           <MiddlewareDemo />
           <DebugUtilitiesDemo />
-          
+
           {showDebugInspector && (
             <ConciergusDebugInspector
               position="bottom-right"
@@ -140,7 +147,7 @@ export const EnterpriseConciergusApp: React.FC = () => {
 
 // Example 2: Enterprise Feature Demonstration
 const EnterpriseFeatureDemo: React.FC = () => {
-  const { 
+  const {
     config,
     isEnhanced,
     telemetry,
@@ -148,7 +155,7 @@ const EnterpriseFeatureDemo: React.FC = () => {
     chatStore,
     hasFeature,
     error,
-    runtimeError
+    runtimeError,
   } = useConciergus();
 
   const [response, setResponse] = useState<string>('');
@@ -163,19 +170,23 @@ const EnterpriseFeatureDemo: React.FC = () => {
       }
     } catch (error) {
       console.error('Enterprise chat error:', error);
-     setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      setResponse(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+      );
     }
   };
 
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '8px', 
-      padding: '16px', 
-      marginBottom: '20px' 
-    }}>
+    <div
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}
+    >
       <h3>🎯 Enterprise Features Demo</h3>
-      
+
       <div style={{ marginBottom: '16px' }}>
         <button
           onClick={handleEnterpriseChat}
@@ -186,7 +197,7 @@ const EnterpriseFeatureDemo: React.FC = () => {
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: !isEnhanced ? 'not-allowed' : 'pointer'
+            cursor: !isEnhanced ? 'not-allowed' : 'pointer',
           }}
         >
           💬 Send Enterprise Message {!isEnhanced && '(Enhanced mode required)'}
@@ -194,37 +205,58 @@ const EnterpriseFeatureDemo: React.FC = () => {
       </div>
 
       {(error.message || runtimeError) && (
-        <div style={{ 
-          padding: '10px', 
-          backgroundColor: '#ffe6e6', 
-          border: '1px solid #ff9999', 
-          borderRadius: '4px',
-          marginBottom: '16px'
-        }}>
+        <div
+          style={{
+            padding: '10px',
+            backgroundColor: '#ffe6e6',
+            border: '1px solid #ff9999',
+            borderRadius: '4px',
+            marginBottom: '16px',
+          }}
+        >
           <strong>Error:</strong> {error.message || runtimeError?.message}
         </div>
       )}
 
       {response && (
-        <div style={{ 
-          padding: '10px', 
-          backgroundColor: '#e6f3ff', 
-          border: '1px solid #99ccff', 
-          borderRadius: '4px',
-          marginBottom: '16px'
-        }}>
+        <div
+          style={{
+            padding: '10px',
+            backgroundColor: '#e6f3ff',
+            border: '1px solid #99ccff',
+            borderRadius: '4px',
+            marginBottom: '16px',
+          }}
+        >
           <strong>Response:</strong> {response}
         </div>
       )}
 
       <div style={{ fontSize: '14px', color: '#666' }}>
-        <p><strong>Active Enterprise Features:</strong></p>
+        <p>
+          <strong>Active Enterprise Features:</strong>
+        </p>
         <ul>
-          <li>{hasFeature('telemetry') ? '✅' : '❌'} Telemetry: {hasFeature('telemetry') ? 'Enabled' : 'Disabled'}</li>
-          <li>{hasFeature('middleware') ? '✅' : '❌'} Middleware: {hasFeature('middleware') ? 'Enabled' : 'Disabled'}</li>
-          <li>{hasFeature('aiGateway') ? '✅' : '❌'} AI Gateway: {hasFeature('aiGateway') ? 'Enabled' : 'Disabled'}</li>
-          <li>{hasFeature('chatStore') ? '✅' : '❌'} AI SDK 5 ChatStore: {hasFeature('chatStore') ? 'Enabled' : 'Disabled'}</li>
-          <li>{hasFeature('modelManager') ? '✅' : '❌'} Model Manager: {hasFeature('modelManager') ? 'Enabled' : 'Disabled'}</li>
+          <li>
+            {hasFeature('telemetry') ? '✅' : '❌'} Telemetry:{' '}
+            {hasFeature('telemetry') ? 'Enabled' : 'Disabled'}
+          </li>
+          <li>
+            {hasFeature('middleware') ? '✅' : '❌'} Middleware:{' '}
+            {hasFeature('middleware') ? 'Enabled' : 'Disabled'}
+          </li>
+          <li>
+            {hasFeature('aiGateway') ? '✅' : '❌'} AI Gateway:{' '}
+            {hasFeature('aiGateway') ? 'Enabled' : 'Disabled'}
+          </li>
+          <li>
+            {hasFeature('chatStore') ? '✅' : '❌'} AI SDK 5 ChatStore:{' '}
+            {hasFeature('chatStore') ? 'Enabled' : 'Disabled'}
+          </li>
+          <li>
+            {hasFeature('modelManager') ? '✅' : '❌'} Model Manager:{' '}
+            {hasFeature('modelManager') ? 'Enabled' : 'Disabled'}
+          </li>
           <li>✅ Error Boundaries: Active</li>
           <li>✅ Debug Utilities: Available</li>
         </ul>
@@ -245,17 +277,17 @@ const TelemetryDemo: React.FC = () => {
         // Simulate telemetry recording
         console.log('Recording telemetry:', {
           component: 'TelemetryDemo',
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
-        
+
         // Get recent metrics (this would normally come from the telemetry system)
-        setMetrics(prev => [
+        setMetrics((prev) => [
           ...prev.slice(-4), // Keep last 4 entries
           {
             name: 'demo_counter',
             value: Math.random() * 100,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         ]);
       }, 2000);
 
@@ -270,21 +302,23 @@ const TelemetryDemo: React.FC = () => {
       console.log('Starting custom operation');
 
       // Simulate some work
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       console.log('Custom operation completed');
     }
   };
 
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '8px', 
-      padding: '16px', 
-      marginBottom: '20px' 
-    }}>
+    <div
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}
+    >
       <h3>📊 Telemetry Demo</h3>
-      
+
       <button
         onClick={createCustomSpan}
         style={{
@@ -293,7 +327,7 @@ const TelemetryDemo: React.FC = () => {
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          marginBottom: '16px'
+          marginBottom: '16px',
         }}
       >
         🎯 Create Custom Span
@@ -305,7 +339,8 @@ const TelemetryDemo: React.FC = () => {
           <ul style={{ fontSize: '12px', fontFamily: 'monospace' }}>
             {metrics.map((metric, index) => (
               <li key={index}>
-                {new Date(metric.timestamp).toLocaleTimeString()}: {metric.name} = {metric.value.toFixed(2)}
+                {new Date(metric.timestamp).toLocaleTimeString()}: {metric.name}{' '}
+                = {metric.value.toFixed(2)}
               </li>
             ))}
           </ul>
@@ -326,28 +361,30 @@ const MiddlewareDemo: React.FC = () => {
     if (hasFeature('middleware')) {
       // Simulate middleware execution
       const logEntry = `[${new Date().toLocaleTimeString()}] Middleware pipeline executed for demo request`;
-      setMiddlewareLog(prev => [...prev.slice(-4), logEntry]);
-      
+      setMiddlewareLog((prev) => [...prev.slice(-4), logEntry]);
+
       // Simulate some processing time
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const completionEntry = `[${new Date().toLocaleTimeString()}] Middleware execution completed successfully`;
-      setMiddlewareLog(prev => [...prev.slice(-4), completionEntry]);
+      setMiddlewareLog((prev) => [...prev.slice(-4), completionEntry]);
     } else {
       const errorEntry = `[${new Date().toLocaleTimeString()}] Middleware not available - enhanced features disabled`;
-      setMiddlewareLog(prev => [...prev.slice(-4), errorEntry]);
+      setMiddlewareLog((prev) => [...prev.slice(-4), errorEntry]);
     }
   };
 
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '8px', 
-      padding: '16px', 
-      marginBottom: '20px' 
-    }}>
+    <div
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}
+    >
       <h3>⚙️ Middleware Demo</h3>
-      
+
       <button
         onClick={testMiddleware}
         style={{
@@ -356,7 +393,7 @@ const MiddlewareDemo: React.FC = () => {
           color: 'white',
           border: 'none',
           borderRadius: '4px',
-          marginBottom: '16px'
+          marginBottom: '16px',
         }}
       >
         🔧 Test Middleware Pipeline
@@ -365,13 +402,22 @@ const MiddlewareDemo: React.FC = () => {
       <div>
         <h4>Middleware Execution Log:</h4>
         {middlewareLog.length > 0 ? (
-          <ul style={{ fontSize: '12px', fontFamily: 'monospace', backgroundColor: '#f8f9fa', padding: '10px' }}>
+          <ul
+            style={{
+              fontSize: '12px',
+              fontFamily: 'monospace',
+              backgroundColor: '#f8f9fa',
+              padding: '10px',
+            }}
+          >
             {middlewareLog.map((log, index) => (
               <li key={index}>{log}</li>
             ))}
           </ul>
         ) : (
-          <p style={{ color: '#666' }}>No middleware executions logged yet...</p>
+          <p style={{ color: '#666' }}>
+            No middleware executions logged yet...
+          </p>
         )}
       </div>
     </div>
@@ -383,7 +429,7 @@ const DebugUtilitiesDemo: React.FC = () => {
   const debug = useConciergusDebug({
     enabled: true,
     level: 'debug',
-    enablePerformanceProfiler: true
+    enablePerformanceProfiler: true,
   });
 
   const [profileResults, setProfileResults] = useState<any[]>([]);
@@ -396,14 +442,16 @@ const DebugUtilitiesDemo: React.FC = () => {
       'demo_async_operation',
       async () => {
         // Simulate some async work
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.random() * 2000 + 500)
+        );
         return { success: true, data: 'Demo completed' };
       },
       { testType: 'demo', complexity: 'medium' }
     );
 
     debug.info('performance', 'Performance test completed', result);
-    
+
     // Get recent performance metrics
     const recentMetrics = debug.getMetrics('demo_async_operation', 5);
     setProfileResults(recentMetrics);
@@ -416,7 +464,7 @@ const DebugUtilitiesDemo: React.FC = () => {
     } catch (error) {
       debug.error('general', 'Demo error caught', error as Error, {
         component: 'DebugUtilitiesDemo',
-        action: 'testErrorLogging'
+        action: 'testErrorLogging',
       });
     }
   };
@@ -433,14 +481,16 @@ const DebugUtilitiesDemo: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '8px', 
-      padding: '16px', 
-      marginBottom: '20px' 
-    }}>
+    <div
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '20px',
+      }}
+    >
       <h3>🐛 Debug Utilities Demo</h3>
-      
+
       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
         <button
           onClick={runPerformanceTest}
@@ -449,12 +499,12 @@ const DebugUtilitiesDemo: React.FC = () => {
             backgroundColor: '#6f42c1',
             color: 'white',
             border: 'none',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         >
           ⏱️ Run Performance Test
         </button>
-        
+
         <button
           onClick={testErrorLogging}
           style={{
@@ -462,12 +512,12 @@ const DebugUtilitiesDemo: React.FC = () => {
             backgroundColor: '#dc3545',
             color: 'white',
             border: 'none',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         >
           ❌ Test Error Logging
         </button>
-        
+
         <button
           onClick={exportDebugData}
           style={{
@@ -475,7 +525,7 @@ const DebugUtilitiesDemo: React.FC = () => {
             backgroundColor: '#17a2b8',
             color: 'white',
             border: 'none',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         >
           📥 Export Debug Data
@@ -485,11 +535,19 @@ const DebugUtilitiesDemo: React.FC = () => {
       <div>
         <h4>Recent Performance Results:</h4>
         {profileResults.length > 0 ? (
-          <div style={{ fontSize: '12px', fontFamily: 'monospace', backgroundColor: '#f8f9fa', padding: '10px' }}>
+          <div
+            style={{
+              fontSize: '12px',
+              fontFamily: 'monospace',
+              backgroundColor: '#f8f9fa',
+              padding: '10px',
+            }}
+          >
             {profileResults.map((result, index) => (
               <div key={index} style={{ marginBottom: '8px' }}>
-                <strong>{result.operation}</strong>: {result.duration.toFixed(2)}ms 
-                (Memory: {result.memory.used.toFixed(1)}MB)
+                <strong>{result.operation}</strong>:{' '}
+                {result.duration.toFixed(2)}ms (Memory:{' '}
+                {result.memory.used.toFixed(1)}MB)
               </div>
             ))}
           </div>
@@ -499,13 +557,22 @@ const DebugUtilitiesDemo: React.FC = () => {
       </div>
 
       <div style={{ marginTop: '16px', fontSize: '14px', color: '#666' }}>
-        <p><strong>Debug Configuration:</strong></p>
+        <p>
+          <strong>Debug Configuration:</strong>
+        </p>
         <ul>
           <li>Enabled: {debug.config.enabled ? 'Yes' : 'No'}</li>
           <li>Level: {debug.config.level}</li>
-          <li>Performance Profiler: {debug.config.enablePerformanceProfiler ? 'Yes' : 'No'}</li>
-          <li>Request Logging: {debug.config.enableRequestLogging ? 'Yes' : 'No'}</li>
-          <li>Memory Tracking: {debug.config.enableMemoryTracking ? 'Yes' : 'No'}</li>
+          <li>
+            Performance Profiler:{' '}
+            {debug.config.enablePerformanceProfiler ? 'Yes' : 'No'}
+          </li>
+          <li>
+            Request Logging: {debug.config.enableRequestLogging ? 'Yes' : 'No'}
+          </li>
+          <li>
+            Memory Tracking: {debug.config.enableMemoryTracking ? 'Yes' : 'No'}
+          </li>
         </ul>
       </div>
     </div>
@@ -516,7 +583,7 @@ const DebugUtilitiesDemo: React.FC = () => {
 export const ProductionEnterpriseSetup: React.FC = () => {
   const productionConfig: ConciergusConfig = {
     defaultModel: 'claude-3-sonnet-20240229',
-    
+
     // Production telemetry settings
     telemetryConfig: {
       serviceName: 'conciergus-production',
@@ -526,12 +593,12 @@ export const ProductionEnterpriseSetup: React.FC = () => {
       enableConsoleExport: false,
       sampleRate: 0.1, // Sample 10% of traces in production
     } as TelemetryConfig,
-    
+
     // Production security
     rateLimitConfig: {
       maxRequests: 1000,
-      windowMs: 60000
-    }
+      windowMs: 60000,
+    },
   };
 
   return (
@@ -549,7 +616,10 @@ export const ProductionEnterpriseSetup: React.FC = () => {
         // Example: sendToMonitoringService(error, errorInfo);
       }}
     >
-      <UnifiedConciergusProvider {...productionConfig} enableEnhancedFeatures={true}>
+      <UnifiedConciergusProvider
+        {...productionConfig}
+        enableEnhancedFeatures={true}
+      >
         <div>
           <h2>🏭 Production Enterprise Application</h2>
           <p>This setup is optimized for production use with:</p>
@@ -566,4 +636,4 @@ export const ProductionEnterpriseSetup: React.FC = () => {
   );
 };
 
-export default EnterpriseConciergusApp; 
+export default EnterpriseConciergusApp;

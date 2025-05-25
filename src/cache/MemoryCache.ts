@@ -49,7 +49,7 @@ export class MemoryCache extends EventEmitter {
     memory: 0,
     connections: 1, // Always "connected" for memory cache
     uptime: Date.now(),
-    lastUpdated: new Date()
+    lastUpdated: new Date(),
   };
 
   constructor(config: MemoryCacheConfig) {
@@ -84,7 +84,7 @@ export class MemoryCache extends EventEmitter {
     }
 
     // Check TTL expiration
-    if (entry.timestamp + (entry.ttl * 1000) < Date.now()) {
+    if (entry.timestamp + entry.ttl * 1000 < Date.now()) {
       this.cache.delete(formattedKey);
       this.accessOrder.delete(formattedKey);
       this.stats.misses++;
@@ -100,7 +100,9 @@ export class MemoryCache extends EventEmitter {
 
     this.stats.hits++;
     this.recordMetric('cache_hit', 1, { key });
-    this.recordMetric('cache_latency', Date.now() - startTime, { operation: 'get' });
+    this.recordMetric('cache_latency', Date.now() - startTime, {
+      operation: 'get',
+    });
 
     return entry.value;
   }
@@ -109,8 +111,8 @@ export class MemoryCache extends EventEmitter {
    * Set value in cache
    */
   async set<T>(
-    key: string, 
-    value: T, 
+    key: string,
+    value: T,
     ttl: number = this.config.defaultTtl,
     metadata?: Record<string, any>
   ): Promise<void> {
@@ -129,7 +131,7 @@ export class MemoryCache extends EventEmitter {
       lastAccessed: Date.now(),
       accessCount: 0,
       size,
-      metadata
+      metadata,
     };
 
     this.cache.set(formattedKey, entry);
@@ -138,7 +140,9 @@ export class MemoryCache extends EventEmitter {
     this.stats.sets++;
     this.updateMemoryStats();
     this.recordMetric('cache_set', 1, { key });
-    this.recordMetric('cache_latency', Date.now() - startTime, { operation: 'set' });
+    this.recordMetric('cache_latency', Date.now() - startTime, {
+      operation: 'set',
+    });
   }
 
   /**
@@ -171,7 +175,7 @@ export class MemoryCache extends EventEmitter {
     }
 
     // Check TTL expiration
-    if (entry.timestamp + (entry.ttl * 1000) < Date.now()) {
+    if (entry.timestamp + entry.ttl * 1000 < Date.now()) {
       this.cache.delete(formattedKey);
       this.accessOrder.delete(formattedKey);
       return false;
@@ -192,7 +196,7 @@ export class MemoryCache extends EventEmitter {
       this.accessOrder.clear();
     } else {
       const regex = this.patternToRegex(pattern);
-      
+
       for (const [key] of this.cache) {
         if (regex.test(key)) {
           this.cache.delete(key);
@@ -204,7 +208,7 @@ export class MemoryCache extends EventEmitter {
 
     this.updateMemoryStats();
     this.recordMetric('cache_clear', deletedCount, { pattern });
-    
+
     return deletedCount;
   }
 
@@ -226,13 +230,16 @@ export class MemoryCache extends EventEmitter {
       try {
         const count = await this.clear(pattern.pattern);
         totalInvalidated += count;
-        
+
         this.recordMetric('cache_invalidation', count, {
           pattern: pattern.pattern,
-          strategy: pattern.strategy
+          strategy: pattern.strategy,
         });
       } catch (error) {
-        console.error(`Failed to invalidate pattern ${pattern.pattern}:`, error);
+        console.error(
+          `Failed to invalidate pattern ${pattern.pattern}:`,
+          error
+        );
       }
     }
 
@@ -280,7 +287,9 @@ export class MemoryCache extends EventEmitter {
       this.cache.delete(keyToEvict);
       this.accessOrder.delete(keyToEvict);
       this.stats.evictions++;
-      this.recordMetric('cache_eviction', 1, { policy: this.config.evictionPolicy });
+      this.recordMetric('cache_eviction', 1, {
+        policy: this.config.evictionPolicy,
+      });
     }
   }
 
@@ -326,7 +335,7 @@ export class MemoryCache extends EventEmitter {
     let shortestExpiry = Infinity;
 
     for (const [key, entry] of this.cache) {
-      const expiry = entry.timestamp + (entry.ttl * 1000);
+      const expiry = entry.timestamp + entry.ttl * 1000;
       if (expiry < shortestExpiry) {
         shortestExpiry = expiry;
         shortestTTLKey = key;
@@ -342,7 +351,7 @@ export class MemoryCache extends EventEmitter {
   private findRandomKey(): string | null {
     const keys = Array.from(this.cache.keys());
     if (keys.length === 0) return null;
-    
+
     const randomIndex = Math.floor(Math.random() * keys.length);
     return keys[randomIndex];
   }
@@ -355,7 +364,7 @@ export class MemoryCache extends EventEmitter {
     const expiredKeys: string[] = [];
 
     for (const [key, entry] of this.cache) {
-      if (entry.timestamp + (entry.ttl * 1000) < now) {
+      if (entry.timestamp + entry.ttl * 1000 < now) {
         expiredKeys.push(key);
       }
     }
@@ -391,9 +400,12 @@ export class MemoryCache extends EventEmitter {
     this.metricsTimer = setInterval(async () => {
       try {
         const stats = await this.getStats();
-        
+
         // Record key metrics
-        this.recordMetric('cache_hit_rate', stats.hits / (stats.hits + stats.misses || 1));
+        this.recordMetric(
+          'cache_hit_rate',
+          stats.hits / (stats.hits + stats.misses || 1)
+        );
         this.recordMetric('cache_memory_usage', stats.memory);
         this.recordMetric('cache_size', this.cache.size);
       } catch (error) {
@@ -415,11 +427,11 @@ export class MemoryCache extends EventEmitter {
    */
   private getCurrentMemoryUsage(): number {
     let totalSize = 0;
-    
+
     for (const entry of this.cache.values()) {
       totalSize += entry.size;
     }
-    
+
     return totalSize;
   }
 
@@ -450,7 +462,11 @@ export class MemoryCache extends EventEmitter {
   /**
    * Record performance metrics
    */
-  private recordMetric(metric: string, value: number, labels: Record<string, any> = {}): void {
+  private recordMetric(
+    metric: string,
+    value: number,
+    labels: Record<string, any> = {}
+  ): void {
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         metric as any,
@@ -500,4 +516,4 @@ export class MemoryCache extends EventEmitter {
   keys(): string[] {
     return Array.from(this.cache.keys());
   }
-} 
+}

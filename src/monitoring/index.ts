@@ -4,12 +4,12 @@
  */
 
 // Performance Dashboard
-export { 
-  PerformanceDashboard, 
+export {
+  PerformanceDashboard,
   type PerformanceDashboardProps,
   type DashboardConfig,
   type PerformanceMetrics,
-  type AlertData
+  type AlertData,
 } from './PerformanceDashboard';
 
 // APM Integrations
@@ -26,14 +26,18 @@ export {
   type AlertPayload,
   type LogPayload,
   type DashboardDefinition,
-  type DashboardWidget
+  type DashboardWidget,
 } from './APMIntegrations';
 
 // React Hooks
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PerformanceMonitor } from '../telemetry/PerformanceMonitor';
 import { getGlobalAPMManager } from './APMIntegrations';
-import type { PerformanceMetrics, DashboardConfig, AlertData } from './PerformanceDashboard';
+import type {
+  PerformanceMetrics,
+  DashboardConfig,
+  AlertData,
+} from './PerformanceDashboard';
 import type { APMConfig } from './APMIntegrations';
 
 /**
@@ -51,7 +55,7 @@ export function usePerformanceDashboard(config: DashboardConfig) {
   const collectMetrics = useCallback(async (): Promise<PerformanceMetrics> => {
     // Mock implementation - in real usage, this would collect actual metrics
     const timestamp = new Date();
-    
+
     const coreWebVitals = {
       lcp: Math.random() * 3000 + 1000,
       fid: Math.random() * 200 + 50,
@@ -59,7 +63,7 @@ export function usePerformanceDashboard(config: DashboardConfig) {
       fcp: Math.random() * 2000 + 800,
       ttfb: Math.random() * 1000 + 200,
     };
-    
+
     const performance = {
       responseTime: Math.random() * 500 + 100,
       throughput: Math.random() * 100 + 50,
@@ -67,7 +71,7 @@ export function usePerformanceDashboard(config: DashboardConfig) {
       successRate: Math.random() * 10 + 90,
       activeUsers: Math.floor(Math.random() * 1000) + 100,
     };
-    
+
     const system = {
       memoryUsage: Math.random() * 80 + 10,
       cpuUsage: Math.random() * 60 + 10,
@@ -89,13 +93,13 @@ export function usePerformanceDashboard(config: DashboardConfig) {
       setError(null);
       const newMetrics = await collectMetrics();
       setMetrics(newMetrics);
-      
+
       // Send to APM providers
       await apmManager.sendMetrics(newMetrics);
-      
+
       // Check for alerts
       const newAlerts: AlertData[] = [];
-      
+
       if (newMetrics.performance.errorRate > config.alertThresholds.errorRate) {
         newAlerts.push({
           id: `error-rate-${Date.now()}`,
@@ -109,10 +113,10 @@ export function usePerformanceDashboard(config: DashboardConfig) {
           source: 'performance-monitor',
         });
       }
-      
+
       if (newAlerts.length > 0) {
-        setAlerts(prev => [...prev, ...newAlerts]);
-        
+        setAlerts((prev) => [...prev, ...newAlerts]);
+
         // Send alerts to APM
         for (const alert of newAlerts) {
           await apmManager.sendAlert({
@@ -123,11 +127,14 @@ export function usePerformanceDashboard(config: DashboardConfig) {
             timestamp: alert.timestamp,
             source: alert.source,
             tags: { alertType: alert.type },
-            metrics: { currentValue: alert.currentValue, threshold: alert.threshold },
+            metrics: {
+              currentValue: alert.currentValue,
+              threshold: alert.threshold,
+            },
           });
         }
       }
-      
+
       setIsLoading(false);
     } catch (err) {
       setError(err as Error);
@@ -142,9 +149,11 @@ export function usePerformanceDashboard(config: DashboardConfig) {
   }, [updateMetrics, config.refreshInterval]);
 
   const resolveAlert = useCallback((alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId ? { ...alert, resolved: true } : alert
-    ));
+    setAlerts((prev) =>
+      prev.map((alert) =>
+        alert.id === alertId ? { ...alert, resolved: true } : alert
+      )
+    );
   }, []);
 
   return {
@@ -167,65 +176,81 @@ export function useAPM(config?: APMConfig) {
 
   const apmManager = getGlobalAPMManager();
 
-  const initializeAPM = useCallback(async (apmConfig: APMConfig) => {
-    try {
-      setError(null);
-      await apmManager.addProvider(apmConfig.provider, apmConfig);
-      setIsInitialized(true);
-    } catch (err) {
-      setError(err as Error);
-    }
-  }, [apmManager]);
+  const initializeAPM = useCallback(
+    async (apmConfig: APMConfig) => {
+      try {
+        setError(null);
+        await apmManager.addProvider(apmConfig.provider, apmConfig);
+        setIsInitialized(true);
+      } catch (err) {
+        setError(err as Error);
+      }
+    },
+    [apmManager]
+  );
 
-  const sendMetrics = useCallback(async (metrics: PerformanceMetrics) => {
-    if (!isInitialized) return;
-    
-    try {
-      await apmManager.sendMetrics(metrics);
-    } catch (err) {
-      console.error('Failed to send metrics:', err);
-    }
-  }, [apmManager, isInitialized]);
+  const sendMetrics = useCallback(
+    async (metrics: PerformanceMetrics) => {
+      if (!isInitialized) return;
 
-  const sendAlert = useCallback(async (alert: AlertData) => {
-    if (!isInitialized) return;
-    
-    try {
-      await apmManager.sendAlert({
-        alertId: alert.id,
-        severity: alert.type === 'critical' ? 'critical' : 
-                 alert.type === 'error' ? 'high' : 'medium',
-        title: alert.title,
-        message: alert.message,
-        timestamp: alert.timestamp,
-        source: alert.source,
-        tags: { alertType: alert.type },
-      });
-    } catch (err) {
-      console.error('Failed to send alert:', err);
-    }
-  }, [apmManager, isInitialized]);
+      try {
+        await apmManager.sendMetrics(metrics);
+      } catch (err) {
+        console.error('Failed to send metrics:', err);
+      }
+    },
+    [apmManager, isInitialized]
+  );
 
-  const sendLog = useCallback(async (
-    level: 'debug' | 'info' | 'warn' | 'error' | 'fatal',
-    message: string,
-    context?: Record<string, any>
-  ) => {
-    if (!isInitialized) return;
-    
-    try {
-      await apmManager.sendLog({
-        level,
-        message,
-        timestamp: new Date(),
-        source: 'conciergus-ai',
-        tags: {},
-        context,
-      });
-    } catch (err) {
-      console.error('Failed to send log:', err);
-    }
-  }, [apmManager, isInitialized]);
+  const sendAlert = useCallback(
+    async (alert: AlertData) => {
+      if (!isInitialized) return;
+
+      try {
+        await apmManager.sendAlert({
+          alertId: alert.id,
+          severity:
+            alert.type === 'critical'
+              ? 'critical'
+              : alert.type === 'error'
+                ? 'high'
+                : 'medium',
+          title: alert.title,
+          message: alert.message,
+          timestamp: alert.timestamp,
+          source: alert.source,
+          tags: { alertType: alert.type },
+        });
+      } catch (err) {
+        console.error('Failed to send alert:', err);
+      }
+    },
+    [apmManager, isInitialized]
+  );
+
+  const sendLog = useCallback(
+    async (
+      level: 'debug' | 'info' | 'warn' | 'error' | 'fatal',
+      message: string,
+      context?: Record<string, any>
+    ) => {
+      if (!isInitialized) return;
+
+      try {
+        await apmManager.sendLog({
+          level,
+          message,
+          timestamp: new Date(),
+          source: 'conciergus-ai',
+          tags: {},
+          context,
+        });
+      } catch (err) {
+        console.error('Failed to send log:', err);
+      }
+    },
+    [apmManager, isInitialized]
+  );
 
   useEffect(() => {
     if (config && !isInitialized) {
@@ -280,36 +305,42 @@ export function useCoreWebVitals() {
       observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1] as any;
-        setVitals(prev => ({ ...prev, lcp: lastEntry.renderTime || lastEntry.loadTime }));
+        setVitals((prev) => ({
+          ...prev,
+          lcp: lastEntry.renderTime || lastEntry.loadTime,
+        }));
       });
       observer.observe({ entryTypes: ['largest-contentful-paint'] });
 
       // FCP (First Contentful Paint)
       const fcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        const fcpEntry = entries.find(entry => entry.name === 'first-contentful-paint') as any;
+        const fcpEntry = entries.find(
+          (entry) => entry.name === 'first-contentful-paint'
+        ) as any;
         if (fcpEntry) {
-          setVitals(prev => ({ ...prev, fcp: fcpEntry.startTime }));
+          setVitals((prev) => ({ ...prev, fcp: fcpEntry.startTime }));
         }
       });
       fcpObserver.observe({ entryTypes: ['paint'] });
 
       // TTFB (Time to First Byte)
-      const navigationEntry = performance.getEntriesByType('navigation')[0] as any;
+      const navigationEntry = performance.getEntriesByType(
+        'navigation'
+      )[0] as any;
       if (navigationEntry) {
-        setVitals(prev => ({ ...prev, ttfb: navigationEntry.responseStart }));
+        setVitals((prev) => ({ ...prev, ttfb: navigationEntry.responseStart }));
       }
 
       // FID and CLS would require the web-vitals library for accurate measurement
       // For now, we'll mock these values
       setTimeout(() => {
-        setVitals(prev => ({
+        setVitals((prev) => ({
           ...prev,
           fid: Math.random() * 200 + 50,
           cls: Math.random() * 0.3,
         }));
       }, 1000);
-
     } catch (error) {
       console.warn('Core Web Vitals monitoring not supported:', error);
     }
@@ -321,22 +352,25 @@ export function useCoreWebVitals() {
     };
   }, []);
 
-  const getVitalStatus = useCallback((metric: keyof typeof vitals, value: number | null) => {
-    if (value === null) return 'unknown';
-    
-    const thresholds = {
-      lcp: { good: 2500, poor: 4000 },
-      fid: { good: 100, poor: 300 },
-      cls: { good: 0.1, poor: 0.25 },
-      fcp: { good: 1800, poor: 3000 },
-      ttfb: { good: 800, poor: 1800 },
-    };
-    
-    const threshold = thresholds[metric];
-    if (value <= threshold.good) return 'good';
-    if (value <= threshold.poor) return 'needs-improvement';
-    return 'poor';
-  }, []);
+  const getVitalStatus = useCallback(
+    (metric: keyof typeof vitals, value: number | null) => {
+      if (value === null) return 'unknown';
+
+      const thresholds = {
+        lcp: { good: 2500, poor: 4000 },
+        fid: { good: 100, poor: 300 },
+        cls: { good: 0.1, poor: 0.25 },
+        fcp: { good: 1800, poor: 3000 },
+        ttfb: { good: 800, poor: 1800 },
+      };
+
+      const threshold = thresholds[metric];
+      if (value <= threshold.good) return 'good';
+      if (value <= threshold.poor) return 'needs-improvement';
+      return 'poor';
+    },
+    []
+  );
 
   const vitalsWithStatus = useMemo(() => {
     return Object.entries(vitals).map(([key, value]) => ({
@@ -497,14 +531,21 @@ export const MonitoringUtils = {
   /**
    * Format metric value for display
    */
-  formatMetric(value: number, type: 'time' | 'percentage' | 'count' | 'bytes'): string {
+  formatMetric(
+    value: number,
+    type: 'time' | 'percentage' | 'count' | 'bytes'
+  ): string {
     switch (type) {
       case 'time':
-        return value < 1000 ? `${value.toFixed(0)}ms` : `${(value / 1000).toFixed(2)}s`;
+        return value < 1000
+          ? `${value.toFixed(0)}ms`
+          : `${(value / 1000).toFixed(2)}s`;
       case 'percentage':
         return `${value.toFixed(1)}%`;
       case 'count':
-        return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0);
+        return value >= 1000
+          ? `${(value / 1000).toFixed(1)}k`
+          : value.toFixed(0);
       case 'bytes':
         const units = ['B', 'KB', 'MB', 'GB'];
         let unitIndex = 0;
@@ -522,10 +563,18 @@ export const MonitoringUtils = {
   /**
    * Get metric status color
    */
-  getMetricColor(value: number, thresholds: { good: number; poor: number }, inverted = false): string {
-    const isGood = inverted ? value <= thresholds.good : value >= thresholds.good;
-    const isPoor = inverted ? value >= thresholds.poor : value <= thresholds.poor;
-    
+  getMetricColor(
+    value: number,
+    thresholds: { good: number; poor: number },
+    inverted = false
+  ): string {
+    const isGood = inverted
+      ? value <= thresholds.good
+      : value >= thresholds.good;
+    const isPoor = inverted
+      ? value >= thresholds.poor
+      : value <= thresholds.poor;
+
     if (isGood) return '#28a745'; // Green
     if (isPoor) return '#dc3545'; // Red
     return '#ffc107'; // Yellow
@@ -543,16 +592,22 @@ export const MonitoringUtils = {
     };
 
     // Normalize metrics to 0-100 scale
-    const responseTimeScore = Math.max(0, 100 - (metrics.performance.responseTime / 20));
-    const errorRateScore = Math.max(0, 100 - (metrics.performance.errorRate * 10));
+    const responseTimeScore = Math.max(
+      0,
+      100 - metrics.performance.responseTime / 20
+    );
+    const errorRateScore = Math.max(
+      0,
+      100 - metrics.performance.errorRate * 10
+    );
     const successRateScore = metrics.performance.successRate;
-    
+
     // Simplified vitals score
-    const vitalsScore = (
-      Math.max(0, 100 - (metrics.coreWebVitals.lcp / 40)) +
-      Math.max(0, 100 - (metrics.coreWebVitals.fid / 3)) +
-      Math.max(0, 100 - (metrics.coreWebVitals.cls * 400))
-    ) / 3;
+    const vitalsScore =
+      (Math.max(0, 100 - metrics.coreWebVitals.lcp / 40) +
+        Math.max(0, 100 - metrics.coreWebVitals.fid / 3) +
+        Math.max(0, 100 - metrics.coreWebVitals.cls * 400)) /
+      3;
 
     return (
       responseTimeScore * weights.responseTime +
@@ -572,4 +627,4 @@ export default {
   MonitoringFactory,
   MonitoringUtils,
   DEFAULT_DASHBOARD_CONFIG,
-}; 
+};

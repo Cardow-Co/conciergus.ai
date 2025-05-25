@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
-import type { 
-  StructuredObject, 
-  StructuredObjectState, 
+import type {
+  StructuredObject,
+  StructuredObjectState,
   EnhancedStreamPart,
-  StreamingType 
+  StreamingType,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -31,7 +31,7 @@ export interface ConciergusObjectStreamProps {
   errorComponent?: React.ComponentType<{ error: Error }>;
   /** Custom object renderer */
   objectRenderer?: React.ComponentType<ObjectRendererProps>;
-  
+
   // === Display Options ===
   /** Show streaming progress */
   showProgress?: boolean;
@@ -43,7 +43,7 @@ export interface ConciergusObjectStreamProps {
   enableAnimations?: boolean;
   /** Compact display mode */
   compact?: boolean;
-  
+
   // === Events ===
   /** Object update handler */
   onObjectUpdate?: (object: any, delta?: any) => void;
@@ -55,7 +55,7 @@ export interface ConciergusObjectStreamProps {
   onStreamError?: (error: Error) => void;
   /** Field update handler */
   onFieldUpdate?: (field: string, value: any) => void;
-  
+
   // === Advanced Options ===
   /** Custom stream part processor */
   streamPartProcessor?: (part: EnhancedStreamPart) => any;
@@ -65,13 +65,13 @@ export interface ConciergusObjectStreamProps {
   maxRetries?: number;
   /** Enable debug mode */
   debug?: boolean;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -130,79 +130,94 @@ const DefaultObjectRenderer: React.FC<ObjectRendererProps> = ({
   enableAnimations = true,
   compact = false,
   className = '',
-  onFieldUpdate
+  onFieldUpdate,
 }) => {
-  const renderValue = useCallback((key: string, value: any, depth = 0): React.ReactNode => {
-    const isUpdated = updatedFields.has(key);
-    const baseClasses = `object-field ${isUpdated ? 'updated' : ''}`;
-    const animationClass = enableAnimations && isUpdated ? 'field-pulse' : '';
-    
-    if (value === null || value === undefined) {
-      return (
-        <span className={`${baseClasses} null-value ${animationClass}`}>
-          {value === null ? 'null' : 'undefined'}
-        </span>
-      );
-    }
-    
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      return (
-        <div className={`${baseClasses} object-value ${animationClass}`} style={{ marginLeft: depth * 16 }}>
-          <div className="object-key">{key}:</div>
-          <div className="object-content">
-            {Object.entries(value).map(([subKey, subValue]) => (
-              <div key={subKey} className="object-entry">
-                {renderValue(`${key}.${subKey}`, subValue, depth + 1)}
-              </div>
-            ))}
+  const renderValue = useCallback(
+    (key: string, value: any, depth = 0): React.ReactNode => {
+      const isUpdated = updatedFields.has(key);
+      const baseClasses = `object-field ${isUpdated ? 'updated' : ''}`;
+      const animationClass = enableAnimations && isUpdated ? 'field-pulse' : '';
+
+      if (value === null || value === undefined) {
+        return (
+          <span className={`${baseClasses} null-value ${animationClass}`}>
+            {value === null ? 'null' : 'undefined'}
+          </span>
+        );
+      }
+
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return (
+          <div
+            className={`${baseClasses} object-value ${animationClass}`}
+            style={{ marginLeft: depth * 16 }}
+          >
+            <div className="object-key">{key}:</div>
+            <div className="object-content">
+              {Object.entries(value).map(([subKey, subValue]) => (
+                <div key={subKey} className="object-entry">
+                  {renderValue(`${key}.${subKey}`, subValue, depth + 1)}
+                </div>
+              ))}
+            </div>
           </div>
+        );
+      }
+
+      if (Array.isArray(value)) {
+        return (
+          <div
+            className={`${baseClasses} array-value ${animationClass}`}
+            style={{ marginLeft: depth * 16 }}
+          >
+            <div className="array-key">
+              {key}: [{value.length}]
+            </div>
+            <div className="array-content">
+              {value.map((item, index) => (
+                <div key={index} className="array-item">
+                  {renderValue(`${key}[${index}]`, item, depth + 1)}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // Primitive values
+      const valueType = typeof value;
+      return (
+        <div
+          className={`${baseClasses} primitive-value ${valueType}-value ${animationClass}`}
+          style={{ marginLeft: depth * 16 }}
+          onClick={() => onFieldUpdate?.(key, value)}
+        >
+          <span className="field-key">{key}:</span>
+          <span className={`field-value ${valueType}`}>
+            {valueType === 'string' ? `"${value}"` : String(value)}
+          </span>
         </div>
       );
-    }
-    
-    if (Array.isArray(value)) {
-      return (
-        <div className={`${baseClasses} array-value ${animationClass}`} style={{ marginLeft: depth * 16 }}>
-          <div className="array-key">{key}: [{value.length}]</div>
-          <div className="array-content">
-            {value.map((item, index) => (
-              <div key={index} className="array-item">
-                {renderValue(`${key}[${index}]`, item, depth + 1)}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    
-    // Primitive values
-    const valueType = typeof value;
-    return (
-      <div 
-        className={`${baseClasses} primitive-value ${valueType}-value ${animationClass}`}
-        style={{ marginLeft: depth * 16 }}
-        onClick={() => onFieldUpdate?.(key, value)}
-      >
-        <span className="field-key">{key}:</span>
-        <span className={`field-value ${valueType}`}>
-          {valueType === 'string' ? `"${value}"` : String(value)}
-        </span>
-      </div>
-    );
-  }, [updatedFields, enableAnimations, onFieldUpdate]);
-  
+    },
+    [updatedFields, enableAnimations, onFieldUpdate]
+  );
+
   if (!object || typeof object !== 'object') {
     return (
       <div className={`object-renderer empty ${className}`}>
         <div className="empty-state">
-          {state === 'streaming' ? 'Waiting for object data...' : 'No object data'}
+          {state === 'streaming'
+            ? 'Waiting for object data...'
+            : 'No object data'}
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className={`object-renderer ${state} ${compact ? 'compact' : ''} ${className}`}>
+    <div
+      className={`object-renderer ${state} ${compact ? 'compact' : ''} ${className}`}
+    >
       {objectType && !compact && (
         <div className="object-header">
           <span className="object-type">{objectType}</span>
@@ -245,7 +260,7 @@ const DefaultErrorComponent: React.FC<{ error: Error }> = ({ error }) => (
 
 /**
  * ConciergusObjectStream - Real-time structured object streaming component
- * 
+ *
  * Renders structured objects as they stream from AI, with type-safe incremental parsing
  * and smooth real-time updates. Uses AI SDK 5's useObject hook for object streaming.
  */
@@ -258,37 +273,37 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
   loadingComponent,
   errorComponent: ErrorComponent = DefaultErrorComponent,
   objectRenderer: ObjectRenderer = DefaultObjectRenderer,
-  
+
   // Display options
   showProgress = true,
   showSchema = false,
   showFieldUpdates = true,
   enableAnimations = true,
   compact = false,
-  
+
   // Events
   onObjectUpdate,
   onStreamStart,
   onStreamComplete,
   onStreamError,
   onFieldUpdate,
-  
+
   // Advanced options
   streamPartProcessor,
   debounceDelay = 100,
   maxRetries = 3,
   debug = false,
-  
+
   // Accessibility
   ariaLabel = 'Streaming object display',
   ariaDescription,
-  
+
   ...rest
 }) => {
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
+
   const [streamingState, setStreamingState] = useState<StreamingState>({
     isStreaming: false,
     streamingType: 'object',
@@ -296,191 +311,252 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
     error: null,
     retryCount: 0,
     lastUpdate: Date.now(),
-    updatedFields: new Set()
+    updatedFields: new Set(),
   });
-  
+
   const [currentObject, setCurrentObject] = useState<any>(initialObject || {});
-  const [objectState, setObjectState] = useState<StructuredObjectState>('streaming');
-  
+  const [objectState, setObjectState] =
+    useState<StructuredObjectState>('streaming');
+
   // ==========================================
   // AI SDK 5 INTEGRATION
   // ==========================================
-  
+
   // Use AI SDK 5's useObject hook for structured object streaming
-  const { object, isLoading, error: objectError } = useObject({
+  const {
+    object,
+    isLoading,
+    error: objectError,
+  } = useObject({
     api: streamUrl,
     schema,
     initialValue: initialObject,
     onFinish: (finalObject) => {
       setObjectState('complete');
-      setStreamingState(prev => ({ ...prev, isStreaming: false, progress: 100 }));
+      setStreamingState((prev) => ({
+        ...prev,
+        isStreaming: false,
+        progress: 100,
+      }));
       onStreamComplete?.(finalObject);
-      
+
       if (debug) {
-        console.log('[ConciergusObjectStream] Object streaming completed:', finalObject);
+        console.log(
+          '[ConciergusObjectStream] Object streaming completed:',
+          finalObject
+        );
       }
     },
     onError: (error) => {
       setObjectState('error');
-      setStreamingState(prev => ({ 
-        ...prev, 
-        isStreaming: false, 
+      setStreamingState((prev) => ({
+        ...prev,
+        isStreaming: false,
         error,
-        retryCount: prev.retryCount + 1
+        retryCount: prev.retryCount + 1,
       }));
       onStreamError?.(error);
-      
+
       if (debug) {
-        console.error('[ConciergusObjectStream] Object streaming error:', error);
+        console.error(
+          '[ConciergusObjectStream] Object streaming error:',
+          error
+        );
       }
-    }
+    },
   });
-  
+
   // ==========================================
   // EFFECT HANDLERS
   // ==========================================
-  
+
   // Handle object updates
   useEffect(() => {
     if (object && object !== currentObject) {
       const updatedFields = new Set<string>();
-      
+
       // Detect which fields have changed
       const detectChanges = (newObj: any, oldObj: any, path = '') => {
         if (!oldObj) {
           // All fields are new
-          Object.keys(newObj || {}).forEach(key => {
+          Object.keys(newObj || {}).forEach((key) => {
             updatedFields.add(path ? `${path}.${key}` : key);
           });
           return;
         }
-        
-        Object.keys(newObj || {}).forEach(key => {
+
+        Object.keys(newObj || {}).forEach((key) => {
           const newPath = path ? `${path}.${key}` : key;
           const newValue = newObj[key];
           const oldValue = oldObj[key];
-          
+
           if (newValue !== oldValue) {
             updatedFields.add(newPath);
-            
+
             // If it's an object, recursively check nested changes
-            if (typeof newValue === 'object' && newValue !== null && !Array.isArray(newValue)) {
+            if (
+              typeof newValue === 'object' &&
+              newValue !== null &&
+              !Array.isArray(newValue)
+            ) {
               detectChanges(newValue, oldValue, newPath);
             }
           }
         });
       };
-      
+
       detectChanges(object, currentObject);
-      
+
       setCurrentObject(object);
-      setStreamingState(prev => ({
+      setStreamingState((prev) => ({
         ...prev,
         updatedFields,
         lastUpdate: Date.now(),
-        progress: Math.min((Object.keys(object || {}).length / Math.max(Object.keys(schema?.properties || {}).length, 1)) * 100, 99)
+        progress: Math.min(
+          (Object.keys(object || {}).length /
+            Math.max(Object.keys(schema?.properties || {}).length, 1)) *
+            100,
+          99
+        ),
       }));
-      
+
       onObjectUpdate?.(object, updatedFields);
-      
+
       if (debug) {
-        console.log('[ConciergusObjectStream] Object updated:', { object, updatedFields: Array.from(updatedFields) });
+        console.log('[ConciergusObjectStream] Object updated:', {
+          object,
+          updatedFields: Array.from(updatedFields),
+        });
       }
     }
   }, [object, currentObject, schema, onObjectUpdate, debug]);
-  
+
   // Handle streaming state changes
   useEffect(() => {
     if (isLoading && !streamingState.isStreaming) {
       setObjectState('streaming');
-      setStreamingState(prev => ({ ...prev, isStreaming: true, progress: 0 }));
+      setStreamingState((prev) => ({
+        ...prev,
+        isStreaming: true,
+        progress: 0,
+      }));
       onStreamStart?.();
-      
+
       if (debug) {
         console.log('[ConciergusObjectStream] Object streaming started');
       }
     } else if (!isLoading && !objectError && object) {
       setObjectState('complete');
-      setStreamingState(prev => ({ ...prev, isStreaming: false, progress: 100 }));
+      setStreamingState((prev) => ({
+        ...prev,
+        isStreaming: false,
+        progress: 100,
+      }));
     }
-  }, [isLoading, streamingState.isStreaming, onStreamStart, debug, objectError, object]);
-  
+  }, [
+    isLoading,
+    streamingState.isStreaming,
+    onStreamStart,
+    debug,
+    objectError,
+    object,
+  ]);
+
   // Handle errors
   useEffect(() => {
     if (objectError && objectError !== streamingState.error) {
       setObjectState('error');
-      setStreamingState(prev => ({ ...prev, error: objectError, isStreaming: false }));
+      setStreamingState((prev) => ({
+        ...prev,
+        error: objectError,
+        isStreaming: false,
+      }));
     }
   }, [objectError, streamingState.error]);
-  
+
   // Clear updated fields after animation delay
   useEffect(() => {
     if (streamingState.updatedFields.size > 0 && enableAnimations) {
       const timer = setTimeout(() => {
-        setStreamingState(prev => ({ ...prev, updatedFields: new Set() }));
+        setStreamingState((prev) => ({ ...prev, updatedFields: new Set() }));
       }, 1000); // Clear after 1 second
-      
+
       return () => clearTimeout(timer);
     }
   }, [streamingState.updatedFields, enableAnimations]);
-  
+
   // ==========================================
   // EVENT HANDLERS
   // ==========================================
-  
-  const handleFieldUpdate = useCallback((field: string, value: any) => {
-    onFieldUpdate?.(field, value);
-    
-    if (debug) {
-      console.log('[ConciergusObjectStream] Field updated:', { field, value });
-    }
-  }, [onFieldUpdate, debug]);
-  
+
+  const handleFieldUpdate = useCallback(
+    (field: string, value: any) => {
+      onFieldUpdate?.(field, value);
+
+      if (debug) {
+        console.log('[ConciergusObjectStream] Field updated:', {
+          field,
+          value,
+        });
+      }
+    },
+    [onFieldUpdate, debug]
+  );
+
   const handleRetry = useCallback(() => {
     if (streamingState.retryCount < maxRetries) {
-      setStreamingState(prev => ({ 
-        ...prev, 
-        error: null, 
-        retryCount: prev.retryCount + 1 
+      setStreamingState((prev) => ({
+        ...prev,
+        error: null,
+        retryCount: prev.retryCount + 1,
       }));
       setObjectState('streaming');
-      
+
       if (debug) {
-        console.log('[ConciergusObjectStream] Retrying object stream, attempt:', streamingState.retryCount + 1);
+        console.log(
+          '[ConciergusObjectStream] Retrying object stream, attempt:',
+          streamingState.retryCount + 1
+        );
       }
     }
   }, [streamingState.retryCount, maxRetries, debug]);
-  
+
   // ==========================================
   // COMPUTED VALUES
   // ==========================================
-  
-  const containerClasses = useMemo(() => [
-    'conciergus-object-stream',
-    objectState,
-    compact ? 'compact' : '',
-    enableAnimations ? 'animated' : '',
-    className
-  ].filter(Boolean).join(' '), [objectState, compact, enableAnimations, className]);
-  
+
+  const containerClasses = useMemo(
+    () =>
+      [
+        'conciergus-object-stream',
+        objectState,
+        compact ? 'compact' : '',
+        enableAnimations ? 'animated' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    [objectState, compact, enableAnimations, className]
+  );
+
   const progressPercentage = useMemo(() => {
     if (objectState === 'complete') return 100;
     if (objectState === 'error') return streamingState.progress;
     return streamingState.progress;
   }, [objectState, streamingState.progress]);
-  
+
   // ==========================================
   // RENDER
   // ==========================================
-  
+
   // Error state
   if (streamingState.error && objectState === 'error') {
     return (
       <div className={containerClasses} role="alert">
         <ErrorComponent error={streamingState.error} />
         {streamingState.retryCount < maxRetries && (
-          <button 
-            className="retry-button" 
+          <button
+            className="retry-button"
             onClick={handleRetry}
             aria-label="Retry object streaming"
           >
@@ -490,7 +566,7 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
       </div>
     );
   }
-  
+
   // Loading state
   if (isLoading && !object) {
     return (
@@ -504,10 +580,10 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
       </div>
     );
   }
-  
+
   // Main render
   return (
-    <div 
+    <div
       className={containerClasses}
       role="region"
       aria-label={ariaLabel}
@@ -518,8 +594,8 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
       {showProgress && objectState === 'streaming' && (
         <div className="streaming-progress">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -528,7 +604,7 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
           </div>
         </div>
       )}
-      
+
       {/* Schema information */}
       {showSchema && schema && (
         <details className="schema-info">
@@ -538,7 +614,7 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
           </pre>
         </details>
       )}
-      
+
       {/* Object content */}
       <ObjectRenderer
         object={currentObject}
@@ -550,22 +626,26 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
         compact={compact}
         onFieldUpdate={handleFieldUpdate}
       />
-      
+
       {/* Debug information */}
       {debug && (
         <details className="debug-info">
           <summary>Debug Information</summary>
           <pre className="debug-content">
-            {JSON.stringify({
-              objectState,
-              streamingState: {
-                ...streamingState,
-                updatedFields: Array.from(streamingState.updatedFields)
+            {JSON.stringify(
+              {
+                objectState,
+                streamingState: {
+                  ...streamingState,
+                  updatedFields: Array.from(streamingState.updatedFields),
+                },
+                isLoading,
+                hasObject: !!object,
+                objectKeys: Object.keys(currentObject || {}),
               },
-              isLoading,
-              hasObject: !!object,
-              objectKeys: Object.keys(currentObject || {})
-            }, null, 2)}
+              null,
+              2
+            )}
           </pre>
         </details>
       )}
@@ -578,4 +658,4 @@ const ConciergusObjectStream: React.FC<ConciergusObjectStreamProps> = ({
 // ==========================================
 
 export default ConciergusObjectStream;
-export type { ConciergusObjectStreamProps, ObjectRendererProps }; 
+export type { ConciergusObjectStreamProps, ObjectRendererProps };

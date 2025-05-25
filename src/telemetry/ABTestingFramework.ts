@@ -114,7 +114,11 @@ export interface StatisticalAnalysis {
     effectSize: number;
     confidenceLevel: number;
   } | null;
-  recommendation: 'continue' | 'stop_winner' | 'stop_no_winner' | 'extend_duration';
+  recommendation:
+    | 'continue'
+    | 'stop_winner'
+    | 'stop_no_winner'
+    | 'extend_duration';
   analysisDate: Date;
 }
 
@@ -178,7 +182,7 @@ export class ABTestingFramework extends EventEmitter {
   private assignments: Map<string, ABTestAssignment[]> = new Map();
   private results: Map<string, ABTestResult[]> = new Map();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> testId -> variantId
-  
+
   private analysisTimer: NodeJS.Timeout | null = null;
 
   private constructor(config: ABTestingConfig) {
@@ -216,7 +220,9 @@ export class ABTestingFramework extends EventEmitter {
     this.analyticsEngine = AnalyticsEngine.getInstance();
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
-    console.log('A/B Testing Framework initialized with enterprise integrations');
+    console.log(
+      'A/B Testing Framework initialized with enterprise integrations'
+    );
   }
 
   /**
@@ -248,7 +254,7 @@ export class ABTestingFramework extends EventEmitter {
       ...test,
       id: this.generateTestId(),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.tests.set(newTest.id, newTest);
@@ -256,7 +262,10 @@ export class ABTestingFramework extends EventEmitter {
     this.results.set(newTest.id, []);
 
     this.emit('test_created', newTest);
-    this.logComplianceEvent('test_created', { testId: newTest.id, createdBy: newTest.createdBy });
+    this.logComplianceEvent('test_created', {
+      testId: newTest.id,
+      createdBy: newTest.createdBy,
+    });
 
     return newTest;
   }
@@ -277,12 +286,15 @@ export class ABTestingFramework extends EventEmitter {
     const updatedTest = {
       ...test,
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.tests.set(testId, updatedTest);
     this.emit('test_updated', updatedTest);
-    this.logComplianceEvent('test_updated', { testId, updates: Object.keys(updates) });
+    this.logComplianceEvent('test_updated', {
+      testId,
+      updates: Object.keys(updates),
+    });
 
     return updatedTest;
   }
@@ -297,7 +309,9 @@ export class ABTestingFramework extends EventEmitter {
     }
 
     if (test.status !== 'draft') {
-      throw new Error(`Test ${testId} cannot be started from status ${test.status}`);
+      throw new Error(
+        `Test ${testId} cannot be started from status ${test.status}`
+      );
     }
 
     const startedTest = {
@@ -305,9 +319,9 @@ export class ABTestingFramework extends EventEmitter {
       status: 'running' as const,
       duration: {
         ...test.duration,
-        startDate: new Date()
+        startDate: new Date(),
       },
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.tests.set(testId, startedTest);
@@ -320,7 +334,10 @@ export class ABTestingFramework extends EventEmitter {
   /**
    * Stop an A/B test
    */
-  stopTest(testId: string, reason: 'completed' | 'cancelled' = 'completed'): ABTest {
+  stopTest(
+    testId: string,
+    reason: 'completed' | 'cancelled' = 'completed'
+  ): ABTest {
     const test = this.tests.get(testId);
     if (!test) {
       throw new Error(`Test ${testId} not found`);
@@ -331,9 +348,9 @@ export class ABTestingFramework extends EventEmitter {
       status: reason,
       duration: {
         ...test.duration,
-        endDate: new Date()
+        endDate: new Date(),
       },
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.tests.set(testId, stoppedTest);
@@ -347,8 +364,8 @@ export class ABTestingFramework extends EventEmitter {
    * Assign a user to a test variant
    */
   assignUser(
-    userId: string, 
-    testId: string, 
+    userId: string,
+    testId: string,
     context: Record<string, any> = {},
     sessionId?: string
   ): ABTestAssignment | null {
@@ -367,7 +384,7 @@ export class ABTestingFramework extends EventEmitter {
         userId,
         sessionId,
         timestamp: new Date(),
-        context
+        context,
       };
     }
 
@@ -384,7 +401,7 @@ export class ABTestingFramework extends EventEmitter {
       userId,
       sessionId,
       timestamp: new Date(),
-      context
+      context,
     };
 
     // Store assignment
@@ -399,10 +416,12 @@ export class ABTestingFramework extends EventEmitter {
     this.userAssignments.get(userId)!.set(testId, variantId);
 
     this.emit('user_assigned', assignment);
-    this.logComplianceEvent('user_assigned', { 
-      testId, 
-      variantId, 
-      userId: this.config.compliance.anonymizeData ? this.hashUserId(userId) : userId 
+    this.logComplianceEvent('user_assigned', {
+      testId,
+      variantId,
+      userId: this.config.compliance.anonymizeData
+        ? this.hashUserId(userId)
+        : userId,
     });
 
     return assignment;
@@ -439,7 +458,7 @@ export class ABTestingFramework extends EventEmitter {
       metric,
       value,
       timestamp: new Date(),
-      context
+      context,
     };
 
     const testResults = this.results.get(testId) || [];
@@ -447,15 +466,18 @@ export class ABTestingFramework extends EventEmitter {
     this.results.set(testId, testResults);
 
     this.emit('result_recorded', result);
-    this.logComplianceEvent('result_recorded', { 
-      testId, 
-      metric, 
+    this.logComplianceEvent('result_recorded', {
+      testId,
+      metric,
       value,
-      userId: this.config.compliance.anonymizeData ? this.hashUserId(userId) : userId 
+      userId: this.config.compliance.anonymizeData
+        ? this.hashUserId(userId)
+        : userId,
     });
 
     // Check if we should analyze the test
-    if (testResults.length % 100 === 0) { // Analyze every 100 results
+    if (testResults.length % 100 === 0) {
+      // Analyze every 100 results
       this.analyzeTest(testId);
     }
   }
@@ -463,7 +485,10 @@ export class ABTestingFramework extends EventEmitter {
   /**
    * Get variant configuration for a user
    */
-  getVariantConfig(userId: string, testId: string): ABTestVariant['config'] | null {
+  getVariantConfig(
+    userId: string,
+    testId: string
+  ): ABTestVariant['config'] | null {
     const test = this.tests.get(testId);
     if (!test || test.status !== 'running') {
       return null;
@@ -474,7 +499,7 @@ export class ABTestingFramework extends EventEmitter {
       return null;
     }
 
-    const variant = test.variants.find(v => v.id === variantId);
+    const variant = test.variants.find((v) => v.id === variantId);
     return variant?.config || null;
   }
 
@@ -487,16 +512,16 @@ export class ABTestingFramework extends EventEmitter {
 
     const results = this.results.get(testId) || [];
     const primaryMetric = test.metrics.primary;
-    
+
     // Group results by variant
     const variantResults = new Map<string, number[]>();
-    test.variants.forEach(variant => {
+    test.variants.forEach((variant) => {
       variantResults.set(variant.id, []);
     });
 
     results
-      .filter(r => r.metric === primaryMetric)
-      .forEach(result => {
+      .filter((r) => r.metric === primaryMetric)
+      .forEach((result) => {
         const values = variantResults.get(result.variantId);
         if (values) {
           values.push(result.value);
@@ -504,25 +529,39 @@ export class ABTestingFramework extends EventEmitter {
       });
 
     // Calculate statistics for each variant
-    const variantStats = test.variants.map(variant => {
+    const variantStats = test.variants.map((variant) => {
       const values = variantResults.get(variant.id) || [];
-      const mean = values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
-      const variance = values.length > 1 ? 
-        values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (values.length - 1) : 0;
+      const mean =
+        values.length > 0
+          ? values.reduce((sum, v) => sum + v, 0) / values.length
+          : 0;
+      const variance =
+        values.length > 1
+          ? values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) /
+            (values.length - 1)
+          : 0;
       const standardDeviation = Math.sqrt(variance);
-      
+
       return {
         variantId: variant.id,
         sampleSize: values.length,
         mean,
         standardDeviation,
-        confidenceInterval: this.calculateConfidenceInterval(mean, standardDeviation, values.length, test.metrics.significanceLevel)
+        confidenceInterval: this.calculateConfidenceInterval(
+          mean,
+          standardDeviation,
+          values.length,
+          test.metrics.significanceLevel
+        ),
       };
     });
 
     // Perform statistical comparison (simplified t-test)
     let comparison = null;
-    if (variantStats.length === 2 && variantStats.every(v => v.sampleSize >= test.metrics.minimumSampleSize)) {
+    if (
+      variantStats.length === 2 &&
+      variantStats.every((v) => v.sampleSize >= test.metrics.minimumSampleSize)
+    ) {
       const [baseline, treatment] = variantStats;
       const pValue = this.calculateTTestPValue(baseline, treatment);
       const isSignificant = pValue < test.metrics.significanceLevel;
@@ -534,12 +573,16 @@ export class ABTestingFramework extends EventEmitter {
         pValue,
         isSignificant,
         effectSize,
-        confidenceLevel: 1 - test.metrics.significanceLevel
+        confidenceLevel: 1 - test.metrics.significanceLevel,
       };
     }
 
     // Generate recommendation
-    const recommendation = this.generateRecommendation(test, variantStats, comparison);
+    const recommendation = this.generateRecommendation(
+      test,
+      variantStats,
+      comparison
+    );
 
     const analysis: StatisticalAnalysis = {
       testId,
@@ -547,7 +590,7 @@ export class ABTestingFramework extends EventEmitter {
       variants: variantStats,
       comparison,
       recommendation,
-      analysisDate: new Date()
+      analysisDate: new Date(),
     };
 
     this.emit('analysis_completed', analysis);
@@ -568,27 +611,39 @@ export class ABTestingFramework extends EventEmitter {
     const analysis = this.analyzeTest(testId);
 
     // Calculate variant performance
-    const variantPerformance = test.variants.map(variant => {
-      const variantAssignments = assignments.filter(a => a.variantId === variant.id).length;
-      const variantResults = results.filter(r => r.variantId === variant.id && r.metric === test.metrics.primary);
-      const conversions = variantResults.filter(r => r.value > 0).length;
-      const conversionRate = variantAssignments > 0 ? conversions / variantAssignments : 0;
-      const averageMetric = variantResults.length > 0 ? 
-        variantResults.reduce((sum, r) => sum + r.value, 0) / variantResults.length : 0;
+    const variantPerformance = test.variants.map((variant) => {
+      const variantAssignments = assignments.filter(
+        (a) => a.variantId === variant.id
+      ).length;
+      const variantResults = results.filter(
+        (r) => r.variantId === variant.id && r.metric === test.metrics.primary
+      );
+      const conversions = variantResults.filter((r) => r.value > 0).length;
+      const conversionRate =
+        variantAssignments > 0 ? conversions / variantAssignments : 0;
+      const averageMetric =
+        variantResults.length > 0
+          ? variantResults.reduce((sum, r) => sum + r.value, 0) /
+            variantResults.length
+          : 0;
 
       return {
         variantId: variant.id,
         assignments: variantAssignments,
         conversions,
         conversionRate,
-        averageMetric
+        averageMetric,
       };
     });
 
     const overallPerformance = {
       totalAssignments: assignments.length,
-      totalConversions: results.filter(r => r.metric === test.metrics.primary && r.value > 0).length,
-      averageConversionRate: variantPerformance.reduce((sum, v) => sum + v.conversionRate, 0) / variantPerformance.length
+      totalConversions: results.filter(
+        (r) => r.metric === test.metrics.primary && r.value > 0
+      ).length,
+      averageConversionRate:
+        variantPerformance.reduce((sum, v) => sum + v.conversionRate, 0) /
+        variantPerformance.length,
     };
 
     return {
@@ -598,8 +653,8 @@ export class ABTestingFramework extends EventEmitter {
       analysis,
       performance: {
         variantPerformance,
-        overallPerformance
-      }
+        overallPerformance,
+      },
     };
   }
 
@@ -614,16 +669,22 @@ export class ABTestingFramework extends EventEmitter {
    * Get running tests
    */
   getRunningTests(): ABTest[] {
-    return Array.from(this.tests.values()).filter(test => test.status === 'running');
+    return Array.from(this.tests.values()).filter(
+      (test) => test.status === 'running'
+    );
   }
 
   /**
    * Private helper methods
    */
-  private isUserEligible(userId: string, test: ABTest, context: Record<string, any>): boolean {
+  private isUserEligible(
+    userId: string,
+    test: ABTest,
+    context: Record<string, any>
+  ): boolean {
     // Check percentage targeting
     const hash = this.hashUserId(userId);
-    const userPercentile = parseInt(hash.slice(-2), 16) / 255 * 100;
+    const userPercentile = (parseInt(hash.slice(-2), 16) / 255) * 100;
     if (userPercentile >= test.targeting.percentage) {
       return false;
     }
@@ -664,31 +725,48 @@ export class ABTestingFramework extends EventEmitter {
     return test.variants[0].id;
   }
 
-  private evaluateCondition(condition: any, context: Record<string, any>): boolean {
+  private evaluateCondition(
+    condition: any,
+    context: Record<string, any>
+  ): boolean {
     const value = context[condition.field];
-    
+
     switch (condition.operator) {
-      case '=': return value === condition.value;
-      case '!=': return value !== condition.value;
-      case '>': return value > condition.value;
-      case '<': return value < condition.value;
-      case 'contains': return String(value).includes(condition.value);
-      case 'in': return Array.isArray(condition.value) && condition.value.includes(value);
-      default: return false;
+      case '=':
+        return value === condition.value;
+      case '!=':
+        return value !== condition.value;
+      case '>':
+        return value > condition.value;
+      case '<':
+        return value < condition.value;
+      case 'contains':
+        return String(value).includes(condition.value);
+      case 'in':
+        return (
+          Array.isArray(condition.value) && condition.value.includes(value)
+        );
+      default:
+        return false;
     }
   }
 
-  private calculateConfidenceInterval(mean: number, std: number, n: number, alpha: number) {
+  private calculateConfidenceInterval(
+    mean: number,
+    std: number,
+    n: number,
+    alpha: number
+  ) {
     if (n < 2) return { lower: mean, upper: mean, level: 1 - alpha };
-    
+
     // Using t-distribution critical value (approximation)
     const tValue = this.getTCriticalValue(n - 1, alpha);
     const margin = tValue * (std / Math.sqrt(n));
-    
+
     return {
       lower: mean - margin,
       upper: mean + margin,
-      level: 1 - alpha
+      level: 1 - alpha,
     };
   }
 
@@ -698,24 +776,29 @@ export class ABTestingFramework extends EventEmitter {
 
     const pooledStd = Math.sqrt(
       ((baseline.sampleSize - 1) * Math.pow(baseline.standardDeviation, 2) +
-       (treatment.sampleSize - 1) * Math.pow(treatment.standardDeviation, 2)) /
-      (baseline.sampleSize + treatment.sampleSize - 2)
+        (treatment.sampleSize - 1) * Math.pow(treatment.standardDeviation, 2)) /
+        (baseline.sampleSize + treatment.sampleSize - 2)
     );
 
-    const tStat = Math.abs(baseline.mean - treatment.mean) / 
-      (pooledStd * Math.sqrt(1/baseline.sampleSize + 1/treatment.sampleSize));
+    const tStat =
+      Math.abs(baseline.mean - treatment.mean) /
+      (pooledStd *
+        Math.sqrt(1 / baseline.sampleSize + 1 / treatment.sampleSize));
 
     // Simplified p-value calculation (this would be more complex in a real implementation)
     return Math.min(0.5, 0.5 * Math.exp(-tStat));
   }
 
   private calculateEffectSize(baseline: any, treatment: any): number {
-    if (baseline.standardDeviation === 0 && treatment.standardDeviation === 0) return 0;
-    
+    if (baseline.standardDeviation === 0 && treatment.standardDeviation === 0)
+      return 0;
+
     const pooledStd = Math.sqrt(
-      (Math.pow(baseline.standardDeviation, 2) + Math.pow(treatment.standardDeviation, 2)) / 2
+      (Math.pow(baseline.standardDeviation, 2) +
+        Math.pow(treatment.standardDeviation, 2)) /
+        2
     );
-    
+
     return pooledStd > 0 ? (treatment.mean - baseline.mean) / pooledStd : 0;
   }
 
@@ -727,19 +810,24 @@ export class ABTestingFramework extends EventEmitter {
   }
 
   private generateRecommendation(
-    test: ABTest, 
-    variantStats: any[], 
+    test: ABTest,
+    variantStats: any[],
     comparison: any
   ): StatisticalAnalysis['recommendation'] {
     // Check if test should continue
     const now = new Date();
-    if (test.duration.maxDuration && 
-        now.getTime() - test.duration.startDate.getTime() > test.duration.maxDuration) {
+    if (
+      test.duration.maxDuration &&
+      now.getTime() - test.duration.startDate.getTime() >
+        test.duration.maxDuration
+    ) {
       return comparison?.isSignificant ? 'stop_winner' : 'stop_no_winner';
     }
 
     // Check sample size
-    const minSampleMet = variantStats.every(v => v.sampleSize >= test.metrics.minimumSampleSize);
+    const minSampleMet = variantStats.every(
+      (v) => v.sampleSize >= test.metrics.minimumSampleSize
+    );
     if (!minSampleMet) {
       return 'continue';
     }
@@ -752,7 +840,7 @@ export class ABTestingFramework extends EventEmitter {
     // Check if we need more time
     const testDuration = now.getTime() - test.duration.startDate.getTime();
     const minTestDuration = 7 * 24 * 60 * 60 * 1000; // 1 week minimum
-    
+
     if (testDuration < minTestDuration) {
       return 'continue';
     }
@@ -762,10 +850,13 @@ export class ABTestingFramework extends EventEmitter {
 
   private runAutomaticAnalysis(): void {
     const runningTests = this.getRunningTests();
-    
-    runningTests.forEach(test => {
+
+    runningTests.forEach((test) => {
       const analysis = this.analyzeTest(test.id);
-      if (analysis?.recommendation === 'stop_winner' || analysis?.recommendation === 'stop_no_winner') {
+      if (
+        analysis?.recommendation === 'stop_winner' ||
+        analysis?.recommendation === 'stop_no_winner'
+      ) {
         // Auto-stop tests that meet stopping criteria
         this.stopTest(test.id, 'completed');
       }
@@ -777,7 +868,7 @@ export class ABTestingFramework extends EventEmitter {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
       const char = userId.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(16);
@@ -790,13 +881,13 @@ export class ABTestingFramework extends EventEmitter {
       timestamp: new Date().toISOString(),
       event,
       data,
-      framework: 'ab_testing'
+      framework: 'ab_testing',
     };
 
     if (this.telemetryManager) {
       this.telemetryManager.recordMetric('compliance_event', 1, {
         event_type: event,
-        framework: 'ab_testing'
+        framework: 'ab_testing',
       });
     }
 
@@ -826,7 +917,7 @@ export class ABTestingFramework extends EventEmitter {
       clearInterval(this.analysisTimer);
       this.analysisTimer = null;
     }
-    
+
     this.removeAllListeners();
     this.tests.clear();
     this.assignments.clear();
@@ -848,13 +939,13 @@ export const defaultABTestingConfig: ABTestingConfig = {
   autoAnalysisInterval: 60 * 60 * 1000, // 1 hour
   storage: {
     type: 'memory',
-    retentionPeriod: 90 // 90 days
+    retentionPeriod: 90, // 90 days
   },
   compliance: {
     trackUserConsent: true,
     anonymizeData: true,
-    auditLogging: true
-  }
+    auditLogging: true,
+  },
 };
 
-export default ABTestingFramework; 
+export default ABTestingFramework;

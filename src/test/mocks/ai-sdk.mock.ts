@@ -40,8 +40,12 @@ export interface MockStreamTextResult {
 
 // Mock model interface
 export interface MockLanguageModel {
-  generateText: jest.MockedFunction<(options: any) => Promise<MockGenerateTextResult>>;
-  generateObject: jest.MockedFunction<(options: any) => Promise<MockGenerateObjectResult>>;
+  generateText: jest.MockedFunction<
+    (options: any) => Promise<MockGenerateTextResult>
+  >;
+  generateObject: jest.MockedFunction<
+    (options: any) => Promise<MockGenerateObjectResult>
+  >;
   streamText: jest.MockedFunction<(options: any) => MockStreamTextResult>;
 }
 
@@ -56,7 +60,7 @@ export const createMockModel = (): MockLanguageModel => ({
     },
     finishReason: 'stop',
   }),
-  
+
   generateObject: jest.fn().mockResolvedValue({
     object: { message: 'Mock generated object', type: 'response' },
     usage: {
@@ -65,7 +69,7 @@ export const createMockModel = (): MockLanguageModel => ({
       totalTokens: 50,
     },
   }),
-  
+
   streamText: jest.fn().mockReturnValue({
     textStream: (async function* () {
       yield 'Mock ';
@@ -89,8 +93,12 @@ export const createMockModel = (): MockLanguageModel => ({
 });
 
 // Mock provider creation functions
-export const anthropic = jest.fn().mockImplementation((config: any) => createMockModel());
-export const openai = jest.fn().mockImplementation((config: any) => createMockModel());
+export const anthropic = jest
+  .fn()
+  .mockImplementation((config: any) => createMockModel());
+export const openai = jest
+  .fn()
+  .mockImplementation((config: any) => createMockModel());
 
 // Mock core AI SDK functions
 // Create a shared model instance or allow injection
@@ -100,15 +108,19 @@ export const setMockModel = (model: MockLanguageModel) => {
   sharedModel = model;
 };
 
- export const generateText = jest.fn().mockImplementation(async (options: any) => {
-  const model = sharedModel || createMockModel();
-   return model.generateText(options);
- });
+export const generateText = jest
+  .fn()
+  .mockImplementation(async (options: any) => {
+    const model = sharedModel || createMockModel();
+    return model.generateText(options);
+  });
 
-export const generateObject = jest.fn().mockImplementation(async (options: any) => {
-  const model = createMockModel();
-  return model.generateObject(options);
-});
+export const generateObject = jest
+  .fn()
+  .mockImplementation(async (options: any) => {
+    const model = createMockModel();
+    return model.generateObject(options);
+  });
 
 export const streamText = jest.fn().mockImplementation((options: any) => {
   const model = createMockModel();
@@ -116,12 +128,14 @@ export const streamText = jest.fn().mockImplementation((options: any) => {
 });
 
 // Mock utility functions
-export const convertToCoreMessages = jest.fn().mockImplementation((messages: any[]) => {
-  return messages.map(msg => ({
-    role: msg.role || 'user',
-    content: msg.content || '',
-  }));
-});
+export const convertToCoreMessages = jest
+  .fn()
+  .mockImplementation((messages: any[]) => {
+    return messages.map((msg) => ({
+      role: msg.role || 'user',
+      content: msg.content || '',
+    }));
+  });
 
 export const experimental_createProviderRegistry = jest.fn().mockReturnValue({
   registerProvider: jest.fn(),
@@ -141,37 +155,48 @@ export const tool = jest.fn().mockImplementation((config: any) => ({
 const DEFAULT_EMBEDDING_DIM = 1536;
 
 export const embed = jest.fn().mockImplementation((options: any) => ({
-  embedding: new Array(options?.dimensions ?? DEFAULT_EMBEDDING_DIM).fill(0).map(() => Math.random()),
-   usage: { tokens: 10 },
+  embedding: new Array(options?.dimensions ?? DEFAULT_EMBEDDING_DIM)
+    .fill(0)
+    .map(() => Math.random()),
+  usage: { tokens: 10 },
 }));
 
 export const embedMany = jest.fn().mockImplementation((options: any) => {
   const count = options?.inputs?.length ?? 2;
   const dimensions = options?.dimensions ?? DEFAULT_EMBEDDING_DIM;
   return {
-    embeddings: Array(count).fill(null).map(() => 
-      new Array(dimensions).fill(0).map(() => Math.random())
-    ),
+    embeddings: Array(count)
+      .fill(null)
+      .map(() => new Array(dimensions).fill(0).map(() => Math.random())),
     usage: { tokens: count * 10 },
   };
 });
 
 // Mock schema validation
 export const schema = {
-  object: jest.fn().mockImplementation((fields: any) => ({ type: 'object', properties: fields })),
+  object: jest.fn().mockImplementation((fields: any) => ({
+    type: 'object',
+    properties: fields,
+  })),
   string: jest.fn().mockReturnValue({ type: 'string' }),
   number: jest.fn().mockReturnValue({ type: 'number' }),
   boolean: jest.fn().mockReturnValue({ type: 'boolean' }),
-  array: jest.fn().mockImplementation((items: any) => ({ type: 'array', items })),
+  array: jest
+    .fn()
+    .mockImplementation((items: any) => ({ type: 'array', items })),
 };
 
 // Mock experimental features
-export const experimental_wrapLanguageModel = jest.fn().mockImplementation((model: any) => model);
+export const experimental_wrapLanguageModel = jest
+  .fn()
+  .mockImplementation((model: any) => model);
 
-export const experimental_customProvider = jest.fn().mockImplementation((config: any) => ({
-  ...createMockModel(),
-  providerId: config.providerId || 'mock-provider',
-}));
+export const experimental_customProvider = jest
+  .fn()
+  .mockImplementation((config: any) => ({
+    ...createMockModel(),
+    providerId: config.providerId || 'mock-provider',
+  }));
 
 // Mock streaming utilities
 export const createStreamableValue = jest.fn().mockReturnValue({
@@ -181,15 +206,20 @@ export const createStreamableValue = jest.fn().mockReturnValue({
   error: jest.fn(),
 });
 
-export const readStreamableValue = jest.fn().mockImplementation(async function* (streamable: any) {
-  yield 'chunk 1';
-  yield 'chunk 2';
-  yield 'chunk 3';
-});
+export const readStreamableValue = jest
+  .fn()
+  .mockImplementation(async function* (streamable: any) {
+    yield 'chunk 1';
+    yield 'chunk 2';
+    yield 'chunk 3';
+  });
 
 // Mock error types
 export class MockAPICallError extends Error {
-  constructor(message: string, public statusCode?: number) {
+  constructor(
+    message: string,
+    public statusCode?: number
+  ) {
     super(message);
     this.name = 'MockAPICallError';
   }
@@ -218,4 +248,4 @@ const aiSDKMock = {
   createMockModel,
 };
 
-export default aiSDKMock; 
+export default aiSDKMock;

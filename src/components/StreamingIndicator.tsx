@@ -99,9 +99,9 @@ export const StreamingIndicator: FC<StreamingIndicatorProps> = ({
       <div className="streaming-content">
         {/* Main indicator */}
         <div className="streaming-main">
-          <span 
+          <span
             className={`streaming-icon ${animationSpeedClass}`}
-            role="img" 
+            role="img"
             aria-label={`${streamingType} streaming`}
           >
             {typeConfig.icon}
@@ -142,12 +142,22 @@ export const StreamingIndicator: FC<StreamingIndicatorProps> = ({
         {/* Animated dots for continuous streaming indication */}
         <div className="streaming-dots">
           <span className={`dot dot-1 ${animationSpeedClass}`}>.</span>
-          <span className={`dot dot-2 ${animationSpeedClass}`} style={{ animationDelay: '0.2s' }}>.</span>
-          <span className={`dot dot-3 ${animationSpeedClass}`} style={{ animationDelay: '0.4s' }}>.</span>
+          <span
+            className={`dot dot-2 ${animationSpeedClass}`}
+            style={{ animationDelay: '0.2s' }}
+          >
+            .
+          </span>
+          <span
+            className={`dot dot-3 ${animationSpeedClass}`}
+            style={{ animationDelay: '0.4s' }}
+          >
+            .
+          </span>
         </div>
       </div>
     </div>
   );
 };
 
-export default StreamingIndicator; 
+export default StreamingIndicator;

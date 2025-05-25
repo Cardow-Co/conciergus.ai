@@ -1,9 +1,9 @@
-import { 
-  ConciergusOpenTelemetry, 
-  type TelemetryConfig, 
-  type TelemetryInstance 
+import {
+  ConciergusOpenTelemetry,
+  type TelemetryConfig,
+  type TelemetryInstance,
 } from './OpenTelemetryConfig';
-import { 
+import {
   ConciergusMiddlewarePipeline,
   type MiddlewareContext,
   loggingMiddleware,
@@ -11,20 +11,20 @@ import {
   rateLimitingMiddleware,
   authenticationMiddleware,
   securityHeadersMiddleware,
-  corsMiddleware
+  corsMiddleware,
 } from '../middleware/MiddlewarePipeline';
-import { 
+import {
   ConciergusErrorBoundary,
   type ConciergusError,
   ErrorCategory,
-  ConciergusErrorFactory
+  ConciergusErrorFactory,
 } from '../errors/ErrorBoundary';
 import {
   PerformanceMonitor,
   MemoryMonitor,
   NetworkMonitor,
   initializeDebugging,
-  ConciergusLogger
+  ConciergusLogger,
 } from '../debug/DebugUtils';
 
 /**
@@ -36,17 +36,17 @@ export interface EnterpriseTelemetryConfig extends TelemetryConfig {
   enableSecurityHeaders?: boolean;
   enableCORS?: boolean;
   corsOrigins?: string[];
-  
+
   // Rate Limiting
   enableRateLimit?: boolean;
   rateLimitRequests?: number;
   rateLimitWindow?: number;
-  
+
   // Authentication
   enableAuth?: boolean;
   authRequired?: boolean;
   authTokenValidator?: (token: string) => Promise<any>;
-  
+
   // Performance
   enablePerformanceMonitoring?: boolean;
   enableMemoryMonitoring?: boolean;
@@ -56,27 +56,30 @@ export interface EnterpriseTelemetryConfig extends TelemetryConfig {
     memoryWarning?: number;
     longTask?: number;
   };
-  
+
   // Error Handling
   enableErrorBoundary?: boolean;
   errorRetryAttempts?: number;
   errorReportingEndpoint?: string;
-  
+
   // Debugging
   enableDebugging?: boolean;
   debugCommands?: boolean;
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
-  
+
   // Health Checks
   enableHealthChecks?: boolean;
   healthCheckInterval?: number;
   healthCheckEndpoint?: string;
-  
+
   // Custom Middleware
   customMiddlewares?: Array<{
     name: string;
     priority: number;
-    middleware: (context: MiddlewareContext, next: () => Promise<void>) => Promise<void>;
+    middleware: (
+      context: MiddlewareContext,
+      next: () => Promise<void>
+    ) => Promise<void>;
   }>;
 }
 
@@ -127,7 +130,9 @@ export class EnterpriseTelemetryManager {
   /**
    * Initialize enterprise telemetry
    */
-  static async initialize(config: EnterpriseTelemetryConfig): Promise<EnterpriseTelemetryManager> {
+  static async initialize(
+    config: EnterpriseTelemetryConfig
+  ): Promise<EnterpriseTelemetryManager> {
     if (this.instance) {
       console.warn('Enterprise telemetry already initialized');
       return this.instance;
@@ -135,7 +140,7 @@ export class EnterpriseTelemetryManager {
 
     const manager = new EnterpriseTelemetryManager(config);
     await manager.setup();
-    
+
     this.instance = manager;
     return manager;
   }
@@ -155,10 +160,15 @@ export class EnterpriseTelemetryManager {
 
     // Initialize OpenTelemetry
     try {
-      this.telemetryInstance = await ConciergusOpenTelemetry.initialize(this.config);
+      this.telemetryInstance = await ConciergusOpenTelemetry.initialize(
+        this.config
+      );
       ConciergusLogger.info('OpenTelemetry initialized successfully');
     } catch (error) {
-      ConciergusLogger.error('Failed to initialize OpenTelemetry', error as Error);
+      ConciergusLogger.error(
+        'Failed to initialize OpenTelemetry',
+        error as Error
+      );
     }
 
     // Setup middleware pipeline
@@ -167,11 +177,21 @@ export class EnterpriseTelemetryManager {
     // Initialize debugging utilities
     if (this.config.enableDebugging !== false) {
       initializeDebugging({
-        ...(this.config.enablePerformanceMonitoring !== undefined && { enablePerformanceMonitoring: this.config.enablePerformanceMonitoring }),
-        ...(this.config.enableMemoryMonitoring !== undefined && { enableMemoryMonitoring: this.config.enableMemoryMonitoring }),
-        ...(this.config.enableNetworkMonitoring !== undefined && { enableNetworkMonitoring: this.config.enableNetworkMonitoring }),
-        ...(this.config.debugCommands !== undefined && { enableConsoleCommands: this.config.debugCommands }),
-        ...(this.config.logLevel !== undefined && { logLevel: this.config.logLevel }),
+        ...(this.config.enablePerformanceMonitoring !== undefined && {
+          enablePerformanceMonitoring: this.config.enablePerformanceMonitoring,
+        }),
+        ...(this.config.enableMemoryMonitoring !== undefined && {
+          enableMemoryMonitoring: this.config.enableMemoryMonitoring,
+        }),
+        ...(this.config.enableNetworkMonitoring !== undefined && {
+          enableNetworkMonitoring: this.config.enableNetworkMonitoring,
+        }),
+        ...(this.config.debugCommands !== undefined && {
+          enableConsoleCommands: this.config.debugCommands,
+        }),
+        ...(this.config.logLevel !== undefined && {
+          logLevel: this.config.logLevel,
+        }),
       });
     }
 
@@ -203,7 +223,7 @@ export class EnterpriseTelemetryManager {
    */
   private setupMiddleware(): void {
     const pipeline = this.middlewarePipeline;
-    
+
     // Error handling (highest priority)
     pipeline.use(
       { name: 'error-handling', enabled: true, priority: 0 },
@@ -245,8 +265,12 @@ export class EnterpriseTelemetryManager {
       pipeline.use(
         { name: 'authentication', enabled: true, priority: 4 },
         authenticationMiddleware({
-          ...(this.config.authRequired !== undefined && { required: this.config.authRequired }),
-          ...(this.config.authTokenValidator && { validateToken: this.config.authTokenValidator }),
+          ...(this.config.authRequired !== undefined && {
+            required: this.config.authRequired,
+          }),
+          ...(this.config.authTokenValidator && {
+            validateToken: this.config.authTokenValidator,
+          }),
         })
       );
     }
@@ -261,10 +285,10 @@ export class EnterpriseTelemetryManager {
     if (this.config.customMiddlewares) {
       for (const customMw of this.config.customMiddlewares) {
         pipeline.use(
-          { 
-            name: customMw.name, 
-            enabled: true, 
-            priority: customMw.priority 
+          {
+            name: customMw.name,
+            enabled: true,
+            priority: customMw.priority,
           },
           customMw.middleware
         );
@@ -279,7 +303,7 @@ export class EnterpriseTelemetryManager {
    */
   private setupPerformanceMonitoring(): void {
     const thresholds = this.config.performanceThresholds || {};
-    
+
     // Monitor for long tasks
     if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
       try {
@@ -288,8 +312,10 @@ export class EnterpriseTelemetryManager {
             if (entry.entryType === 'longtask') {
               const threshold = thresholds.longTask || 50;
               if (entry.duration > threshold) {
-                ConciergusLogger.warn(`Long task detected: ${entry.duration}ms (threshold: ${threshold}ms)`);
-                
+                ConciergusLogger.warn(
+                  `Long task detected: ${entry.duration}ms (threshold: ${threshold}ms)`
+                );
+
                 ConciergusOpenTelemetry.recordMetric(
                   'conciergus-performance',
                   'longtask.detected',
@@ -300,7 +326,7 @@ export class EnterpriseTelemetryManager {
             }
           }
         });
-        
+
         observer.observe({ entryTypes: ['longtask'] });
         this.cleanupFunctions.push(() => observer.disconnect());
       } catch (error) {
@@ -313,8 +339,9 @@ export class EnterpriseTelemetryManager {
    * Setup memory monitoring
    */
   private setupMemoryMonitoring(): void {
-    const threshold = this.config.performanceThresholds?.memoryWarning || 100 * 1024 * 1024; // 100MB
-    
+    const threshold =
+      this.config.performanceThresholds?.memoryWarning || 100 * 1024 * 1024; // 100MB
+
     const stopMonitoring = MemoryMonitor.startMonitoring({
       warningThreshold: threshold,
       onWarning: (usage) => {
@@ -324,7 +351,7 @@ export class EnterpriseTelemetryManager {
         });
       },
     });
-    
+
     this.cleanupFunctions.push(stopMonitoring);
   }
 
@@ -341,24 +368,27 @@ export class EnterpriseTelemetryManager {
    */
   private startHealthChecks(): void {
     const interval = this.config.healthCheckInterval || 30000; // 30 seconds
-    
+
     this.healthCheckInterval = setInterval(() => {
       const status = this.getHealthStatus();
-      
+
       // Log health status
       ConciergusLogger.debug('Health check completed', status);
-      
-          // Record metrics
-    ConciergusOpenTelemetry.recordMetric(
-      'conciergus-health',
-      'check.completed',
-      1,
-      { status: status.status }
-    );
-      
+
+      // Record metrics
+      ConciergusOpenTelemetry.recordMetric(
+        'conciergus-health',
+        'check.completed',
+        1,
+        { status: status.status }
+      );
+
       // Alert on unhealthy status
       if (status.status === 'unhealthy') {
-        ConciergusLogger.error('System health check failed', new Error('Unhealthy status detected'));
+        ConciergusLogger.error(
+          'System health check failed',
+          new Error('Unhealthy status detected')
+        );
       }
     }, interval);
   }
@@ -369,42 +399,51 @@ export class EnterpriseTelemetryManager {
   getHealthStatus(): HealthStatus {
     const now = new Date();
     const uptime = now.getTime() - this.startTime.getTime();
-    
+
     // Check memory status
     const memoryUsage = MemoryMonitor.getCurrentUsage();
     let memoryStatus: 'ok' | 'warning' | 'critical' = 'ok';
     let memoryUsageMB = 0;
-    
+
     if (memoryUsage) {
       memoryUsageMB = memoryUsage.usedJSHeapSize / 1024 / 1024;
       const limit = memoryUsage.jsHeapSizeLimit / 1024 / 1024;
       const usage = memoryUsageMB / limit;
-      
+
       if (usage > 0.9) memoryStatus = 'critical';
       else if (usage > 0.7) memoryStatus = 'warning';
     }
-    
+
     // Check network status
     const networkStats = NetworkMonitor.getStats();
     let networkStatus: 'ok' | 'degraded' | 'error' = 'ok';
-    
-    if (networkStats.errorRate > 0.1) networkStatus = 'error'; // >10% error rate
+
+    if (networkStats.errorRate > 0.1)
+      networkStatus = 'error'; // >10% error rate
     else if (networkStats.averageDuration > 5000) networkStatus = 'degraded'; // >5s average
-    
+
     // Check error status
     let errorStatus: 'ok' | 'elevated' | 'critical' = 'ok';
     if (networkStats.errorRate > 0.05) errorStatus = 'elevated'; // >5% error rate
     if (networkStats.errorRate > 0.2) errorStatus = 'critical'; // >20% error rate
-    
+
     // Determine overall status
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
-    if (memoryStatus === 'critical' || networkStatus === 'error' || errorStatus === 'critical') {
+
+    if (
+      memoryStatus === 'critical' ||
+      networkStatus === 'error' ||
+      errorStatus === 'critical'
+    ) {
       overallStatus = 'unhealthy';
-    } else if (memoryStatus === 'warning' || networkStatus === 'degraded' || errorStatus === 'elevated') {
+    } else if (
+      memoryStatus === 'warning' ||
+      networkStatus === 'degraded' ||
+      errorStatus === 'elevated'
+    ) {
       overallStatus = 'degraded';
     }
-    
+
     return {
       status: overallStatus,
       timestamp: now,
@@ -435,19 +474,22 @@ export class EnterpriseTelemetryManager {
   /**
    * Report a custom error
    */
-  reportError(error: Error | ConciergusError, context?: Record<string, any>): void {
+  reportError(
+    error: Error | ConciergusError,
+    context?: Record<string, any>
+  ): void {
     let enhancedError: ConciergusError;
-    
+
     if ('category' in error) {
       enhancedError = error as ConciergusError;
     } else {
       enhancedError = ConciergusErrorBoundary.enhanceError(error);
     }
-    
+
     if (context) {
       enhancedError.context = { ...enhancedError.context, ...context };
     }
-    
+
     // Report to telemetry
     ConciergusOpenTelemetry.createSpan(
       'conciergus-error-reporting',
@@ -461,7 +503,7 @@ export class EnterpriseTelemetryManager {
         span?.recordException(enhancedError);
       }
     );
-    
+
     ConciergusLogger.error('Custom error reported', enhancedError);
   }
 
@@ -469,8 +511,8 @@ export class EnterpriseTelemetryManager {
    * Record custom metrics
    */
   recordMetric(
-    name: string, 
-    value: number, 
+    name: string,
+    value: number,
     attributes?: Record<string, string | number | boolean>
   ): void {
     ConciergusOpenTelemetry.recordMetric(
@@ -500,12 +542,15 @@ export class EnterpriseTelemetryManager {
   /**
    * Start a span
    */
-  startSpan(operation: string, attributes?: Record<string, string | number | boolean>): any {
+  startSpan(
+    operation: string,
+    attributes?: Record<string, string | number | boolean>
+  ): any {
     if (!this.telemetryInstance) {
       return {
         setAttributes: () => {},
         end: () => {},
-        recordException: () => {}
+        recordException: () => {},
       };
     }
 
@@ -513,8 +558,8 @@ export class EnterpriseTelemetryManager {
     return tracer.startSpan(operation, {
       attributes: {
         'conciergus.component': 'enterprise-manager',
-        ...attributes
-      }
+        ...attributes,
+      },
     });
   }
 
@@ -545,12 +590,12 @@ export class EnterpriseTelemetryManager {
    */
   async shutdown(): Promise<void> {
     ConciergusLogger.info('Shutting down enterprise telemetry');
-    
+
     // Stop health checks
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
     }
-    
+
     // Run cleanup functions
     for (const cleanup of this.cleanupFunctions) {
       try {
@@ -559,15 +604,15 @@ export class EnterpriseTelemetryManager {
         ConciergusLogger.warn('Cleanup function failed', error as Error);
       }
     }
-    
+
     // Shutdown OpenTelemetry
     if (this.telemetryInstance) {
       await this.telemetryInstance.shutdown();
     }
-    
+
     // Clear middleware pipeline
     this.middlewarePipeline.clear();
-    
+
     EnterpriseTelemetryManager.instance = null;
     ConciergusLogger.info('Enterprise telemetry shutdown completed');
   }
@@ -580,7 +625,9 @@ export class TelemetryConfigFactory {
   /**
    * Development configuration
    */
-  static development(overrides?: Partial<EnterpriseTelemetryConfig>): EnterpriseTelemetryConfig {
+  static development(
+    overrides?: Partial<EnterpriseTelemetryConfig>
+  ): EnterpriseTelemetryConfig {
     return {
       serviceName: 'conciergus-dev',
       serviceVersion: '1.0.0',
@@ -607,7 +654,9 @@ export class TelemetryConfigFactory {
   /**
    * Production configuration
    */
-  static production(overrides?: Partial<EnterpriseTelemetryConfig>): EnterpriseTelemetryConfig {
+  static production(
+    overrides?: Partial<EnterpriseTelemetryConfig>
+  ): EnterpriseTelemetryConfig {
     return {
       serviceName: 'conciergus-prod',
       serviceVersion: '1.0.0',
@@ -641,7 +690,9 @@ export class TelemetryConfigFactory {
   /**
    * Testing configuration
    */
-  static testing(overrides?: Partial<EnterpriseTelemetryConfig>): EnterpriseTelemetryConfig {
+  static testing(
+    overrides?: Partial<EnterpriseTelemetryConfig>
+  ): EnterpriseTelemetryConfig {
     return {
       serviceName: 'conciergus-test',
       serviceVersion: '1.0.0',
@@ -663,4 +714,4 @@ export class TelemetryConfigFactory {
       ...overrides,
     };
   }
-} 
+}

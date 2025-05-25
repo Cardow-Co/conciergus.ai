@@ -108,18 +108,26 @@ export class CacheMetrics extends EventEmitter {
   private config: CacheMetricsConfig;
   private performanceMonitor: PerformanceMonitor | null = null;
   private operationHistory: CacheOperationMetrics[] = [];
-  private keyStats = new Map<string, { hits: number; misses: number; lastAccessed: Date }>();
+  private keyStats = new Map<
+    string,
+    { hits: number; misses: number; lastAccessed: Date }
+  >();
   private metricsTimer: NodeJS.Timeout | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
   private lastSummary: CachePerformanceSummary | null = null;
-  private trendHistory: Array<{ timestamp: Date; hitRate: number; latency: number; volume: number }> = [];
+  private trendHistory: Array<{
+    timestamp: Date;
+    hitRate: number;
+    latency: number;
+    volume: number;
+  }> = [];
 
   constructor(cacheManager: CacheManager, config: CacheMetricsConfig) {
     super();
     this.cacheManager = cacheManager;
     this.config = config;
     this.performanceMonitor = PerformanceMonitor.getInstance();
-    
+
     if (this.config.enabled) {
       this.initialize();
     }
@@ -143,7 +151,10 @@ export class CacheMetrics extends EventEmitter {
   /**
    * Record cache operation
    */
-  recordOperation(result: CacheResult<any>, metadata?: Record<string, any>): void {
+  recordOperation(
+    result: CacheResult<any>,
+    metadata?: Record<string, any>
+  ): void {
     if (!this.config.enabled) return;
 
     const operation: CacheOperationMetrics = {
@@ -218,9 +229,15 @@ export class CacheMetrics extends EventEmitter {
     if (this.keyStats.size > this.config.keyTracking.maxKeys) {
       // Remove least recently accessed keys
       const entries = Array.from(this.keyStats.entries());
-      entries.sort((a, b) => a[1].lastAccessed.getTime() - b[1].lastAccessed.getTime());
-      
-      for (let i = 0; i < entries.length - this.config.keyTracking.maxKeys; i++) {
+      entries.sort(
+        (a, b) => a[1].lastAccessed.getTime() - b[1].lastAccessed.getTime()
+      );
+
+      for (
+        let i = 0;
+        i < entries.length - this.config.keyTracking.maxKeys;
+        i++
+      ) {
         this.keyStats.delete(entries[i][0]);
       }
     }
@@ -229,7 +246,11 @@ export class CacheMetrics extends EventEmitter {
   /**
    * Record health check result
    */
-  private recordHealthCheck(result: { healthy: boolean; provider: string; latency?: number }): void {
+  private recordHealthCheck(result: {
+    healthy: boolean;
+    provider: string;
+    latency?: number;
+  }): void {
     if (this.performanceMonitor) {
       this.performanceMonitor.recordMetric(
         'cache_health' as any,
@@ -284,9 +305,13 @@ export class CacheMetrics extends EventEmitter {
   /**
    * Get performance summary
    */
-  async getPerformanceSummary(timeWindowMinutes: number = 60): Promise<CachePerformanceSummary> {
+  async getPerformanceSummary(
+    timeWindowMinutes: number = 60
+  ): Promise<CachePerformanceSummary> {
     const cutoff = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
-    const recentOperations = this.operationHistory.filter(op => op.timestamp > cutoff);
+    const recentOperations = this.operationHistory.filter(
+      (op) => op.timestamp > cutoff
+    );
 
     if (recentOperations.length === 0) {
       return {
@@ -301,12 +326,19 @@ export class CacheMetrics extends EventEmitter {
       };
     }
 
-    const hits = recentOperations.filter(op => op.fromCache).length;
-    const errors = recentOperations.filter(op => !op.success).length;
-    const totalLatency = recentOperations.reduce((sum, op) => sum + op.latency, 0);
-    
-    const redisOps = recentOperations.filter(op => op.provider === 'redis').length;
-    const memoryOps = recentOperations.filter(op => op.provider === 'memory').length;
+    const hits = recentOperations.filter((op) => op.fromCache).length;
+    const errors = recentOperations.filter((op) => !op.success).length;
+    const totalLatency = recentOperations.reduce(
+      (sum, op) => sum + op.latency,
+      0
+    );
+
+    const redisOps = recentOperations.filter(
+      (op) => op.provider === 'redis'
+    ).length;
+    const memoryOps = recentOperations.filter(
+      (op) => op.provider === 'memory'
+    ).length;
 
     // Get top keys
     const topKeys = Array.from(this.keyStats.entries())
@@ -316,7 +348,7 @@ export class CacheMetrics extends EventEmitter {
         misses: stats.misses,
         lastAccessed: stats.lastAccessed,
       }))
-      .sort((a, b) => (b.hits + b.misses) - (a.hits + a.misses))
+      .sort((a, b) => b.hits + b.misses - (a.hits + a.misses))
       .slice(0, 10);
 
     const summary: CachePerformanceSummary = {
@@ -378,9 +410,12 @@ export class CacheMetrics extends EventEmitter {
       volume: older.reduce((sum, d) => sum + d.volume, 0) / older.length,
     };
 
-    const hitRateTrend = ((recentAvg.hitRate - olderAvg.hitRate) / olderAvg.hitRate) * 100;
-    const latencyTrend = ((recentAvg.latency - olderAvg.latency) / olderAvg.latency) * 100;
-    const volumeTrend = ((recentAvg.volume - olderAvg.volume) / olderAvg.volume) * 100;
+    const hitRateTrend =
+      ((recentAvg.hitRate - olderAvg.hitRate) / olderAvg.hitRate) * 100;
+    const latencyTrend =
+      ((recentAvg.latency - olderAvg.latency) / olderAvg.latency) * 100;
+    const volumeTrend =
+      ((recentAvg.volume - olderAvg.volume) / olderAvg.volume) * 100;
 
     // Determine overall trend
     let trend: 'improving' | 'degrading' | 'stable' = 'stable';
@@ -393,16 +428,24 @@ export class CacheMetrics extends EventEmitter {
     // Generate recommendations
     const recommendations: string[] = [];
     if (recentAvg.hitRate < 0.7) {
-      recommendations.push('Consider increasing cache TTL or reviewing cache key strategies');
+      recommendations.push(
+        'Consider increasing cache TTL or reviewing cache key strategies'
+      );
     }
     if (recentAvg.latency > 100) {
-      recommendations.push('High cache latency detected - review Redis configuration or network');
+      recommendations.push(
+        'High cache latency detected - review Redis configuration or network'
+      );
     }
     if (latencyTrend > 20) {
-      recommendations.push('Cache latency is increasing - investigate performance bottlenecks');
+      recommendations.push(
+        'Cache latency is increasing - investigate performance bottlenecks'
+      );
     }
     if (hitRateTrend < -10) {
-      recommendations.push('Cache hit rate is declining - review cache invalidation strategies');
+      recommendations.push(
+        'Cache hit rate is declining - review cache invalidation strategies'
+      );
     }
 
     return {
@@ -434,16 +477,16 @@ export class CacheMetrics extends EventEmitter {
 
     const summary = await this.getPerformanceSummary(60);
     const cacheStats = await this.cacheManager.getStats();
-    
+
     // Calculate component scores
     const availability = this.cacheManager.isInitialized() ? 100 : 0;
-    
+
     let performance = 100;
     if (summary.averageLatency > 200) performance -= 30;
     if (summary.averageLatency > 500) performance -= 40;
-    
-    let efficiency = Math.min(summary.hitRate * 100, 100);
-    
+
+    const efficiency = Math.min(summary.hitRate * 100, 100);
+
     let reliability = 100;
     if (summary.errorRate > 0.01) reliability -= 20;
     if (summary.errorRate > 0.05) reliability -= 40;
@@ -452,7 +495,7 @@ export class CacheMetrics extends EventEmitter {
 
     // Generate alerts
     const alerts: CacheHealthScore['alerts'] = [];
-    
+
     if (summary.hitRate < this.config.alerting.hitRateThreshold) {
       alerts.push({
         severity: 'medium',
@@ -525,8 +568,10 @@ export class CacheMetrics extends EventEmitter {
   private startMetricsCollection(): void {
     this.metricsTimer = setInterval(async () => {
       try {
-        const summary = await this.getPerformanceSummary(this.config.aggregationWindow);
-        
+        const summary = await this.getPerformanceSummary(
+          this.config.aggregationWindow
+        );
+
         // Add to trend history
         this.trendHistory.push({
           timestamp: new Date(),
@@ -551,19 +596,26 @@ export class CacheMetrics extends EventEmitter {
    * Start cleanup timer
    */
   private startCleanup(): void {
-    this.cleanupTimer = setInterval(() => {
-      const cutoff = new Date(Date.now() - this.config.retentionPeriod * 60 * 60 * 1000);
-      
-      // Clean operation history
-      this.operationHistory = this.operationHistory.filter(op => op.timestamp > cutoff);
-      
-      // Clean key stats
-      for (const [key, stats] of this.keyStats.entries()) {
-        if (stats.lastAccessed < cutoff) {
-          this.keyStats.delete(key);
+    this.cleanupTimer = setInterval(
+      () => {
+        const cutoff = new Date(
+          Date.now() - this.config.retentionPeriod * 60 * 60 * 1000
+        );
+
+        // Clean operation history
+        this.operationHistory = this.operationHistory.filter(
+          (op) => op.timestamp > cutoff
+        );
+
+        // Clean key stats
+        for (const [key, stats] of this.keyStats.entries()) {
+          if (stats.lastAccessed < cutoff) {
+            this.keyStats.delete(key);
+          }
         }
-      }
-    }, 60 * 60 * 1000); // Run every hour
+      },
+      60 * 60 * 1000
+    ); // Run every hour
   }
 
   /**
@@ -593,4 +645,4 @@ export class CacheMetrics extends EventEmitter {
 
     this.emit('shutdown');
   }
-} 
+}

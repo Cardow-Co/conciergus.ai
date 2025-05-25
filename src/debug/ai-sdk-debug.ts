@@ -25,7 +25,13 @@ export interface PerformanceMetrics {
 
 // AI SDK Event types
 export interface AISDKEvent {
-  type: 'request' | 'response' | 'error' | 'stream-start' | 'stream-chunk' | 'stream-end';
+  type:
+    | 'request'
+    | 'response'
+    | 'error'
+    | 'stream-start'
+    | 'stream-chunk'
+    | 'stream-end';
   timestamp: number;
   data: any;
   metadata?: Record<string, any>;
@@ -46,14 +52,20 @@ export interface DebugConfig {
 // Debug logger class
 export class AISDKDebugger {
   private config: DebugConfig;
-  private logs: Array<{ level: DebugLevel; message: string; timestamp: number; data?: any }> = [];
+  private logs: Array<{
+    level: DebugLevel;
+    message: string;
+    timestamp: number;
+    data?: any;
+  }> = [];
   private events: AISDKEvent[] = [];
   private performanceMetrics: Map<string, PerformanceMetrics> = new Map();
   private activeOperations: Map<string, PerformanceMetrics> = new Map();
 
   constructor(config: Partial<DebugConfig> = {}) {
     this.config = {
-      enabled: process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
+      enabled:
+        process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true',
       level: (process.env.DEBUG_LEVEL as DebugLevel) || 'info',
       logToConsole: true,
       logToFile: false,
@@ -78,7 +90,7 @@ export class AISDKDebugger {
 
     // Add to internal logs
     this.logs.push(logEntry);
-    
+
     // Trim logs if exceeding max entries
     if (this.logs.length > this.config.maxLogEntries) {
       this.logs = this.logs.slice(-this.config.maxLogEntries);
@@ -90,7 +102,7 @@ export class AISDKDebugger {
     }
 
     // File output (would require Node.js fs module in real implementation)
-// TODO: implement Node-only file logger or drop `logToFile` from DebugConfig
+    // TODO: implement Node-only file logger or drop `logToFile` from DebugConfig
   }
 
   /**
@@ -109,7 +121,10 @@ export class AISDKDebugger {
   /**
    * Start performance tracking for an operation
    */
-  startPerformanceTracking(operationId: string, metadata?: Record<string, any>): void {
+  startPerformanceTracking(
+    operationId: string,
+    metadata?: Record<string, any>
+  ): void {
     if (!this.config.enabled || !this.config.trackPerformance) {
       return;
     }
@@ -127,17 +142,19 @@ export class AISDKDebugger {
     }
 
     this.activeOperations.set(operationId, metrics);
-    this.log('trace', `Started tracking operation: ${operationId}`, { metadata });
+    this.log('trace', `Started tracking operation: ${operationId}`, {
+      metadata,
+    });
   }
 
   /**
    * End performance tracking for an operation
    */
   endPerformanceTracking(
-    operationId: string, 
-    additionalData?: { 
-      totalTokens?: number; 
-      promptTokens?: number; 
+    operationId: string,
+    additionalData?: {
+      totalTokens?: number;
+      promptTokens?: number;
       completionTokens?: number;
       costEstimate?: number;
     }
@@ -157,10 +174,11 @@ export class AISDKDebugger {
 
     if (additionalData) {
       Object.assign(metrics, additionalData);
-      
+
       // Calculate tokens per second
       if (metrics.duration && additionalData.totalTokens) {
-        metrics.tokensPerSecond = (additionalData.totalTokens / metrics.duration) * 1000;
+        metrics.tokensPerSecond =
+          (additionalData.totalTokens / metrics.duration) * 1000;
       }
     }
 
@@ -174,7 +192,11 @@ export class AISDKDebugger {
   /**
    * Log streaming chunk performance
    */
-  logStreamChunk(operationId: string, chunkSize: number, isFirstChunk: boolean = false): void {
+  logStreamChunk(
+    operationId: string,
+    chunkSize: number,
+    isFirstChunk: boolean = false
+  ): void {
     if (!this.config.enabled || !this.config.trackPerformance) {
       return;
     }
@@ -185,7 +207,7 @@ export class AISDKDebugger {
     }
 
     const currentTime = performance.now();
-    
+
     if (isFirstChunk) {
       metrics.firstTokenTime = currentTime - metrics.startTime;
     }
@@ -200,12 +222,15 @@ export class AISDKDebugger {
   /**
    * Enhanced error logging with AI SDK context
    */
-  logAIError(error: Error, context?: { 
-    operation?: string; 
-    model?: string; 
-    prompt?: string; 
-    config?: any 
-  }): void {
+  logAIError(
+    error: Error,
+    context?: {
+      operation?: string;
+      model?: string;
+      prompt?: string;
+      config?: any;
+    }
+  ): void {
     const errorData = {
       name: error.name,
       message: error.message,
@@ -215,7 +240,7 @@ export class AISDKDebugger {
     };
 
     this.log('error', `AI SDK Error: ${error.message}`, errorData);
-    
+
     // Log as AI event
     this.logAIEvent({
       type: 'error',
@@ -228,10 +253,12 @@ export class AISDKDebugger {
    */
   debugConfig(config: ConciergusConfig): void {
     this.log('debug', 'AI SDK Configuration', {
-      providers: config.providers?.map(p => ({ name: p.name, type: p.type })),
+      providers: config.providers?.map((p) => ({ name: p.name, type: p.type })),
       defaultModel: config.defaultModel,
       enableTelemetry: config.enableTelemetry,
-      customPrompts: config.customPrompts ? Object.keys(config.customPrompts) : [],
+      customPrompts: config.customPrompts
+        ? Object.keys(config.customPrompts)
+        : [],
       middleware: config.middleware?.length || 0,
     });
   }
@@ -247,7 +274,7 @@ export class AISDKDebugger {
     totalCost: number;
   } {
     const metrics = Array.from(this.performanceMetrics.values());
-    
+
     if (metrics.length === 0) {
       return {
         totalOperations: 0,
@@ -258,19 +285,32 @@ export class AISDKDebugger {
       };
     }
 
-    const validDurations = metrics.filter(m => m.duration).map(m => m.duration!);
-    const validTokensPerSecond = metrics.filter(m => m.tokensPerSecond).map(m => m.tokensPerSecond!);
-    const totalTokens = metrics.reduce((sum, m) => sum + (m.totalTokens || 0), 0);
-    const totalCost = metrics.reduce((sum, m) => sum + (m.costEstimate || 0), 0);
+    const validDurations = metrics
+      .filter((m) => m.duration)
+      .map((m) => m.duration!);
+    const validTokensPerSecond = metrics
+      .filter((m) => m.tokensPerSecond)
+      .map((m) => m.tokensPerSecond!);
+    const totalTokens = metrics.reduce(
+      (sum, m) => sum + (m.totalTokens || 0),
+      0
+    );
+    const totalCost = metrics.reduce(
+      (sum, m) => sum + (m.costEstimate || 0),
+      0
+    );
 
     return {
       totalOperations: metrics.length,
-      averageDuration: validDurations.length > 0 
-        ? validDurations.reduce((a, b) => a + b, 0) / validDurations.length 
-        : 0,
-      averageTokensPerSecond: validTokensPerSecond.length > 0
-        ? validTokensPerSecond.reduce((a, b) => a + b, 0) / validTokensPerSecond.length
-        : 0,
+      averageDuration:
+        validDurations.length > 0
+          ? validDurations.reduce((a, b) => a + b, 0) / validDurations.length
+          : 0,
+      averageTokensPerSecond:
+        validTokensPerSecond.length > 0
+          ? validTokensPerSecond.reduce((a, b) => a + b, 0) /
+            validTokensPerSecond.length
+          : 0,
       totalTokens,
       totalCost,
     };
@@ -279,7 +319,12 @@ export class AISDKDebugger {
   /**
    * Get recent logs
    */
-  getRecentLogs(count: number = 50): Array<{ level: DebugLevel; message: string; timestamp: number; data?: any }> {
+  getRecentLogs(count: number = 50): Array<{
+    level: DebugLevel;
+    message: string;
+    timestamp: number;
+    data?: any;
+  }> {
     return this.logs.slice(-count);
   }
 
@@ -287,7 +332,9 @@ export class AISDKDebugger {
    * Get AI events
    */
   getAIEvents(type?: AISDKEvent['type']): AISDKEvent[] {
-    return type ? this.events.filter(event => event.type === type) : this.events;
+    return type
+      ? this.events.filter((event) => event.type === type)
+      : this.events;
   }
 
   /**
@@ -328,12 +375,17 @@ export class AISDKDebugger {
     return messageLevelIndex <= configLevelIndex;
   }
 
-  private outputToConsole(logEntry: { level: DebugLevel; message: string; timestamp: number; data?: any }): void {
+  private outputToConsole(logEntry: {
+    level: DebugLevel;
+    message: string;
+    timestamp: number;
+    data?: any;
+  }): void {
     const timestamp = new Date(logEntry.timestamp).toISOString();
     const prefix = `[${timestamp}] [AI-SDK] [${logEntry.level.toUpperCase()}]`;
-    
+
     const consoleMethod = this.getConsoleMethod(logEntry.level);
-    
+
     if (logEntry.data) {
       consoleMethod(`${prefix} ${logEntry.message}`, logEntry.data);
     } else {
@@ -341,7 +393,12 @@ export class AISDKDebugger {
     }
   }
 
-  private outputToFile(logEntry: { level: DebugLevel; message: string; timestamp: number; data?: any }): void {
+  private outputToFile(logEntry: {
+    level: DebugLevel;
+    message: string;
+    timestamp: number;
+    data?: any;
+  }): void {
     // File logging would be implemented here for Node.js environments
     // For browser environments, this could use IndexedDB or localStorage
     console.log('File logging not implemented in browser environment');
@@ -349,12 +406,18 @@ export class AISDKDebugger {
 
   private getConsoleMethod(level: DebugLevel): (...args: any[]) => void {
     switch (level) {
-      case 'error': return console.error;
-      case 'warn': return console.warn;
-      case 'info': return console.info;
-      case 'debug': return console.debug;
-      case 'trace': return console.trace;
-      default: return console.log;
+      case 'error':
+        return console.error;
+      case 'warn':
+        return console.warn;
+      case 'info':
+        return console.info;
+      case 'debug':
+        return console.debug;
+      case 'trace':
+        return console.trace;
+      default:
+        return console.log;
     }
   }
 }
@@ -367,25 +430,32 @@ export const debugAI = {
   /**
    * Quick logging functions
    */
-  error: (message: string, data?: any) => aiDebugger.log('error', message, data),
+  error: (message: string, data?: any) =>
+    aiDebugger.log('error', message, data),
   warn: (message: string, data?: any) => aiDebugger.log('warn', message, data),
   info: (message: string, data?: any) => aiDebugger.log('info', message, data),
-  debug: (message: string, data?: any) => aiDebugger.log('debug', message, data),
-  trace: (message: string, data?: any) => aiDebugger.log('trace', message, data),
+  debug: (message: string, data?: any) =>
+    aiDebugger.log('debug', message, data),
+  trace: (message: string, data?: any) =>
+    aiDebugger.log('trace', message, data),
 
   /**
    * Performance tracking helpers
    */
-  startTracking: (operationId: string) => aiDebugger.startPerformanceTracking(operationId),
-  endTracking: (operationId: string, data?: any) => aiDebugger.endPerformanceTracking(operationId, data),
-  
+  startTracking: (operationId: string) =>
+    aiDebugger.startPerformanceTracking(operationId),
+  endTracking: (operationId: string, data?: any) =>
+    aiDebugger.endPerformanceTracking(operationId, data),
+
   /**
    * AI-specific helpers
    */
   logAIRequest: (data: any) => aiDebugger.logAIEvent({ type: 'request', data }),
-  logAIResponse: (data: any) => aiDebugger.logAIEvent({ type: 'response', data }),
-  logAIError: (error: Error, context?: any) => aiDebugger.logAIError(error, context),
-  
+  logAIResponse: (data: any) =>
+    aiDebugger.logAIEvent({ type: 'response', data }),
+  logAIError: (error: Error, context?: any) =>
+    aiDebugger.logAIError(error, context),
+
   /**
    * Debugging utilities
    */
@@ -403,7 +473,7 @@ export const devTools = {
   measure: async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
     const operationId = `measure_${name}_${Date.now()}`;
     aiDebugger.startPerformanceTracking(operationId);
-    
+
     try {
       const result = await fn();
       aiDebugger.endPerformanceTracking(operationId);
@@ -419,18 +489,18 @@ export const devTools = {
    * Create a debugging wrapper for AI SDK functions
    */
   wrapAIFunction: <T extends (...args: any[]) => any>(
-    name: string, 
+    name: string,
     fn: T
   ): T => {
     return ((...args: any[]) => {
       const operationId = `${name}_${Date.now()}`;
       debugAI.debug(`Calling ${name}`, { args: args.slice(0, 2) }); // Limit args for privacy
-      
+
       aiDebugger.startPerformanceTracking(operationId);
-      
+
       try {
         const result = fn(...args);
-        
+
         // Handle promises
         if (result && typeof result.then === 'function') {
           return result
@@ -445,7 +515,7 @@ export const devTools = {
               throw error;
             });
         }
-        
+
         // Handle synchronous results
         aiDebugger.endPerformanceTracking(operationId);
         debugAI.debug(`${name} completed successfully`);
@@ -465,14 +535,14 @@ export const devTools = {
     if (typeof process !== 'undefined') {
       return process.memoryUsage();
     }
-    
+
     // Browser memory estimation
     if ('memory' in performance) {
       return (performance as any).memory;
     }
-    
+
     return null;
   },
 };
 
-export default aiDebugger; 
+export default aiDebugger;

@@ -4,7 +4,17 @@
  */
 
 // Core CDN components
-export { AssetOptimizer, type AssetOptimizationConfig, type AssetInfo, type ImageOptimizationOptions, type AssetPreloadOptions, type CDNMetrics, type CDNProvider, type AssetType, type ImageFormat } from './AssetOptimizer';
+export {
+  AssetOptimizer,
+  type AssetOptimizationConfig,
+  type AssetInfo,
+  type ImageOptimizationOptions,
+  type AssetPreloadOptions,
+  type CDNMetrics,
+  type CDNProvider,
+  type AssetType,
+  type ImageFormat,
+} from './AssetOptimizer';
 export { OptimizedImage, type OptimizedImageProps } from './OptimizedImage';
 
 // Default configurations
@@ -154,7 +164,9 @@ export function createNetlifyOptimizer(config: {
 /**
  * Create custom asset optimizer
  */
-export function createCustomOptimizer(config: Partial<AssetOptimizationConfig>): AssetOptimizer {
+export function createCustomOptimizer(
+  config: Partial<AssetOptimizationConfig>
+): AssetOptimizer {
   const optimizerConfig: AssetOptimizationConfig = {
     ...DEFAULT_CDN_CONFIG,
     ...config,
@@ -214,7 +226,10 @@ export function createOptimizerFromEnv(): AssetOptimizer {
   }
 
   // Check for AWS CloudFront
-  if (process.env.AWS_CLOUDFRONT_DISTRIBUTION_ID || process.env.CLOUDFRONT_DOMAIN) {
+  if (
+    process.env.AWS_CLOUDFRONT_DISTRIBUTION_ID ||
+    process.env.CLOUDFRONT_DOMAIN
+  ) {
     return createCloudFrontOptimizer({
       domain: process.env.CDN_DOMAIN || process.env.CLOUDFRONT_DOMAIN || '',
       enableMetrics: process.env.CDN_ENABLE_METRICS !== 'false',
@@ -247,7 +262,9 @@ export function createOptimizerFromEnv(): AssetOptimizer {
     },
     caching: {
       enableVersioning: process.env.CDN_ENABLE_VERSIONING !== 'false',
-      versionStrategy: (process.env.CDN_VERSION_STRATEGY as 'hash' | 'timestamp' | 'semver') || 'hash',
+      versionStrategy:
+        (process.env.CDN_VERSION_STRATEGY as 'hash' | 'timestamp' | 'semver') ||
+        'hash',
       enablePreload: process.env.CDN_ENABLE_PRELOAD !== 'false',
       enablePrefetch: process.env.CDN_ENABLE_PREFETCH !== 'false',
     },
@@ -263,10 +280,10 @@ export const CDNUtils = {
    */
   generateBreakpoints(): number[] {
     return [
-      320,  // Mobile portrait
-      375,  // Mobile portrait (iPhone 6/7/8)
-      414,  // Mobile portrait (iPhone 6/7/8 Plus)
-      768,  // Tablet portrait
+      320, // Mobile portrait
+      375, // Mobile portrait (iPhone 6/7/8)
+      414, // Mobile portrait (iPhone 6/7/8 Plus)
+      768, // Tablet portrait
       1024, // Tablet landscape / Desktop small
       1280, // Desktop medium
       1440, // Desktop large
@@ -277,7 +294,9 @@ export const CDNUtils = {
   /**
    * Get recommended image quality settings
    */
-  getQualitySettings(useCase: 'thumbnails' | 'content' | 'hero' | 'print'): AssetOptimizationConfig['images']['quality'] {
+  getQualitySettings(
+    useCase: 'thumbnails' | 'content' | 'hero' | 'print'
+  ): AssetOptimizationConfig['images']['quality'] {
     switch (useCase) {
       case 'thumbnails':
         return { jpeg: 70, webp: 70, avif: 65, png: 80 };
@@ -295,11 +314,14 @@ export const CDNUtils = {
   /**
    * Generate cache headers for different asset types
    */
-  getCacheHeaders(assetType: AssetType, cacheStrategy: 'aggressive' | 'moderate' | 'conservative' = 'moderate'): Record<string, string> {
+  getCacheHeaders(
+    assetType: AssetType,
+    cacheStrategy: 'aggressive' | 'moderate' | 'conservative' = 'moderate'
+  ): Record<string, string> {
     const strategies = {
       aggressive: { maxAge: 31536000, staleWhileRevalidate: 86400 }, // 1 year, 1 day
-      moderate: { maxAge: 86400, staleWhileRevalidate: 3600 },      // 1 day, 1 hour
-      conservative: { maxAge: 3600, staleWhileRevalidate: 300 },    // 1 hour, 5 minutes
+      moderate: { maxAge: 86400, staleWhileRevalidate: 3600 }, // 1 day, 1 hour
+      conservative: { maxAge: 3600, staleWhileRevalidate: 300 }, // 1 hour, 5 minutes
     };
 
     const { maxAge, staleWhileRevalidate } = strategies[cacheStrategy];
@@ -309,7 +331,10 @@ export const CDNUtils = {
     };
 
     // Add immutable for static assets
-    if (['image', 'font', 'css', 'js'].includes(assetType) && cacheStrategy === 'aggressive') {
+    if (
+      ['image', 'font', 'css', 'js'].includes(assetType) &&
+      cacheStrategy === 'aggressive'
+    ) {
       headers['Cache-Control'] += ', immutable';
     }
 
@@ -328,7 +353,7 @@ export const CDNUtils = {
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
-    
+
     try {
       if (canvas.toDataURL('image/avif').indexOf('data:image/avif') === 0) {
         return 'avif';
@@ -352,14 +377,17 @@ export const CDNUtils = {
   /**
    * Calculate bandwidth savings from optimization
    */
-  calculateSavings(originalSize: number, optimizedSize: number): {
+  calculateSavings(
+    originalSize: number,
+    optimizedSize: number
+  ): {
     bytes: number;
     percentage: number;
     formatted: string;
   } {
     const bytes = originalSize - optimizedSize;
     const percentage = originalSize > 0 ? (bytes / originalSize) * 100 : 0;
-    
+
     const formatBytes = (bytes: number): string => {
       if (bytes === 0) return '0 B';
       const k = 1024;
@@ -406,4 +434,4 @@ export function shutdownGlobalCDN(): void {
     globalCDNOptimizer.shutdown();
     globalCDNOptimizer = null;
   }
-} 
+}

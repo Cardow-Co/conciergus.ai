@@ -23,7 +23,9 @@ export interface MockChatActions {
   reload: jest.MockedFunction<() => Promise<void>>;
   stop: jest.MockedFunction<() => void>;
   setInput: jest.MockedFunction<(input: string) => void>;
-  handleInputChange: jest.MockedFunction<(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void>;
+  handleInputChange: jest.MockedFunction<
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  >;
   handleSubmit: jest.MockedFunction<(e?: React.FormEvent) => void>;
   setMessages: jest.MockedFunction<(messages: MockMessage[]) => void>;
 }
@@ -56,7 +58,7 @@ export const useChat = jest.fn().mockReturnValue({
       createdAt: new Date(),
     },
     {
-      id: 'msg-2', 
+      id: 'msg-2',
       role: 'assistant' as const,
       content: 'Hi there! How can I help you today?',
       createdAt: new Date(),
@@ -117,18 +119,24 @@ export const useStreamableValue = jest.fn().mockReturnValue([
   undefined, // error
 ]);
 
-export const readStreamableValue = jest.fn().mockImplementation(async function* (streamable: any) {
-  if (!streamable) {
-    throw new Error('Streamable value is required');
-  }
-  
-  const chunks = streamable.chunks || ['stream chunk 1', 'stream chunk 2', 'stream chunk 3'];
-  for (const chunk of chunks) {
-    yield chunk;
-    // Simulate async delay
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-});
+export const readStreamableValue = jest
+  .fn()
+  .mockImplementation(async function* (streamable: any) {
+    if (!streamable) {
+      throw new Error('Streamable value is required');
+    }
+
+    const chunks = streamable.chunks || [
+      'stream chunk 1',
+      'stream chunk 2',
+      'stream chunk 3',
+    ];
+    for (const chunk of chunks) {
+      yield chunk;
+      // Simulate async delay
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  });
 
 // Mock ChatStore integration (AI SDK 5 specific)
 export const useChatStore = jest.fn().mockReturnValue({
@@ -150,20 +158,29 @@ export const useToolInvocation = jest.fn().mockReturnValue({
 });
 
 // Mock message utilities
-export const experimental_generateId = jest.fn().mockImplementation(() => 
-  `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-);
+export const experimental_generateId = jest
+  .fn()
+  .mockImplementation(
+    () => `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  );
 
-export const experimental_createMessage = jest.fn().mockImplementation((content: string, role: string = 'user') => ({
-  id: experimental_generateId(),
-  role,
-  content,
-  createdAt: new Date(),
-}));
+export const experimental_createMessage = jest
+  .fn()
+  .mockImplementation((content: string, role: string = 'user') => ({
+    id: experimental_generateId(),
+    role,
+    content,
+    createdAt: new Date(),
+  }));
 
 // Mock provider utilities for testing
 export const createMockChatProvider = () => ({
-  Provider: ({ children, ...props }: any) => React.createElement('div', { 'data-testid': 'mock-chat-provider', ...props }, children),
+  Provider: ({ children, ...props }: any) =>
+    React.createElement(
+      'div',
+      { 'data-testid': 'mock-chat-provider', ...props },
+      children
+    ),
   useChat: useChat,
   useCompletion: useCompletion,
   useAssistant: useAssistant,
@@ -222,14 +239,19 @@ export const experimental_usePerformanceMetrics = jest.fn().mockReturnValue({
 
 // Create utilities for testing
 export const testUtils = {
-  createMockMessage: (content: string, role: 'user' | 'assistant' = 'user'): MockMessage => ({
+  createMockMessage: (
+    content: string,
+    role: 'user' | 'assistant' = 'user'
+  ): MockMessage => ({
     id: experimental_generateId(),
     role,
     content,
     createdAt: new Date(),
   }),
 
-  createMockChatState: (overrides: Partial<MockChatState> = {}): MockChatState => ({
+  createMockChatState: (
+    overrides: Partial<MockChatState> = {}
+  ): MockChatState => ({
     messages: [],
     isLoading: false,
     error: undefined,
@@ -263,34 +285,34 @@ export const testUtils = {
       handleInputChange: jest.fn(),
       handleSubmit: jest.fn(),
       setMessages: jest.fn(),
-resetMocks: () => {
-    useChat.mockReturnValue({
-     messages: [
-       {
-         id: 'msg-1',
-         role: 'user' as const,
-         content: 'Hello!',
-         createdAt: new Date(),
-       },
-       {
-         id: 'msg-2', 
-         role: 'assistant' as const,
-         content: 'Hi there! How can I help you today?',
-         createdAt: new Date(),
-       },
-     ],
-      isLoading: false,
-      error: undefined,
-      input: '',
-      data: undefined,
-      // ... rest remains the same
-    });
+      resetMocks: () => {
+        useChat.mockReturnValue({
+          messages: [
+            {
+              id: 'msg-1',
+              role: 'user' as const,
+              content: 'Hello!',
+              createdAt: new Date(),
+            },
+            {
+              id: 'msg-2',
+              role: 'assistant' as const,
+              content: 'Hi there! How can I help you today?',
+              createdAt: new Date(),
+            },
+          ],
+          isLoading: false,
+          error: undefined,
+          input: '',
+          data: undefined,
+          // ... rest remains the same
+        });
 
-    useCompletion.mockReturnValue({
-     completion: 'Mock completion text',
-      // ... rest remains the same
-    });
-  },
+        useCompletion.mockReturnValue({
+          completion: 'Mock completion text',
+          // ... rest remains the same
+        });
+      },
       submitMessage: jest.fn().mockResolvedValue(undefined),
       append: jest.fn(),
       stop: jest.fn(),
@@ -320,4 +342,4 @@ const aiSDKReactMock = {
   testUtils,
 };
 
-export default aiSDKReactMock; 
+export default aiSDKReactMock;

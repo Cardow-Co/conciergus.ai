@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { 
+import type {
   EnhancedStreamPart,
   ToolCall,
   ToolCallState,
-  StreamingType 
+  StreamingType,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -13,7 +13,14 @@ import type {
 /**
  * Agent step status types
  */
-export type AgentStepStatus = 'idle' | 'preparing' | 'running' | 'paused' | 'completed' | 'error' | 'cancelled';
+export type AgentStepStatus =
+  | 'idle'
+  | 'preparing'
+  | 'running'
+  | 'paused'
+  | 'completed'
+  | 'error'
+  | 'cancelled';
 
 /**
  * Agent step execution mode
@@ -49,7 +56,12 @@ export interface AgentStep {
  */
 export interface AgentCondition {
   /** Condition type */
-  type: 'timeout' | 'step_count' | 'result_match' | 'error_threshold' | 'custom';
+  type:
+    | 'timeout'
+    | 'step_count'
+    | 'result_match'
+    | 'error_threshold'
+    | 'custom';
   /** Condition value */
   value: any;
   /** Condition check function for custom conditions */
@@ -76,7 +88,7 @@ export interface ConciergusAgentControlsProps {
   continueConditions?: AgentCondition[];
   /** Additional CSS classes */
   className?: string;
-  
+
   // === Control Options ===
   /** Enable step-by-step execution */
   enableStepByStep?: boolean;
@@ -92,7 +104,7 @@ export interface ConciergusAgentControlsProps {
   showTimeline?: boolean;
   /** Compact display mode */
   compact?: boolean;
-  
+
   // === Event Handlers ===
   /** Start agent execution */
   onStart?: () => void;
@@ -114,7 +126,7 @@ export interface ConciergusAgentControlsProps {
   onStepStatusChange?: (stepId: string, status: AgentStepStatus) => void;
   /** Error handler */
   onError?: (error: Error) => void;
-  
+
   // === Customization ===
   /** Custom step renderer */
   stepRenderer?: React.ComponentType<StepRendererProps>;
@@ -122,13 +134,13 @@ export interface ConciergusAgentControlsProps {
   controlRenderer?: React.ComponentType<ControlRendererProps>;
   /** Show debug information */
   debug?: boolean;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Additional Props ===
   [key: string]: any;
 }
@@ -190,15 +202,21 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
   isLastStep,
   compact = false,
   showDetails = true,
-  onClick
+  onClick,
 }) => {
-  const stepClasses = useMemo(() => [
-    'agent-step',
-    `status-${step.status}`,
-    isCurrentStep ? 'current' : '',
-    isLastStep ? 'last' : '',
-    compact ? 'compact' : ''
-  ].filter(Boolean).join(' '), [step.status, isCurrentStep, isLastStep, compact]);
+  const stepClasses = useMemo(
+    () =>
+      [
+        'agent-step',
+        `status-${step.status}`,
+        isCurrentStep ? 'current' : '',
+        isLastStep ? 'last' : '',
+        compact ? 'compact' : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    [step.status, isCurrentStep, isLastStep, compact]
+  );
 
   const formatDuration = useCallback((duration?: number) => {
     if (!duration) return '';
@@ -208,17 +226,23 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
 
   const getStatusIcon = useCallback((status: AgentStepStatus) => {
     switch (status) {
-      case 'completed': return '✅';
-      case 'error': return '❌';
-      case 'running': return '🔄';
-      case 'paused': return '⏸️';
-      case 'cancelled': return '🚫';
-      default: return '⏳';
+      case 'completed':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'running':
+        return '🔄';
+      case 'paused':
+        return '⏸️';
+      case 'cancelled':
+        return '🚫';
+      default:
+        return '⏳';
     }
   }, []);
 
   return (
-    <div 
+    <div
       className={stepClasses}
       onClick={() => onClick?.(step)}
       role="button"
@@ -233,7 +257,7 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
           <span className="step-duration">{formatDuration(step.duration)}</span>
         )}
       </div>
-      
+
       {showDetails && !compact && (
         <div className="step-details">
           {step.error && (
@@ -242,7 +266,7 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
               <span className="error-message">{step.error.message}</span>
             </div>
           )}
-          
+
           {step.toolCalls && step.toolCalls.length > 0 && (
             <div className="step-tools">
               <span className="tools-label">Tools:</span>
@@ -255,15 +279,14 @@ const DefaultStepRenderer: React.FC<StepRendererProps> = ({
               </div>
             </div>
           )}
-          
+
           {step.result && (
             <div className="step-result">
               <span className="result-label">Result:</span>
               <div className="result-content">
-                {typeof step.result === 'string' 
-                  ? step.result 
-                  : JSON.stringify(step.result, null, 2)
-                }
+                {typeof step.result === 'string'
+                  ? step.result
+                  : JSON.stringify(step.result, null, 2)}
               </div>
             </div>
           )}
@@ -281,7 +304,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
   mode,
   actions,
   disabled = false,
-  compact = false
+  compact = false,
 }) => {
   const isRunning = status === 'running';
   const isPaused = status === 'paused';
@@ -301,7 +324,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
             ▶️ Start
           </button>
         )}
-        
+
         {isRunning && (
           <button
             className="control-button pause"
@@ -312,7 +335,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
             ⏸️ Pause
           </button>
         )}
-        
+
         {isPaused && (
           <button
             className="control-button resume"
@@ -323,7 +346,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
             ▶️ Resume
           </button>
         )}
-        
+
         {(isRunning || isPaused) && (
           <button
             className="control-button stop"
@@ -335,7 +358,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
           </button>
         )}
       </div>
-      
+
       {mode === 'step-by-step' && (
         <div className="control-group step-controls">
           <button
@@ -346,7 +369,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
           >
             ⏭️ Next Step
           </button>
-          
+
           <button
             className="control-button prepare-step"
             onClick={actions.prepareStep}
@@ -357,7 +380,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
           </button>
         </div>
       )}
-      
+
       {isError && (
         <div className="control-group error-controls">
           <button
@@ -380,7 +403,7 @@ const DefaultControlRenderer: React.FC<ControlRendererProps> = ({
 
 /**
  * ConciergusAgentControls - UI component for controlling AI SDK 5's advanced agent features
- * 
+ *
  * Provides controls for prepareStep, continueUntil, and step-by-step agent execution
  * with progress tracking and visual feedback.
  */
@@ -392,7 +415,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
   maxSteps = 10,
   continueConditions = [],
   className = '',
-  
+
   // Control options
   enableStepByStep = true,
   enableAutomatic = true,
@@ -401,7 +424,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
   showStepDetails = true,
   showTimeline = true,
   compact = false,
-  
+
   // Event handlers
   onStart,
   onPause,
@@ -413,90 +436,113 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
   onModeChange,
   onStepStatusChange,
   onError,
-  
+
   // Customization
   stepRenderer: StepRenderer = DefaultStepRenderer,
   controlRenderer: ControlRenderer = DefaultControlRenderer,
   debug = false,
-  
+
   // Accessibility
   ariaLabel = 'Agent execution controls',
   ariaDescription,
-  
+
   ...rest
 }) => {
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
-  const [selectedCondition, setSelectedCondition] = useState<AgentCondition | null>(null);
+
+  const [selectedCondition, setSelectedCondition] =
+    useState<AgentCondition | null>(null);
   const [internalSteps, setInternalSteps] = useState<AgentStep[]>(steps);
-  
+
   // ==========================================
   // COMPUTED VALUES
   // ==========================================
-  
-  const containerClasses = useMemo(() => [
-    'conciergus-agent-controls',
-    `status-${status}`,
-    `mode-${executionMode}`,
-    compact ? 'compact' : '',
-    showTimeline ? 'with-timeline' : '',
-    className
-  ].filter(Boolean).join(' '), [status, executionMode, compact, showTimeline, className]);
-  
+
+  const containerClasses = useMemo(
+    () =>
+      [
+        'conciergus-agent-controls',
+        `status-${status}`,
+        `mode-${executionMode}`,
+        compact ? 'compact' : '',
+        showTimeline ? 'with-timeline' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    [status, executionMode, compact, showTimeline, className]
+  );
+
   const progressPercentage = useMemo(() => {
     if (steps.length === 0) return 0;
-    const completedSteps = steps.filter(step => step.status === 'completed').length;
-    return Math.round((completedSteps / Math.max(steps.length, maxSteps)) * 100);
+    const completedSteps = steps.filter(
+      (step) => step.status === 'completed'
+    ).length;
+    return Math.round(
+      (completedSteps / Math.max(steps.length, maxSteps)) * 100
+    );
   }, [steps, maxSteps]);
-  
+
   const currentStep = useMemo(() => {
     return steps[currentStepIndex] || null;
   }, [steps, currentStepIndex]);
-  
+
   // ==========================================
   // EVENT HANDLERS
   // ==========================================
-  
-  const handleModeChange = useCallback((mode: AgentExecutionMode) => {
-    onModeChange?.(mode);
-  }, [onModeChange]);
-  
-  const handleConditionSelect = useCallback((condition: AgentCondition) => {
-    setSelectedCondition(condition);
-    onContinueUntil?.(condition);
-  }, [onContinueUntil]);
-  
-  const handleStepClick = useCallback((step: AgentStep) => {
-    if (debug) {
-      console.log('[ConciergusAgentControls] Step clicked:', step);
-    }
-  }, [debug]);
-  
-  const controlActions = useMemo(() => ({
-    start: () => onStart?.(),
-    pause: () => onPause?.(),
-    resume: () => onResume?.(),
-    stop: () => onStop?.(),
-    stepNext: () => onStepNext?.(),
-    prepareStep: () => onPrepareStep?.()
-  }), [onStart, onPause, onResume, onStop, onStepNext, onPrepareStep]);
-  
+
+  const handleModeChange = useCallback(
+    (mode: AgentExecutionMode) => {
+      onModeChange?.(mode);
+    },
+    [onModeChange]
+  );
+
+  const handleConditionSelect = useCallback(
+    (condition: AgentCondition) => {
+      setSelectedCondition(condition);
+      onContinueUntil?.(condition);
+    },
+    [onContinueUntil]
+  );
+
+  const handleStepClick = useCallback(
+    (step: AgentStep) => {
+      if (debug) {
+        console.log('[ConciergusAgentControls] Step clicked:', step);
+      }
+    },
+    [debug]
+  );
+
+  const controlActions = useMemo(
+    () => ({
+      start: () => onStart?.(),
+      pause: () => onPause?.(),
+      resume: () => onResume?.(),
+      stop: () => onStop?.(),
+      stepNext: () => onStepNext?.(),
+      prepareStep: () => onPrepareStep?.(),
+    }),
+    [onStart, onPause, onResume, onStop, onStepNext, onPrepareStep]
+  );
+
   // ==========================================
   // EFFECTS
   // ==========================================
-  
+
   useEffect(() => {
     setInternalSteps(steps);
   }, [steps]);
-  
+
   // ==========================================
   // RENDER
   // ==========================================
-  
+
   return (
-    <div 
+    <div
       className={containerClasses}
       role="region"
       aria-label={ariaLabel}
@@ -507,22 +553,25 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
       <div className="agent-header">
         <div className="agent-status">
           <span className="status-indicator" data-status={status}></span>
-          <span className="status-text">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+          <span className="status-text">
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
         </div>
-        
+
         <div className="agent-progress">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
           <div className="progress-text">
-            {progressPercentage}% ({steps.filter(s => s.status === 'completed').length}/{maxSteps})
+            {progressPercentage}% (
+            {steps.filter((s) => s.status === 'completed').length}/{maxSteps})
           </div>
         </div>
       </div>
-      
+
       {/* Execution Mode Selector */}
       <div className="mode-selector">
         <label className="mode-label">Execution Mode:</label>
@@ -536,7 +585,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
               Automatic
             </button>
           )}
-          
+
           {enableStepByStep && (
             <button
               className={`mode-option ${executionMode === 'step-by-step' ? 'active' : ''}`}
@@ -546,7 +595,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
               Step-by-Step
             </button>
           )}
-          
+
           {enableConditional && (
             <button
               className={`mode-option ${executionMode === 'conditional' ? 'active' : ''}`}
@@ -558,7 +607,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Control Buttons */}
       <ControlRenderer
         status={status}
@@ -566,7 +615,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
         actions={controlActions}
         compact={compact}
       />
-      
+
       {/* Continue Conditions (for conditional mode) */}
       {executionMode === 'conditional' && continueConditions.length > 0 && (
         <div className="continue-conditions">
@@ -579,13 +628,14 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
                 onClick={() => handleConditionSelect(condition)}
                 aria-pressed={selectedCondition === condition}
               >
-                {condition.description || `${condition.type}: ${condition.value}`}
+                {condition.description ||
+                  `${condition.type}: ${condition.value}`}
               </button>
             ))}
           </div>
         </div>
       )}
-      
+
       {/* Steps Timeline */}
       {showTimeline && steps.length > 0 && (
         <div className="steps-timeline">
@@ -606,7 +656,7 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
           </div>
         </div>
       )}
-      
+
       {/* Current Step Details */}
       {currentStep && !compact && (
         <div className="current-step-details">
@@ -622,21 +672,25 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
           />
         </div>
       )}
-      
+
       {/* Debug Information */}
       {debug && (
         <details className="debug-info">
           <summary>Debug Information</summary>
           <pre className="debug-content">
-            {JSON.stringify({
-              status,
-              executionMode,
-              currentStepIndex,
-              stepsCount: steps.length,
-              progressPercentage,
-              selectedCondition,
-              continueConditions: continueConditions.length
-            }, null, 2)}
+            {JSON.stringify(
+              {
+                status,
+                executionMode,
+                currentStepIndex,
+                stepsCount: steps.length,
+                progressPercentage,
+                selectedCondition,
+                continueConditions: continueConditions.length,
+              },
+              null,
+              2
+            )}
           </pre>
         </details>
       )}
@@ -649,12 +703,12 @@ const ConciergusAgentControls: React.FC<ConciergusAgentControlsProps> = ({
 // ==========================================
 
 export default ConciergusAgentControls;
-export type { 
-  ConciergusAgentControlsProps, 
-  StepRendererProps, 
+export type {
+  ConciergusAgentControlsProps,
+  StepRendererProps,
   ControlRendererProps,
   AgentStep,
   AgentCondition,
   AgentStepStatus,
-  AgentExecutionMode
-}; 
+  AgentExecutionMode,
+};

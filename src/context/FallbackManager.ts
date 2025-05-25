@@ -1,13 +1,13 @@
-import type { 
-  GatewayConfig, 
-  GatewayModelConfig, 
-  FallbackChainConfig 
+import type {
+  GatewayConfig,
+  GatewayModelConfig,
+  FallbackChainConfig,
 } from './GatewayConfig';
-import { 
-  GATEWAY_MODELS, 
-  FALLBACK_CHAINS, 
+import {
+  GATEWAY_MODELS,
+  FALLBACK_CHAINS,
   createGatewayModel,
-  selectOptimalModel 
+  selectOptimalModel,
 } from './GatewayConfig';
 import CostTracker, { type UsageEvent } from './CostTracker';
 import type { DebugManager } from './DebugManager';
@@ -15,10 +15,10 @@ import type { DebugManager } from './DebugManager';
 /**
  * Error types that can trigger fallback behavior
  */
-export type FallbackTrigger = 
-  | 'rate_limit' 
-  | 'model_unavailable' 
-  | 'timeout' 
+export type FallbackTrigger =
+  | 'rate_limit'
+  | 'model_unavailable'
+  | 'timeout'
   | 'authentication_error'
   | 'quota_exceeded'
   | 'unknown_error';
@@ -82,11 +82,15 @@ export class FallbackManager {
   private costTracker?: CostTracker;
   private debugManager?: DebugManager;
 
-  constructor(config: GatewayConfig = {}, costTracker?: CostTracker, debugManager?: DebugManager) {
+  constructor(
+    config: GatewayConfig = {},
+    costTracker?: CostTracker,
+    debugManager?: DebugManager
+  ) {
     this.config = {
       retryAttempts: 3,
       timeout: 30000,
-      ...config
+      ...config,
     };
 
     this.retryConfig = {
@@ -94,7 +98,7 @@ export class FallbackManager {
       baseDelay: 1000,
       maxDelay: 16000,
       exponentialBase: 2,
-      jitter: true
+      jitter: true,
     };
 
     this.costTracker = costTracker;
@@ -118,17 +122,22 @@ export class FallbackManager {
     const models = this.getOrderedFallbackModels(chainName, context);
     const attempts: FallbackAttempt[] = [];
     const startTime = Date.now();
-    
-    this.debugManager?.info(`Starting fallback execution with ${models.length} models`, {
-      chainName,
-      models,
-      context
-    }, 'FallbackManager', 'fallback');
+
+    this.debugManager?.info(
+      `Starting fallback execution with ${models.length} models`,
+      {
+        chainName,
+        models,
+        context,
+      },
+      'FallbackManager',
+      'fallback'
+    );
 
     for (let i = 0; i < models.length; i++) {
       const modelId = models[i];
       const model = createGatewayModel(modelId, this.config);
-      
+
       try {
         const attemptStart = Date.now();
         const result = await this.executeWithRetry(
@@ -137,66 +146,87 @@ export class FallbackManager {
           operation,
           i + 1
         );
-        
+
         const responseTime = Date.now() - attemptStart;
-        
+
         // Update performance metrics on success
         this.updatePerformanceMetrics(modelId, true, responseTime);
-        
+
         // Track cost usage if tracker is available
         this.trackUsageEvent(modelId, responseTime, true, result);
-        
-        this.debugManager?.info(`Fallback execution succeeded with model ${modelId}`, {
-          modelId,
-          responseTime,
-          fallbacksUsed: i,
-          totalTime: Date.now() - startTime
-        }, 'FallbackManager', 'fallback');
-        
+
+        this.debugManager?.info(
+          `Fallback execution succeeded with model ${modelId}`,
+          {
+            modelId,
+            responseTime,
+            fallbacksUsed: i,
+            totalTime: Date.now() - startTime,
+          },
+          'FallbackManager',
+          'fallback'
+        );
+
         return {
           success: true,
           data: result,
           finalModel: modelId,
           attempts,
           totalResponseTime: Date.now() - startTime,
-          fallbacksUsed: i
+          fallbacksUsed: i,
         };
       } catch (error) {
         const responseTime = Date.now() - attemptStart;
         const trigger = this.categorizeError(error as Error);
-        
+
         attempts.push({
           modelId,
           attempt: i + 1,
           error: error as Error,
           trigger,
           timestamp: new Date(),
-          responseTime
+          responseTime,
         });
 
         // Update performance metrics on failure
         this.updatePerformanceMetrics(modelId, false, responseTime);
-        
+
         // Track cost usage for failed requests too
-        this.trackUsageEvent(modelId, responseTime, false, null, (error as Error).message);
-        
-        this.debugManager?.warn(`Model ${modelId} failed, attempting fallback`, {
+        this.trackUsageEvent(
           modelId,
-          error: (error as Error).message,
-          trigger,
-          attemptNumber: i + 1,
-          responseTime
-        }, 'FallbackManager', 'fallback');
+          responseTime,
+          false,
+          null,
+          (error as Error).message
+        );
+
+        this.debugManager?.warn(
+          `Model ${modelId} failed, attempting fallback`,
+          {
+            modelId,
+            error: (error as Error).message,
+            trigger,
+            attemptNumber: i + 1,
+            responseTime,
+          },
+          'FallbackManager',
+          'fallback'
+        );
 
         // If this is the last model in chain, rethrow the error
         if (i === models.length - 1) {
-          this.debugManager?.error(`All fallback models failed`, {
-            totalModels: models.length,
-            attempts: attempts.length,
-            totalTime: Date.now() - startTime,
-            lastError: (error as Error).message
-          }, 'FallbackManager', 'fallback');
-          
+          this.debugManager?.error(
+            `All fallback models failed`,
+            {
+              totalModels: models.length,
+              attempts: attempts.length,
+              totalTime: Date.now() - startTime,
+              lastError: (error as Error).message,
+            },
+            'FallbackManager',
+            'fallback'
+          );
+
           throw new Error(
             `All fallback models failed. Last error: ${(error as Error).message}`
           );
@@ -223,7 +253,7 @@ export class FallbackManager {
         // Add timeout wrapper
         return await Promise.race([
           operation(modelId, model),
-          this.createTimeoutPromise()
+          this.createTimeoutPromise(),
         ]);
       } catch (error) {
         lastError = error as Error;
@@ -273,7 +303,11 @@ export class FallbackManager {
 
     // Apply query complexity optimization if context provided
     if (context?.query) {
-      models = this.optimizeModelsForQuery(models, context.query, context.requirements);
+      models = this.optimizeModelsForQuery(
+        models,
+        context.query,
+        context.requirements
+      );
     }
 
     // Sort by performance if we have metrics
@@ -292,15 +326,15 @@ export class FallbackManager {
     }
   ): string[] {
     const complexity = this.analyzeQueryComplexity(query);
-    
+
     // Filter models that meet requirements
-    const validModels = models.filter(modelId => {
+    const validModels = models.filter((modelId) => {
       const modelConfig = GATEWAY_MODELS[modelId];
       if (!modelConfig) return false;
 
       if (requirements?.capabilities) {
         const hasAllCapabilities = requirements.capabilities.every(
-          cap => modelConfig.capabilities[cap]
+          (cap) => modelConfig.capabilities[cap]
         );
         if (!hasAllCapabilities) return false;
       }
@@ -313,11 +347,13 @@ export class FallbackManager {
       return validModels.sort((a, b) => {
         const modelA = GATEWAY_MODELS[a];
         const modelB = GATEWAY_MODELS[b];
-        
+
         // Prefer reasoning models for complex queries
-        if (modelA.capabilities.reasoning && !modelB.capabilities.reasoning) return -1;
-        if (!modelA.capabilities.reasoning && modelB.capabilities.reasoning) return 1;
-        
+        if (modelA.capabilities.reasoning && !modelB.capabilities.reasoning)
+          return -1;
+        if (!modelA.capabilities.reasoning && modelB.capabilities.reasoning)
+          return 1;
+
         // Prefer higher cost tier for complex queries
         const costOrder = { high: 3, medium: 2, low: 1 };
         return costOrder[modelB.costTier] - costOrder[modelA.costTier];
@@ -341,36 +377,67 @@ export class FallbackManager {
   } {
     const length = query.length;
     const words = query.toLowerCase().split(/\s+/);
-    
+
     // Length factor (normalized)
     const lengthScore = Math.min(length / 500, 1);
-    
+
     // Reasoning indicators
     const reasoningKeywords = [
-      'analyze', 'compare', 'evaluate', 'explain', 'reasoning', 'logic',
-      'think', 'consider', 'because', 'therefore', 'thus', 'however'
+      'analyze',
+      'compare',
+      'evaluate',
+      'explain',
+      'reasoning',
+      'logic',
+      'think',
+      'consider',
+      'because',
+      'therefore',
+      'thus',
+      'however',
     ];
-    const reasoningScore = reasoningKeywords.some(keyword => 
+    const reasoningScore = reasoningKeywords.some((keyword) =>
       words.includes(keyword)
-    ) ? 0.3 : 0;
-    
+    )
+      ? 0.3
+      : 0;
+
     // Multi-step indicators
     const multiStepKeywords = [
-      'first', 'second', 'then', 'next', 'finally', 'step', 'process',
-      'procedure', 'sequence', 'order'
+      'first',
+      'second',
+      'then',
+      'next',
+      'finally',
+      'step',
+      'process',
+      'procedure',
+      'sequence',
+      'order',
     ];
-    const multiStepScore = multiStepKeywords.some(keyword => 
+    const multiStepScore = multiStepKeywords.some((keyword) =>
       words.includes(keyword)
-    ) ? 0.2 : 0;
-    
+    )
+      ? 0.2
+      : 0;
+
     // Technical indicators
     const technicalKeywords = [
-      'code', 'programming', 'algorithm', 'technical', 'engineering',
-      'mathematics', 'scientific', 'research', 'analysis'
+      'code',
+      'programming',
+      'algorithm',
+      'technical',
+      'engineering',
+      'mathematics',
+      'scientific',
+      'research',
+      'analysis',
     ];
-    const technicalScore = technicalKeywords.some(keyword => 
+    const technicalScore = technicalKeywords.some((keyword) =>
       words.includes(keyword)
-    ) ? 0.2 : 0;
+    )
+      ? 0.2
+      : 0;
 
     const totalScore = Math.min(
       lengthScore + reasoningScore + multiStepScore + technicalScore,
@@ -383,8 +450,8 @@ export class FallbackManager {
         length: lengthScore,
         reasoning: reasoningScore > 0,
         multiStep: multiStepScore > 0,
-        technical: technicalScore > 0
-      }
+        technical: technicalScore > 0,
+      },
     };
   }
 
@@ -426,7 +493,7 @@ export class FallbackManager {
       errorRate: 0,
       lastUsed: new Date(),
       totalRequests: 0,
-      totalErrors: 0
+      totalErrors: 0,
     };
 
     const newTotalRequests = existing.totalRequests + 1;
@@ -434,9 +501,10 @@ export class FallbackManager {
 
     // Update metrics with exponential moving average for responsiveness
     const alpha = 0.3; // Learning rate
-    const newAverageResponseTime = existing.totalRequests === 0 
-      ? responseTime
-      : existing.averageResponseTime * (1 - alpha) + responseTime * alpha;
+    const newAverageResponseTime =
+      existing.totalRequests === 0
+        ? responseTime
+        : existing.averageResponseTime * (1 - alpha) + responseTime * alpha;
 
     this.performanceMetrics.set(modelId, {
       ...existing,
@@ -445,7 +513,7 @@ export class FallbackManager {
       errorRate: newTotalErrors / newTotalRequests,
       lastUsed: new Date(),
       totalRequests: newTotalRequests,
-      totalErrors: newTotalErrors
+      totalErrors: newTotalErrors,
     });
   }
 
@@ -454,8 +522,11 @@ export class FallbackManager {
    */
   private categorizeError(error: Error): FallbackTrigger {
     const message = error.message.toLowerCase();
-    
-    if (message.includes('rate limit') || message.includes('too many requests')) {
+
+    if (
+      message.includes('rate limit') ||
+      message.includes('too many requests')
+    ) {
       return 'rate_limit';
     }
     if (message.includes('unavailable') || message.includes('not found')) {
@@ -470,7 +541,7 @@ export class FallbackManager {
     if (message.includes('quota') || message.includes('limit exceeded')) {
       return 'quota_exceeded';
     }
-    
+
     return 'unknown_error';
   }
 
@@ -480,10 +551,10 @@ export class FallbackManager {
   private shouldRetry(trigger: FallbackTrigger, retryCount: number): boolean {
     // Don't retry authentication errors
     if (trigger === 'authentication_error') return false;
-    
+
     // Don't retry model unavailable errors
     if (trigger === 'model_unavailable') return false;
-    
+
     // Retry rate limits and timeouts
     return retryCount < this.retryConfig.maxAttempts - 1;
   }
@@ -493,7 +564,8 @@ export class FallbackManager {
    */
   private calculateRetryDelay(retryCount: number): number {
     const delay = Math.min(
-      this.retryConfig.baseDelay * Math.pow(this.retryConfig.exponentialBase, retryCount),
+      this.retryConfig.baseDelay *
+        Math.pow(this.retryConfig.exponentialBase, retryCount),
       this.retryConfig.maxDelay
     );
 
@@ -520,7 +592,7 @@ export class FallbackManager {
    * Delay utility
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -548,9 +620,9 @@ export class FallbackManager {
    * Track usage event for cost monitoring
    */
   private trackUsageEvent(
-    modelId: string, 
-    responseTime: number, 
-    success: boolean, 
+    modelId: string,
+    responseTime: number,
+    success: boolean,
     result?: any,
     errorType?: string
   ): void {
@@ -564,10 +636,14 @@ export class FallbackManager {
     // Try to extract actual token usage from result
     if (result && typeof result === 'object') {
       if (result.usage) {
-        inputTokens = result.usage.promptTokens || result.usage.inputTokens || inputTokens;
-        outputTokens = result.usage.completionTokens || result.usage.outputTokens || outputTokens;
+        inputTokens =
+          result.usage.promptTokens || result.usage.inputTokens || inputTokens;
+        outputTokens =
+          result.usage.completionTokens ||
+          result.usage.outputTokens ||
+          outputTokens;
       }
-      
+
       // Determine request type based on result content
       if (result.images || result.imageUrls) {
         requestType = 'vision';
@@ -586,7 +662,7 @@ export class FallbackManager {
       responseTime,
       success,
       errorType,
-      requestType
+      requestType,
     });
   }
 
@@ -606,4 +682,4 @@ export class FallbackManager {
   }
 }
 
-export default FallbackManager; 
+export default FallbackManager;

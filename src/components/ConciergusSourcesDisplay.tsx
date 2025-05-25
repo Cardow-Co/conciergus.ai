@@ -58,12 +58,24 @@ export interface SourceCluster {
 /**
  * Citation format options
  */
-export type CitationFormat = 'apa' | 'mla' | 'chicago' | 'harvard' | 'ieee' | 'custom';
+export type CitationFormat =
+  | 'apa'
+  | 'mla'
+  | 'chicago'
+  | 'harvard'
+  | 'ieee'
+  | 'custom';
 
 /**
  * Display mode for sources
  */
-export type SourcesDisplayMode = 'grid' | 'list' | 'cluster' | 'timeline' | 'graph' | 'compact';
+export type SourcesDisplayMode =
+  | 'grid'
+  | 'list'
+  | 'cluster'
+  | 'timeline'
+  | 'graph'
+  | 'compact';
 
 /**
  * Source filter criteria
@@ -93,7 +105,13 @@ export interface SourceFilter {
 /**
  * Sort options for sources
  */
-export type SourceSortBy = 'relevance' | 'quality' | 'trust' | 'date' | 'citations' | 'alphabetical';
+export type SourceSortBy =
+  | 'relevance'
+  | 'quality'
+  | 'trust'
+  | 'date'
+  | 'citations'
+  | 'alphabetical';
 export type SourceSortOrder = 'asc' | 'desc';
 
 /**
@@ -136,7 +154,7 @@ export interface ClusterRendererProps {
 export interface ConciergusSourcesDisplayProps {
   /** Sources to display */
   sources: EnhancedSource[];
-  
+
   // === Display Configuration ===
   /** Display mode */
   mode?: SourcesDisplayMode;
@@ -150,7 +168,7 @@ export interface ConciergusSourcesDisplayProps {
   enableClustering?: boolean;
   /** Maximum sources to display */
   maxSources?: number;
-  
+
   // === Filtering and Sorting ===
   /** Initial filters */
   filters?: SourceFilter;
@@ -162,7 +180,7 @@ export interface ConciergusSourcesDisplayProps {
   enableSearch?: boolean;
   /** Enable filtering */
   enableFiltering?: boolean;
-  
+
   // === Citation Features ===
   /** Citation format */
   citationFormat?: CitationFormat;
@@ -170,7 +188,7 @@ export interface ConciergusSourcesDisplayProps {
   enableExport?: boolean;
   /** Custom citation formatter */
   formatCitation?: (source: EnhancedSource, format: CitationFormat) => string;
-  
+
   // === Interaction ===
   /** Source selection handler */
   onSourceSelect?: (source: EnhancedSource) => void;
@@ -180,27 +198,30 @@ export interface ConciergusSourcesDisplayProps {
   onCitationCopy?: (citation: string, source: EnhancedSource) => void;
   /** Filter change handler */
   onFiltersChange?: (filters: SourceFilter) => void;
-  
+
   // === Custom Renderers ===
   /** Custom source renderer */
   sourceRenderer?: React.ComponentType<SourceRendererProps>;
   /** Custom cluster renderer */
   clusterRenderer?: React.ComponentType<ClusterRendererProps>;
   /** Custom header renderer */
-  headerRenderer?: React.ComponentType<{ sources: EnhancedSource[]; clusters: SourceCluster[] }>;
-  
+  headerRenderer?: React.ComponentType<{
+    sources: EnhancedSource[];
+    clusters: SourceCluster[];
+  }>;
+
   // === Styling ===
   /** Additional CSS classes */
   className?: string;
   /** Color theme */
   theme?: 'light' | 'dark' | 'auto';
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -218,7 +239,7 @@ const clusterSources = (sources: EnhancedSource[]): SourceCluster[] => {
   const domainClusters = new Map<string, EnhancedSource[]>();
 
   // Simple clustering by domain for now
-  sources.forEach(source => {
+  sources.forEach((source) => {
     const domain = source.domain || extractDomain(source.url) || 'other';
     if (!domainClusters.has(domain)) {
       domainClusters.set(domain, []);
@@ -233,9 +254,11 @@ const clusterSources = (sources: EnhancedSource[]): SourceCluster[] => {
         id: domain,
         label: domain.charAt(0).toUpperCase() + domain.slice(1),
         sources,
-        relevanceScore: sources.reduce((sum, s) => sum + (s.relevanceScore || 0), 0) / sources.length,
+        relevanceScore:
+          sources.reduce((sum, s) => sum + (s.relevanceScore || 0), 0) /
+          sources.length,
         topic: domain,
-        color: generateClusterColor(domain)
+        color: generateClusterColor(domain),
       });
     }
   });
@@ -260,18 +283,29 @@ const extractDomain = (url: string): string => {
  */
 const generateClusterColor = (domain: string): string => {
   const colors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
-    '#8B5CF6', '#F97316', '#06B6D4', '#84CC16'
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#F97316',
+    '#06B6D4',
+    '#84CC16',
   ];
-  const hash = domain.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash = domain
+    .split('')
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 };
 
 /**
  * Filter sources based on criteria
  */
-const filterSources = (sources: EnhancedSource[], filters: SourceFilter): EnhancedSource[] => {
-  return sources.filter(source => {
+const filterSources = (
+  sources: EnhancedSource[],
+  filters: SourceFilter
+): EnhancedSource[] => {
+  return sources.filter((source) => {
     // Text search
     if (filters.query) {
       const query = filters.query.toLowerCase();
@@ -279,9 +313,11 @@ const filterSources = (sources: EnhancedSource[], filters: SourceFilter): Enhanc
         source.title,
         source.url,
         source.preview,
-        source.domain
-      ].join(' ').toLowerCase();
-      
+        source.domain,
+      ]
+        .join(' ')
+        .toLowerCase();
+
       if (!searchableText.includes(query)) {
         return false;
       }
@@ -297,28 +333,37 @@ const filterSources = (sources: EnhancedSource[], filters: SourceFilter): Enhanc
 
     // Access level filter
     if (filters.accessLevels && filters.accessLevels.length > 0) {
-      if (!source.accessLevel || !filters.accessLevels.includes(source.accessLevel)) {
+      if (
+        !source.accessLevel ||
+        !filters.accessLevels.includes(source.accessLevel)
+      ) {
         return false;
       }
     }
 
     // Date range filter
     if (filters.dateRange && source.publishedAt) {
-      if (source.publishedAt < filters.dateRange.start || 
-          source.publishedAt > filters.dateRange.end) {
+      if (
+        source.publishedAt < filters.dateRange.start ||
+        source.publishedAt > filters.dateRange.end
+      ) {
         return false;
       }
     }
 
     // Minimum relevance score
-    if (filters.minRelevance !== undefined && 
-        (source.relevanceScore || 0) < filters.minRelevance) {
+    if (
+      filters.minRelevance !== undefined &&
+      (source.relevanceScore || 0) < filters.minRelevance
+    ) {
       return false;
     }
 
     // Minimum quality score
-    if (filters.minQuality !== undefined && 
-        (source.qualityScore || 0) < filters.minQuality) {
+    if (
+      filters.minQuality !== undefined &&
+      (source.qualityScore || 0) < filters.minQuality
+    ) {
       return false;
     }
 
@@ -344,8 +389,8 @@ const filterSources = (sources: EnhancedSource[], filters: SourceFilter): Enhanc
  * Sort sources by specified criteria
  */
 const sortSources = (
-  sources: EnhancedSource[], 
-  sortBy: SourceSortBy, 
+  sources: EnhancedSource[],
+  sortBy: SourceSortBy,
   sortOrder: SourceSortOrder
 ): EnhancedSource[] => {
   const sorted = [...sources].sort((a, b) => {
@@ -362,7 +407,8 @@ const sortSources = (
         comparison = (a.trustScore || 0) - (b.trustScore || 0);
         break;
       case 'date':
-        comparison = (a.publishedAt?.getTime() || 0) - (b.publishedAt?.getTime() || 0);
+        comparison =
+          (a.publishedAt?.getTime() || 0) - (b.publishedAt?.getTime() || 0);
         break;
       case 'citations':
         comparison = (a.citationCount || 0) - (b.citationCount || 0);
@@ -383,10 +429,15 @@ const sortSources = (
 /**
  * Format citation based on style
  */
-const formatCitation = (source: EnhancedSource, format: CitationFormat): string => {
+const formatCitation = (
+  source: EnhancedSource,
+  format: CitationFormat
+): string => {
   const title = source.title || 'Untitled';
   const url = source.url;
-  const date = source.publishedAt ? source.publishedAt.toLocaleDateString() : 'n.d.';
+  const date = source.publishedAt
+    ? source.publishedAt.toLocaleDateString()
+    : 'n.d.';
   const domain = source.domain || extractDomain(url);
 
   switch (format) {
@@ -420,7 +471,7 @@ const DefaultSourceRenderer: React.FC<SourceRendererProps> = ({
   onClick,
   citationFormat,
   showPreview,
-  showScores
+  showScores,
 }) => {
   const handleClick = () => onClick(source);
   const handleCitationCopy = (e: React.MouseEvent) => {
@@ -430,7 +481,7 @@ const DefaultSourceRenderer: React.FC<SourceRendererProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`source-item ${mode}-mode ${isSelected ? 'selected' : ''}`}
       onClick={handleClick}
       role="button"
@@ -481,16 +532,16 @@ const DefaultSourceRenderer: React.FC<SourceRendererProps> = ({
       )}
 
       <div className="source-actions">
-        <button 
+        <button
           className="action-button copy-citation"
           onClick={handleCitationCopy}
           title="Copy Citation"
         >
           📋 Copy Citation
         </button>
-        <a 
-          href={source.url} 
-          target="_blank" 
+        <a
+          href={source.url}
+          target="_blank"
           rel="noopener noreferrer"
           className="action-button view-source"
           onClick={(e) => e.stopPropagation()}
@@ -517,11 +568,11 @@ const DefaultClusterRenderer: React.FC<ClusterRendererProps> = ({
   cluster,
   isExpanded,
   onToggle,
-  onSourceClick
+  onSourceClick,
 }) => {
   return (
     <div className="source-cluster">
-      <div 
+      <div
         className="cluster-header"
         onClick={() => onToggle(cluster.id)}
         role="button"
@@ -529,13 +580,14 @@ const DefaultClusterRenderer: React.FC<ClusterRendererProps> = ({
         onKeyDown={(e) => e.key === 'Enter' && onToggle(cluster.id)}
       >
         <div className="cluster-info">
-          <span 
-            className="cluster-color" 
+          <span
+            className="cluster-color"
             style={{ backgroundColor: cluster.color }}
           />
           <h3 className="cluster-label">{cluster.label}</h3>
           <span className="cluster-count">
-            {cluster.sources.length} source{cluster.sources.length !== 1 ? 's' : ''}
+            {cluster.sources.length} source
+            {cluster.sources.length !== 1 ? 's' : ''}
           </span>
           <span className="cluster-relevance">
             🎯 {(cluster.relevanceScore * 100).toFixed(0)}%
@@ -550,13 +602,15 @@ const DefaultClusterRenderer: React.FC<ClusterRendererProps> = ({
         <div className="cluster-sources">
           {cluster.sources.map((source, index) => (
             <div key={index} className="cluster-source-item">
-              <span className="source-title" onClick={() => onSourceClick(source)}>
+              <span
+                className="source-title"
+                onClick={() => onSourceClick(source)}
+              >
                 {source.title}
               </span>
               <span className="source-score">
-                {source.relevanceScore !== undefined && 
-                  `${(source.relevanceScore * 100).toFixed(0)}%`
-                }
+                {source.relevanceScore !== undefined &&
+                  `${(source.relevanceScore * 100).toFixed(0)}%`}
               </span>
             </div>
           ))}
@@ -572,7 +626,7 @@ const DefaultClusterRenderer: React.FC<ClusterRendererProps> = ({
 
 /**
  * ConciergusSourcesDisplay Component
- * 
+ *
  * Advanced RAG source citations component with clustering, quality indicators,
  * interactive exploration, and comprehensive citation management features.
  */
@@ -608,11 +662,15 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
+
   const [filters, setFilters] = useState<SourceFilter>(initialFilters);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
-  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(new Set());
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
+    new Set()
+  );
   const [currentSortBy, setCurrentSortBy] = useState(sortBy);
   const [currentSortOrder, setCurrentSortOrder] = useState(sortOrder);
 
@@ -621,15 +679,22 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
   // ==========================================
 
   const processedSources = useMemo(() => {
-    let filtered = filterSources(sources, { ...filters, query: searchQuery });
+    const filtered = filterSources(sources, { ...filters, query: searchQuery });
     let sorted = sortSources(filtered, currentSortBy, currentSortOrder);
-    
+
     if (maxSources) {
       sorted = sorted.slice(0, maxSources);
     }
 
     return sorted;
-  }, [sources, filters, searchQuery, currentSortBy, currentSortOrder, maxSources]);
+  }, [
+    sources,
+    filters,
+    searchQuery,
+    currentSortBy,
+    currentSortOrder,
+    maxSources,
+  ]);
 
   const clusters = useMemo(() => {
     if (enableClustering && mode === 'cluster') {
@@ -640,7 +705,7 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
 
   const availableDomains = useMemo(() => {
     const domains = new Set<string>();
-    sources.forEach(source => {
+    sources.forEach((source) => {
       const domain = source.domain || extractDomain(source.url);
       if (domain) domains.add(domain);
     });
@@ -651,29 +716,35 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
   // EVENT HANDLERS
   // ==========================================
 
-  const handleFiltersChange = useCallback((newFilters: SourceFilter) => {
-    setFilters(newFilters);
-    onFiltersChange?.(newFilters);
-  }, [onFiltersChange]);
+  const handleFiltersChange = useCallback(
+    (newFilters: SourceFilter) => {
+      setFilters(newFilters);
+      onFiltersChange?.(newFilters);
+    },
+    [onFiltersChange]
+  );
 
-  const handleSourceClick = useCallback((source: EnhancedSource) => {
-    const sourceId = source.url; // Use URL as unique identifier
-    
-    setSelectedSources(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sourceId)) {
-        newSet.delete(sourceId);
-      } else {
-        newSet.add(sourceId);
-      }
-      return newSet;
-    });
+  const handleSourceClick = useCallback(
+    (source: EnhancedSource) => {
+      const sourceId = source.url; // Use URL as unique identifier
 
-    onSourceSelect?.(source);
-  }, [onSourceSelect]);
+      setSelectedSources((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(sourceId)) {
+          newSet.delete(sourceId);
+        } else {
+          newSet.add(sourceId);
+        }
+        return newSet;
+      });
+
+      onSourceSelect?.(source);
+    },
+    [onSourceSelect]
+  );
 
   const handleClusterToggle = useCallback((clusterId: string) => {
-    setExpandedClusters(prev => {
+    setExpandedClusters((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(clusterId)) {
         newSet.delete(clusterId);
@@ -684,21 +755,26 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
     });
   }, []);
 
-  const handleSortChange = useCallback((newSortBy: SourceSortBy) => {
-    if (newSortBy === currentSortBy) {
-      setCurrentSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setCurrentSortBy(newSortBy);
-      setCurrentSortOrder('desc');
-    }
-  }, [currentSortBy]);
+  const handleSortChange = useCallback(
+    (newSortBy: SourceSortBy) => {
+      if (newSortBy === currentSortBy) {
+        setCurrentSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setCurrentSortBy(newSortBy);
+        setCurrentSortOrder('desc');
+      }
+    },
+    [currentSortBy]
+  );
 
   const handleExportCitations = useCallback(() => {
-    const citations = processedSources.map(source => 
-      customFormatCitation ? 
-        customFormatCitation(source, citationFormat) : 
-        formatCitation(source, citationFormat)
-    ).join('\n\n');
+    const citations = processedSources
+      .map((source) =>
+        customFormatCitation
+          ? customFormatCitation(source, citationFormat)
+          : formatCitation(source, citationFormat)
+      )
+      .join('\n\n');
 
     navigator.clipboard.writeText(citations);
     // Could also trigger download here
@@ -728,25 +804,31 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
 
         {enableFiltering && (
           <div className="filter-controls">
-            <select 
+            <select
               value={filters.domains?.[0] || ''}
-              onChange={(e) => handleFiltersChange({
-                ...filters,
-                domains: e.target.value ? [e.target.value] : undefined
-              })}
+              onChange={(e) =>
+                handleFiltersChange({
+                  ...filters,
+                  domains: e.target.value ? [e.target.value] : undefined,
+                })
+              }
             >
               <option value="">All Domains</option>
-              {availableDomains.map(domain => (
-                <option key={domain} value={domain}>{domain}</option>
+              {availableDomains.map((domain) => (
+                <option key={domain} value={domain}>
+                  {domain}
+                </option>
               ))}
             </select>
 
             <select
               value={filters.accessLevels?.[0] || ''}
-              onChange={(e) => handleFiltersChange({
-                ...filters,
-                accessLevels: e.target.value ? [e.target.value] : undefined
-              })}
+              onChange={(e) =>
+                handleFiltersChange({
+                  ...filters,
+                  accessLevels: e.target.value ? [e.target.value] : undefined,
+                })
+              }
             >
               <option value="">All Access Levels</option>
               <option value="public">Public</option>
@@ -769,7 +851,9 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
             <option value="alphabetical">Sort Alphabetically</option>
           </select>
           <button
-            onClick={() => setCurrentSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+            onClick={() =>
+              setCurrentSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+            }
             className="sort-direction"
             title={`Sort ${currentSortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
           >
@@ -778,7 +862,7 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
         </div>
 
         {enableExport && (
-          <button 
+          <button
             onClick={handleExportCitations}
             className="export-button"
             title="Export Citations"
@@ -795,10 +879,10 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
 
     if (mode === 'cluster' && clusters.length > 0) {
       const ClusterRenderer = CustomClusterRenderer || DefaultClusterRenderer;
-      
+
       return (
         <div className="sources-clusters">
-          {clusters.map(cluster => (
+          {clusters.map((cluster) => (
             <ClusterRenderer
               key={cluster.id}
               cluster={cluster}
@@ -831,7 +915,9 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
 
   const renderHeader = () => {
     if (CustomHeaderRenderer) {
-      return <CustomHeaderRenderer sources={processedSources} clusters={clusters} />;
+      return (
+        <CustomHeaderRenderer sources={processedSources} clusters={clusters} />
+      );
     }
 
     return (
@@ -841,9 +927,7 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
             {processedSources.length} of {sources.length} sources
           </span>
           {mode === 'cluster' && clusters.length > 0 && (
-            <span className="total-clusters">
-              {clusters.length} clusters
-            </span>
+            <span className="total-clusters">{clusters.length} clusters</span>
           )}
         </div>
       </div>
@@ -855,7 +939,7 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
   // ==========================================
 
   return (
-    <div 
+    <div
       className={`conciergus-sources-display ${mode}-mode theme-${theme} ${className}`}
       role="region"
       aria-label={ariaLabel}
@@ -864,7 +948,7 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
     >
       {renderHeader()}
       {renderSearchAndFilters()}
-      
+
       <div className="sources-content">
         {processedSources.length === 0 ? (
           <div className="no-sources">
@@ -879,8 +963,11 @@ const ConciergusSourcesDisplay: React.FC<ConciergusSourcesDisplayProps> = ({
 
       {selectedSources.size > 0 && (
         <div className="selection-summary">
-          <span>{selectedSources.size} source{selectedSources.size !== 1 ? 's' : ''} selected</span>
-          <button 
+          <span>
+            {selectedSources.size} source{selectedSources.size !== 1 ? 's' : ''}{' '}
+            selected
+          </span>
+          <button
             onClick={() => setSelectedSources(new Set())}
             className="clear-selection"
           >
@@ -907,12 +994,12 @@ export type {
   SourceSortOrder,
   CitationFormat,
   SourceRendererProps,
-  ClusterRendererProps
+  ClusterRendererProps,
 };
 export {
   filterSources,
   sortSources,
   clusterSources,
   formatCitation,
-  extractDomain
-}; 
+  extractDomain,
+};

@@ -1,7 +1,13 @@
-import { ConciergusOpenTelemetry, type TelemetryConfig } from './OpenTelemetryConfig';
+import {
+  ConciergusOpenTelemetry,
+  type TelemetryConfig,
+} from './OpenTelemetryConfig';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';
 import { trace, SpanStatusCode } from '@opentelemetry/api';
-import { AIDistributedTracing, type AITraceContext } from './AIDistributedTracing';
+import {
+  AIDistributedTracing,
+  type AITraceContext,
+} from './AIDistributedTracing';
 
 /**
  * AI SDK 5 Telemetry Settings compatible with experimental_telemetry
@@ -11,7 +17,15 @@ export interface AISDKTelemetrySettings {
   recordInputs?: boolean;
   recordOutputs?: boolean;
   functionId?: string;
-  metadata?: Record<string, string | number | boolean | Array<null | undefined | string> | Array<null | undefined | number> | Array<null | undefined | boolean>>;
+  metadata?: Record<
+    string,
+    | string
+    | number
+    | boolean
+    | Array<null | undefined | string>
+    | Array<null | undefined | number>
+    | Array<null | undefined | boolean>
+  >;
   tracer?: any;
 }
 
@@ -71,7 +85,7 @@ export class AISDKTelemetryIntegration {
   private constructor(config: ConciergusAISDKTelemetryConfig) {
     this.config = config;
     this.telemetryManager = EnterpriseTelemetryManager.getInstance();
-    
+
     // Initialize distributed tracing if OpenTelemetry is available
     try {
       this.distributedTracing = AIDistributedTracing.getInstance();
@@ -86,7 +100,9 @@ export class AISDKTelemetryIntegration {
   /**
    * Initialize AI SDK telemetry integration
    */
-  static initialize(config: ConciergusAISDKTelemetryConfig): AISDKTelemetryIntegration {
+  static initialize(
+    config: ConciergusAISDKTelemetryConfig
+  ): AISDKTelemetryIntegration {
     if (this.instance) {
       console.warn('AI SDK Telemetry Integration already initialized');
       return this.instance;
@@ -107,7 +123,11 @@ export class AISDKTelemetryIntegration {
    * Generate AI SDK 5 compatible telemetry settings for any AI operation
    */
   generateTelemetrySettings(
-    operationType: 'generateText' | 'streamText' | 'generateObject' | 'streamObject',
+    operationType:
+      | 'generateText'
+      | 'streamText'
+      | 'generateObject'
+      | 'streamObject',
     options: {
       model?: string;
       customMetadata?: Record<string, any>;
@@ -123,7 +143,9 @@ export class AISDKTelemetryIntegration {
     }
 
     const operationId = this.generateOperationId();
-    const functionId = options.functionId || `${this.config.functionIdPrefix}_${operationType}_${operationId}`;
+    const functionId =
+      options.functionId ||
+      `${this.config.functionIdPrefix}_${operationType}_${operationId}`;
 
     // Create telemetry data tracking
     const telemetryData: AIOperationTelemetry = {
@@ -136,7 +158,7 @@ export class AISDKTelemetryIntegration {
         operationType,
         ...this.config.customMetadata,
         ...options.customMetadata,
-      }
+      },
     };
 
     this.activeOperations.set(operationId, telemetryData);
@@ -158,10 +180,10 @@ export class AISDKTelemetryIntegration {
               function_id: functionId,
               ...this.config.customMetadata,
               ...options.customMetadata,
-            }
+            },
           }
         );
-        
+
         this.traceContexts.set(operationId, traceContext);
       } catch (error) {
         console.warn('Failed to start distributed trace:', error);
@@ -222,7 +244,8 @@ export class AISDKTelemetryIntegration {
 
     // Update operation data
     operation.endTime = Date.now();
-    operation.duration = result.duration || (operation.endTime - operation.startTime);
+    operation.duration =
+      result.duration || operation.endTime - operation.startTime;
     operation.success = result.success;
     operation.response = result.response;
     operation.tokenUsage = result.tokenUsage;
@@ -250,7 +273,7 @@ export class AISDKTelemetryIntegration {
       } catch (error) {
         console.warn('Failed to complete distributed trace:', error);
       }
-      
+
       this.traceContexts.delete(operationId);
     }
 
@@ -259,37 +282,57 @@ export class AISDKTelemetryIntegration {
 
     // Record custom telemetry
     if (this.telemetryManager) {
-      this.telemetryManager.recordMetric('ai_operation_duration', operation.duration, {
-        operation_type: operation.metadata.operationType,
-        model: operation.model,
-        success: operation.success.toString(),
-      });
+      this.telemetryManager.recordMetric(
+        'ai_operation_duration',
+        operation.duration,
+        {
+          operation_type: operation.metadata.operationType,
+          model: operation.model,
+          success: operation.success.toString(),
+        }
+      );
 
       if (operation.tokenUsage) {
-        this.telemetryManager.recordMetric('ai_token_usage', operation.tokenUsage.total, {
-          operation_type: operation.metadata.operationType,
-          model: operation.model,
-          token_type: 'total',
-        });
+        this.telemetryManager.recordMetric(
+          'ai_token_usage',
+          operation.tokenUsage.total,
+          {
+            operation_type: operation.metadata.operationType,
+            model: operation.model,
+            token_type: 'total',
+          }
+        );
 
-        this.telemetryManager.recordMetric('ai_token_usage', operation.tokenUsage.input, {
-          operation_type: operation.metadata.operationType,
-          model: operation.model,
-          token_type: 'input',
-        });
+        this.telemetryManager.recordMetric(
+          'ai_token_usage',
+          operation.tokenUsage.input,
+          {
+            operation_type: operation.metadata.operationType,
+            model: operation.model,
+            token_type: 'input',
+          }
+        );
 
-        this.telemetryManager.recordMetric('ai_token_usage', operation.tokenUsage.output, {
-          operation_type: operation.metadata.operationType,
-          model: operation.model,
-          token_type: 'output',
-        });
+        this.telemetryManager.recordMetric(
+          'ai_token_usage',
+          operation.tokenUsage.output,
+          {
+            operation_type: operation.metadata.operationType,
+            model: operation.model,
+            token_type: 'output',
+          }
+        );
       }
 
       if (operation.cost !== undefined) {
-        this.telemetryManager.recordMetric('ai_operation_cost', operation.cost, {
-          operation_type: operation.metadata.operationType,
-          model: operation.model,
-        });
+        this.telemetryManager.recordMetric(
+          'ai_operation_cost',
+          operation.cost,
+          {
+            operation_type: operation.metadata.operationType,
+            model: operation.model,
+          }
+        );
       }
 
       if (!operation.success && operation.error) {
@@ -297,7 +340,9 @@ export class AISDKTelemetryIntegration {
           operation_type: operation.metadata.operationType,
           operation_id: operation.operationId,
           model: operation.model,
-          trace_context: traceContext ? JSON.stringify(traceContext) : undefined,
+          trace_context: traceContext
+            ? JSON.stringify(traceContext)
+            : undefined,
         });
       }
     }
@@ -401,7 +446,11 @@ export class AISDKTelemetryIntegration {
    * Create a telemetry-enabled wrapper for AI SDK functions
    */
   createTelemetryWrapper<T extends (...args: any[]) => any>(
-    operationType: 'generateText' | 'streamText' | 'generateObject' | 'streamObject',
+    operationType:
+      | 'generateText'
+      | 'streamText'
+      | 'generateObject'
+      | 'streamObject',
     originalFunction: T,
     options: {
       extractModel?: (args: Parameters<T>) => string;
@@ -420,7 +469,7 @@ export class AISDKTelemetryIntegration {
 
       const model = options.extractModel?.(args) || 'unknown';
       const customMetadata = options.extractMetadata?.(args) || {};
-      
+
       // Generate telemetry settings and inject into AI SDK call
       const telemetrySettings = this.generateTelemetrySettings(operationType, {
         model,
@@ -435,7 +484,9 @@ export class AISDKTelemetryIntegration {
         };
       }
 
-      const operationId = this.extractOperationId(telemetrySettings.functionId || '');
+      const operationId = this.extractOperationId(
+        telemetrySettings.functionId || ''
+      );
       const startTime = Date.now();
 
       // Handle both sync and async functions
@@ -497,7 +548,7 @@ export class AISDKTelemetryIntegration {
     // This would typically aggregate data from OpenTelemetry metrics
     // For now, return basic stats from active operations
     const activeOps = Array.from(this.activeOperations.values());
-    
+
     return {
       totalOperations: this.operationCounter,
       activeOperations: activeOps.length,
@@ -543,14 +594,21 @@ export class AISDKTelemetryIntegration {
   recordOperationError(
     operationId: string,
     error: Error,
-    phase: 'preprocessing' | 'inference' | 'postprocessing' | 'fallback' = 'inference'
+    phase:
+      | 'preprocessing'
+      | 'inference'
+      | 'postprocessing'
+      | 'fallback' = 'inference'
   ): void {
     const traceContext = this.traceContexts.get(operationId);
     if (this.distributedTracing && traceContext) {
       try {
         this.distributedTracing.recordError(traceContext, error, phase);
       } catch (traceError) {
-        console.warn('Failed to record error in distributed trace:', traceError);
+        console.warn(
+          'Failed to record error in distributed trace:',
+          traceError
+        );
       }
     }
 
@@ -580,7 +638,7 @@ export class AISDKTelemetryIntegration {
     if (!this.distributedTracing) {
       return null;
     }
-    
+
     return this.distributedTracing.getTraceStats();
   }
 
@@ -599,7 +657,7 @@ export class AISDKTelemetryIntegration {
       // Dynamically import to avoid circular dependencies
       const { AnalyticsEngine } = await import('./AnalyticsEngine');
       this.analyticsEngine = AnalyticsEngine.getInstance();
-      
+
       if (this.analyticsEngine) {
         console.log('AI SDK Telemetry integrated with Analytics Engine');
       }
@@ -612,7 +670,7 @@ export class AISDKTelemetryIntegration {
    * Record operation in analytics engine
    */
   private recordInAnalytics(
-    operation: AIOperationTelemetry, 
+    operation: AIOperationTelemetry,
     context?: {
       userId?: string;
       sessionId?: string;
@@ -705,4 +763,4 @@ export const productionAISDKTelemetryConfig: ConciergusAISDKTelemetryConfig = {
   ...defaultAISDKTelemetryConfig,
   enableInputRecording: false, // Disable for privacy in production
   enableDebugMode: false,
-}; 
+};

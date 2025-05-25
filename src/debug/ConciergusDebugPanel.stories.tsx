@@ -5,17 +5,17 @@ import ConciergusDebugPanel from './ConciergusDebugPanel';
  * The ConciergusDebugPanel provides real-time monitoring and debugging capabilities
  * for Conciergus AI SDK 5 integration. It offers comprehensive insights into configuration,
  * performance metrics, error tracking, and API calls.
- * 
+ *
  * ## Features
- * 
+ *
  * - **Real-time Log Monitoring**: Captures console logs, warnings, and errors
  * - **Performance Metrics**: Tracks render times, memory usage, and API latency
  * - **Configuration Validation**: Validates AI SDK configurations and shows warnings
  * - **Network Request Monitoring**: Monitors API calls and their performance
  * - **Error Recovery**: Provides actionable suggestions for common issues
- * 
+ *
  * ## Usage
- * 
+ *
  * The debug panel is designed to be used during development to help identify
  * configuration issues and performance bottlenecks. It automatically validates
  * your Conciergus AI setup and provides helpful suggestions.
@@ -142,7 +142,7 @@ export const WithConfigWarnings: Story = {
     config: {
       // Intentionally problematic config to trigger warnings
       maxRetries: 15, // Too high
-      timeout: 1000,  // Too low
+      timeout: 1000, // Too low
       baseUrl: 'http://insecure-api.com', // Insecure URL
       // Missing API key
     },
@@ -298,17 +298,19 @@ export const InteractiveDemo: Story = {
   render: (args) => {
     const SimulateActivity = () => {
       const simulateLog = () => {
-        console.log('Simulated log message', { timestamp: new Date().toISOString() });
+        console.log('Simulated log message', {
+          timestamp: new Date().toISOString(),
+        });
       };
-      
+
       const simulateWarning = () => {
         console.warn('Simulated warning message');
       };
-      
+
       const simulateError = () => {
         console.error('Simulated error message', new Error('Test error'));
       };
-      
+
       const simulateApiCall = async () => {
         try {
           // Simulate API call
@@ -321,52 +323,103 @@ export const InteractiveDemo: Story = {
           console.log('API call simulated (will show in network tab)');
         }
       };
-      
+
       return (
-        <div style={{ padding: '2rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+        <div
+          style={{
+            padding: '2rem',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '8px',
+          }}
+        >
           <h2>Interactive Debug Panel Demo</h2>
-          <p>Use these buttons to generate different types of logs and see how the debug panel handles them:</p>
-          
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-            <button 
+          <p>
+            Use these buttons to generate different types of logs and see how
+            the debug panel handles them:
+          </p>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              marginTop: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
               onClick={simulateLog}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+              }}
             >
               Generate Log
             </button>
-            <button 
+            <button
               onClick={simulateWarning}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#ffc107', color: 'black', border: 'none', borderRadius: '4px' }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#ffc107',
+                color: 'black',
+                border: 'none',
+                borderRadius: '4px',
+              }}
             >
               Generate Warning
             </button>
-            <button 
+            <button
               onClick={simulateError}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+              }}
             >
               Generate Error
             </button>
-            <button 
+            <button
               onClick={simulateApiCall}
-              style={{ padding: '0.5rem 1rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+              }}
             >
               Simulate API Call
             </button>
           </div>
-          
-          <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: 'white', borderRadius: '4px' }}>
+
+          <div
+            style={{
+              marginTop: '2rem',
+              padding: '1rem',
+              backgroundColor: 'white',
+              borderRadius: '4px',
+            }}
+          >
             <h3>Instructions:</h3>
             <ol>
               <li>Open the debug panel by clicking the "🐛 Debug" button</li>
-              <li>Use the buttons above to generate different types of activity</li>
-              <li>Switch between tabs to see logs, metrics, and network requests</li>
+              <li>
+                Use the buttons above to generate different types of activity
+              </li>
+              <li>
+                Switch between tabs to see logs, metrics, and network requests
+              </li>
               <li>Try exporting the debug data using the export button</li>
             </ol>
           </div>
         </div>
       );
     };
-    
+
     return (
       <>
         <SimulateActivity />
@@ -405,4 +458,4 @@ remove the debug functionality.
       },
     },
   },
-}; 
+};

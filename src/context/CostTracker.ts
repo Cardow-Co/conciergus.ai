@@ -72,7 +72,10 @@ export class CostTracker {
   private maxHistoryDays: number = 30;
 
   // Real API pricing data (approximate, in USD per 1k tokens)
-  private static readonly MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  private static readonly MODEL_PRICING: Record<
+    string,
+    { input: number; output: number }
+  > = {
     'xai/grok-3-beta': { input: 0.02, output: 0.08 },
     'openai/gpt-4o': { input: 0.015, output: 0.06 },
     'anthropic/claude-3-7-sonnet-20250219': { input: 0.015, output: 0.075 },
@@ -88,10 +91,10 @@ export class CostTracker {
       monthlyLimit: 1000, // $1000 monthly default
       alertThresholds: {
         warning: 0.8,
-        critical: 0.95
+        critical: 0.95,
       },
       autoScaleDown: true,
-      ...budgetConfig
+      ...budgetConfig,
     };
   }
 
@@ -99,13 +102,17 @@ export class CostTracker {
    * Track a usage event
    */
   trackUsage(event: Omit<UsageEvent, 'id' | 'timestamp' | 'cost'>): void {
-    const cost = this.calculateCost(event.modelId, event.inputTokens, event.outputTokens);
-    
+    const cost = this.calculateCost(
+      event.modelId,
+      event.inputTokens,
+      event.outputTokens
+    );
+
     const usageEvent: UsageEvent = {
       ...event,
       id: this.generateEventId(),
       timestamp: new Date(),
-      cost
+      cost,
     };
 
     this.usageHistory.push(usageEvent);
@@ -118,17 +125,28 @@ export class CostTracker {
   /**
    * Calculate precise cost for API call
    */
-  calculateCost(modelId: string, inputTokens: number, outputTokens: number): number {
+  calculateCost(
+    modelId: string,
+    inputTokens: number,
+    outputTokens: number
+  ): number {
     const pricing = CostTracker.MODEL_PRICING[modelId];
     if (!pricing) {
       // Fallback to tier-based estimation
       const model = GATEWAY_MODELS[modelId];
-      const tierMultiplier = model?.costTier === 'low' ? 0.001 : 
-                           model?.costTier === 'medium' ? 0.005 : 0.02;
-      return (inputTokens + outputTokens) * tierMultiplier / 1000;
+      const tierMultiplier =
+        model?.costTier === 'low'
+          ? 0.001
+          : model?.costTier === 'medium'
+            ? 0.005
+            : 0.02;
+      return ((inputTokens + outputTokens) * tierMultiplier) / 1000;
     }
 
-    return (inputTokens * pricing.input / 1000) + (outputTokens * pricing.output / 1000);
+    return (
+      (inputTokens * pricing.input) / 1000 +
+      (outputTokens * pricing.output) / 1000
+    );
   }
 
   /**
@@ -137,9 +155,9 @@ export class CostTracker {
   getCurrentSpending(period: 'day' | 'week' | 'month'): number {
     const now = new Date();
     const startTime = this.getStartOfPeriod(now, period);
-    
+
     return this.usageHistory
-      .filter(event => event.timestamp >= startTime)
+      .filter((event) => event.timestamp >= startTime)
       .reduce((sum, event) => sum + event.cost, 0);
   }
 
@@ -151,7 +169,7 @@ export class CostTracker {
     const groupedMetrics = new Map<string, CostMetrics>();
 
     // Group events by model and time period
-    this.usageHistory.forEach(event => {
+    this.usageHistory.forEach((event) => {
       const periodStart = this.getStartOfPeriod(event.timestamp, period);
       const key = `${event.modelId}-${periodStart.getTime()}`;
 
@@ -166,7 +184,7 @@ export class CostTracker {
           totalRequests: 0,
           averageCostPerRequest: 0,
           averageCostPerToken: 0,
-          successRate: 0
+          successRate: 0,
         });
       }
 
@@ -177,21 +195,23 @@ export class CostTracker {
     });
 
     // Calculate derived metrics
-    groupedMetrics.forEach(metrics => {
+    groupedMetrics.forEach((metrics) => {
       metrics.averageCostPerRequest = metrics.totalCost / metrics.totalRequests;
       metrics.averageCostPerToken = metrics.totalCost / metrics.totalTokens;
-      
-      const periodEvents = this.usageHistory.filter(event =>
-        event.modelId === metrics.modelId &&
-        event.timestamp >= metrics.startTime &&
-        event.timestamp <= metrics.endTime
+
+      const periodEvents = this.usageHistory.filter(
+        (event) =>
+          event.modelId === metrics.modelId &&
+          event.timestamp >= metrics.startTime &&
+          event.timestamp <= metrics.endTime
       );
-      
-      metrics.successRate = periodEvents.filter(e => e.success).length / periodEvents.length;
+
+      metrics.successRate =
+        periodEvents.filter((e) => e.success).length / periodEvents.length;
     });
 
-    return Array.from(groupedMetrics.values()).sort((a, b) => 
-      b.startTime.getTime() - a.startTime.getTime()
+    return Array.from(groupedMetrics.values()).sort(
+      (a, b) => b.startTime.getTime() - a.startTime.getTime()
     );
   }
 
@@ -201,11 +221,12 @@ export class CostTracker {
   generateForecast(period: 'day' | 'week' | 'month'): CostForecast {
     const currentSpending = this.getCurrentSpending(period);
     const historicalData = this.getCostMetrics(period).slice(0, 7); // Last 7 periods
-    
+
     // Simple linear projection based on recent trends
-    const avgSpending = historicalData.reduce((sum, metrics) => 
-      sum + metrics.totalCost, 0) / Math.max(historicalData.length, 1);
-    
+    const avgSpending =
+      historicalData.reduce((sum, metrics) => sum + metrics.totalCost, 0) /
+      Math.max(historicalData.length, 1);
+
     const projectedUsage = avgSpending * 1.1; // 10% growth buffer
     const budgetLimit = this.getBudgetLimit(period);
     const budgetRemaining = budgetLimit - currentSpending;
@@ -215,18 +236,18 @@ export class CostTracker {
     // Generate recommendations
     if (projectedUsage > budgetRemaining) {
       const overage = projectedUsage - budgetRemaining;
-      
+
       recommendedActions.push({
         type: 'switch_model',
         description: 'Switch to lower-cost models to stay within budget',
-        potentialSaving: overage * 0.6 // Estimate 60% savings from model switching
+        potentialSaving: overage * 0.6, // Estimate 60% savings from model switching
       });
 
       if (overage > budgetLimit * 0.2) {
         recommendedActions.push({
           type: 'reduce_usage',
           description: 'Reduce API usage frequency or optimize prompts',
-          potentialSaving: overage * 0.4
+          potentialSaving: overage * 0.4,
         });
       }
     }
@@ -236,7 +257,7 @@ export class CostTracker {
       currentUsage: currentSpending,
       projectedUsage,
       budgetRemaining,
-      recommendedActions
+      recommendedActions,
     };
   }
 
@@ -254,7 +275,7 @@ export class CostTracker {
     const alerts: ReturnType<CostTracker['getBudgetAlerts']> = [];
     const periods: Array<'day' | 'week' | 'month'> = ['day', 'week', 'month'];
 
-    periods.forEach(period => {
+    periods.forEach((period) => {
       const currentSpending = this.getCurrentSpending(period);
       const budgetLimit = this.getBudgetLimit(period);
       const percentageUsed = currentSpending / budgetLimit;
@@ -266,7 +287,7 @@ export class CostTracker {
           message: `CRITICAL: ${(percentageUsed * 100).toFixed(1)}% of ${period}ly budget used`,
           currentSpending,
           budgetLimit,
-          percentageUsed
+          percentageUsed,
         });
       } else if (percentageUsed >= this.budgetConfig.alertThresholds.warning) {
         alerts.push({
@@ -275,7 +296,7 @@ export class CostTracker {
           message: `WARNING: ${(percentageUsed * 100).toFixed(1)}% of ${period}ly budget used`,
           currentSpending,
           budgetLimit,
-          percentageUsed
+          percentageUsed,
         });
       }
     });
@@ -301,20 +322,23 @@ export class CostTracker {
   } {
     const currentCost = this.getAverageCostPerRequest(currentModel);
     const availableModels = Object.keys(GATEWAY_MODELS);
-    
+
     // Filter models that meet requirements
-    const candidateModels = availableModels.filter(modelId => {
+    const candidateModels = availableModels.filter((modelId) => {
       const model = GATEWAY_MODELS[modelId];
-      
+
       if (requirements.capabilities) {
         const hasAllCapabilities = requirements.capabilities.every(
-          cap => model.capabilities[cap]
+          (cap) => model.capabilities[cap]
         );
         if (!hasAllCapabilities) return false;
       }
 
       const avgCost = this.getAverageCostPerRequest(modelId);
-      if (requirements.maxBudgetPerRequest && avgCost > requirements.maxBudgetPerRequest) {
+      if (
+        requirements.maxBudgetPerRequest &&
+        avgCost > requirements.maxBudgetPerRequest
+      ) {
         return false;
       }
 
@@ -323,10 +347,10 @@ export class CostTracker {
 
     // Find the most cost-effective model
     const bestModel = candidateModels
-      .map(modelId => ({
+      .map((modelId) => ({
         modelId,
         cost: this.getAverageCostPerRequest(modelId),
-        quality: this.getQualityScore(modelId)
+        quality: this.getQualityScore(modelId),
       }))
       .sort((a, b) => {
         // Balance cost and quality
@@ -340,20 +364,22 @@ export class CostTracker {
         recommendedModel: currentModel,
         costSavings: 0,
         qualityImpact: 0,
-        reasoning: 'Current model is already optimal for requirements'
+        reasoning: 'Current model is already optimal for requirements',
       };
     }
 
     const costSavings = currentCost - bestModel.cost;
-    const qualityImpact = bestModel.quality - this.getQualityScore(currentModel);
+    const qualityImpact =
+      bestModel.quality - this.getQualityScore(currentModel);
 
     return {
       recommendedModel: bestModel.modelId,
       costSavings,
       qualityImpact,
-      reasoning: costSavings > 0 
-        ? `Switch to ${bestModel.modelId} to save $${costSavings.toFixed(4)} per request`
-        : `${bestModel.modelId} offers better value despite slightly higher cost`
+      reasoning:
+        costSavings > 0
+          ? `Switch to ${bestModel.modelId} to save $${costSavings.toFixed(4)} per request`
+          : `${bestModel.modelId} offers better value despite slightly higher cost`,
     };
   }
 
@@ -362,18 +388,26 @@ export class CostTracker {
    */
   exportUsageData(format: 'json' | 'csv' = 'json'): string {
     if (format === 'csv') {
-      const headers = ['timestamp', 'modelId', 'inputTokens', 'outputTokens', 'cost', 'responseTime', 'success'];
-      const rows = this.usageHistory.map(event => [
+      const headers = [
+        'timestamp',
+        'modelId',
+        'inputTokens',
+        'outputTokens',
+        'cost',
+        'responseTime',
+        'success',
+      ];
+      const rows = this.usageHistory.map((event) => [
         event.timestamp.toISOString(),
         event.modelId,
         event.inputTokens,
         event.outputTokens,
         event.cost,
         event.responseTime,
-        event.success
+        event.success,
       ]);
-      
-      return [headers, ...rows].map(row => row.join(',')).join('\n');
+
+      return [headers, ...rows].map((row) => row.join(',')).join('\n');
     }
 
     return JSON.stringify(this.usageHistory, null, 2);
@@ -394,27 +428,34 @@ export class CostTracker {
   private cleanupOldHistory(): void {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.maxHistoryDays);
-    
+
     this.usageHistory = this.usageHistory.filter(
-      event => event.timestamp >= cutoffDate
+      (event) => event.timestamp >= cutoffDate
     );
   }
 
   private checkBudgetAlerts(): void {
     if (this.budgetConfig.autoScaleDown) {
       const alerts = this.getBudgetAlerts();
-      const criticalAlerts = alerts.filter(alert => alert.severity === 'critical');
-      
+      const criticalAlerts = alerts.filter(
+        (alert) => alert.severity === 'critical'
+      );
+
       if (criticalAlerts.length > 0) {
         // Trigger auto-scaling logic in consuming components
-        console.warn('Budget limits exceeded, consider switching to lower-cost models');
+        console.warn(
+          'Budget limits exceeded, consider switching to lower-cost models'
+        );
       }
     }
   }
 
-  private getStartOfPeriod(date: Date, period: 'hour' | 'day' | 'week' | 'month'): Date {
+  private getStartOfPeriod(
+    date: Date,
+    period: 'hour' | 'day' | 'week' | 'month'
+  ): Date {
     const start = new Date(date);
-    
+
     switch (period) {
       case 'hour':
         start.setMinutes(0, 0, 0);
@@ -431,13 +472,16 @@ export class CostTracker {
         start.setDate(1);
         break;
     }
-    
+
     return start;
   }
 
-  private getEndOfPeriod(startDate: Date, period: 'hour' | 'day' | 'week' | 'month'): Date {
+  private getEndOfPeriod(
+    startDate: Date,
+    period: 'hour' | 'day' | 'week' | 'month'
+  ): Date {
     const end = new Date(startDate);
-    
+
     switch (period) {
       case 'hour':
         end.setHours(end.getHours() + 1);
@@ -452,7 +496,7 @@ export class CostTracker {
         end.setMonth(end.getMonth() + 1);
         break;
     }
-    
+
     return end;
   }
 
@@ -468,34 +512,42 @@ export class CostTracker {
   }
 
   private getAverageCostPerRequest(modelId: string): number {
-    const modelEvents = this.usageHistory.filter(event => event.modelId === modelId);
+    const modelEvents = this.usageHistory.filter(
+      (event) => event.modelId === modelId
+    );
     if (modelEvents.length === 0) {
       // Estimate based on tier
       const model = GATEWAY_MODELS[modelId];
-      return model?.costTier === 'low' ? 0.001 : 
-             model?.costTier === 'medium' ? 0.01 : 0.05;
+      return model?.costTier === 'low'
+        ? 0.001
+        : model?.costTier === 'medium'
+          ? 0.01
+          : 0.05;
     }
-    
-    return modelEvents.reduce((sum, event) => sum + event.cost, 0) / modelEvents.length;
+
+    return (
+      modelEvents.reduce((sum, event) => sum + event.cost, 0) /
+      modelEvents.length
+    );
   }
 
   private getQualityScore(modelId: string): number {
     const model = GATEWAY_MODELS[modelId];
     if (!model) return 0.5;
-    
+
     // Simple quality scoring based on model capabilities and tier
     let score = 0.3; // Base score
-    
+
     if (model.capabilities.reasoning) score += 0.3;
     if (model.capabilities.vision) score += 0.2;
     if (model.capabilities.function_calling) score += 0.1;
-    
+
     // Tier bonus
     if (model.costTier === 'high') score += 0.1;
     else if (model.costTier === 'medium') score += 0.05;
-    
+
     return Math.min(score, 1.0);
   }
 }
 
-export default CostTracker; 
+export default CostTracker;

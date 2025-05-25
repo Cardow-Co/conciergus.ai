@@ -9,7 +9,7 @@ import {
   type OptimizationInsights,
   type AnalyticsAlert,
   type AnalyticsFilter,
-  type AnalyticsTimeRange
+  type AnalyticsTimeRange,
 } from '../telemetry/AnalyticsDataModels';
 
 // ============================================================================
@@ -25,29 +25,35 @@ interface MetricCardProps {
   className?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ 
-  title, 
-  value, 
-  change, 
-  trend, 
-  icon, 
-  className = '' 
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  change,
+  trend,
+  icon,
+  className = '',
 }) => {
   const getTrendColor = () => {
     if (!trend) return 'text-gray-500';
     switch (trend) {
-      case 'up': return 'text-green-500';
-      case 'down': return 'text-red-500';
-      default: return 'text-gray-500';
+      case 'up':
+        return 'text-green-500';
+      case 'down':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
     }
   };
 
   const getTrendIcon = () => {
     if (!trend) return null;
     switch (trend) {
-      case 'up': return '↗';
-      case 'down': return '↘';
-      default: return '→';
+      case 'up':
+        return '↗';
+      case 'down':
+        return '↘';
+      default:
+        return '→';
     }
   };
 
@@ -64,11 +70,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             </p>
           )}
         </div>
-        {icon && (
-          <div className="text-3xl text-gray-400">
-            {icon}
-          </div>
-        )}
+        {icon && <div className="text-3xl text-gray-400">{icon}</div>}
       </div>
     </div>
   );
@@ -81,23 +83,26 @@ interface ChartProps {
   className?: string;
 }
 
-const SimpleChart: React.FC<ChartProps> = ({ title, data, type, className = '' }) => {
-  const maxValue = Math.max(...data.map(d => d.value));
+const SimpleChart: React.FC<ChartProps> = ({
+  title,
+  data,
+  type,
+  className = '',
+}) => {
+  const maxValue = Math.max(...data.map((d) => d.value));
 
-  const renderBar = (item: typeof data[0], index: number) => {
+  const renderBar = (item: (typeof data)[0], index: number) => {
     const height = (item.value / maxValue) * 100;
     return (
       <div key={index} className="flex flex-col items-center">
-        <div 
+        <div
           className="w-8 bg-blue-500 rounded-t"
           style={{ height: `${height}%`, minHeight: '4px' }}
         />
         <span className="text-xs text-gray-600 mt-2 text-center">
           {item.label}
         </span>
-        <span className="text-xs font-bold text-gray-800">
-          {item.value}
-        </span>
+        <span className="text-xs font-bold text-gray-800">{item.value}</span>
       </div>
     );
   };
@@ -110,9 +115,13 @@ const SimpleChart: React.FC<ChartProps> = ({ title, data, type, className = '' }
           const percentage = ((item.value / total) * 100).toFixed(1);
           return (
             <div key={index} className="flex items-center">
-              <div 
+              <div
                 className="w-3 h-3 rounded mr-2"
-                style={{ backgroundColor: item.color || `hsl(${index * 360 / data.length}, 70%, 50%)` }}
+                style={{
+                  backgroundColor:
+                    item.color ||
+                    `hsl(${(index * 360) / data.length}, 70%, 50%)`,
+                }}
               />
               <span className="text-sm">
                 {item.label}: {percentage}%
@@ -152,10 +161,10 @@ interface UsageMetricsProps {
   refreshInterval?: number;
 }
 
-const UsageMetricsPanel: React.FC<UsageMetricsProps> = ({ 
-  analytics, 
-  filter, 
-  refreshInterval = 30000 
+const UsageMetricsPanel: React.FC<UsageMetricsProps> = ({
+  analytics,
+  filter,
+  refreshInterval = 30000,
 }) => {
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,13 +191,17 @@ const UsageMetricsPanel: React.FC<UsageMetricsProps> = ({
   }
 
   if (!metrics) {
-    return <div className="text-center py-8 text-red-500">Failed to load metrics</div>;
+    return (
+      <div className="text-center py-8 text-red-500">
+        Failed to load metrics
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Usage Metrics</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Requests"
@@ -216,13 +229,25 @@ const UsageMetricsPanel: React.FC<UsageMetricsProps> = ({
         <MetricCard
           title="Success Rate"
           value={`${(metrics.successRate * 100).toFixed(1)}%`}
-          trend={metrics.successRate > 0.95 ? 'up' : metrics.successRate < 0.9 ? 'down' : 'stable'}
+          trend={
+            metrics.successRate > 0.95
+              ? 'up'
+              : metrics.successRate < 0.9
+                ? 'down'
+                : 'stable'
+          }
           icon="✅"
         />
         <MetricCard
           title="Error Rate"
           value={`${(metrics.errorRate * 100).toFixed(1)}%`}
-          trend={metrics.errorRate < 0.05 ? 'up' : metrics.errorRate > 0.1 ? 'down' : 'stable'}
+          trend={
+            metrics.errorRate < 0.05
+              ? 'up'
+              : metrics.errorRate > 0.1
+                ? 'down'
+                : 'stable'
+          }
           icon="❌"
         />
       </div>
@@ -239,9 +264,9 @@ interface ModelStatsProps {
   refreshInterval?: number;
 }
 
-const ModelStatsPanel: React.FC<ModelStatsProps> = ({ 
-  analytics, 
-  refreshInterval = 30000 
+const ModelStatsPanel: React.FC<ModelStatsProps> = ({
+  analytics,
+  refreshInterval = 30000,
 }) => {
   const [modelStats, setModelStats] = useState<ModelUsageStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,9 +292,9 @@ const ModelStatsPanel: React.FC<ModelStatsProps> = ({
     return modelStats
       .sort((a, b) => b.requests - a.requests)
       .slice(0, 10)
-      .map(model => ({
+      .map((model) => ({
         label: model.modelId.split('/').pop() || model.modelId,
-        value: model.requests
+        value: model.requests,
       }));
   }, [modelStats]);
 
@@ -280,15 +305,13 @@ const ModelStatsPanel: React.FC<ModelStatsProps> = ({
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Model Statistics</h2>
-      
-      <SimpleChart
-        title="Requests by Model"
-        data={chartData}
-        type="bar"
-      />
+
+      <SimpleChart title="Requests by Model" data={chartData} type="bar" />
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Model Performance</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Model Performance
+        </h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -332,13 +355,15 @@ const ModelStatsPanel: React.FC<ModelStatsProps> = ({
                     {model.performance.averageLatency.toFixed(0)}ms
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      model.performance.successRate > 0.95 
-                        ? 'bg-green-100 text-green-800'
-                        : model.performance.successRate > 0.9
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        model.performance.successRate > 0.95
+                          ? 'bg-green-100 text-green-800'
+                          : model.performance.successRate > 0.9
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                      }`}
+                    >
                       {(model.performance.successRate * 100).toFixed(1)}%
                     </span>
                   </td>
@@ -362,10 +387,10 @@ interface CostBreakdownProps {
   refreshInterval?: number;
 }
 
-const CostBreakdownPanel: React.FC<CostBreakdownProps> = ({ 
-  analytics, 
-  filter, 
-  refreshInterval = 30000 
+const CostBreakdownPanel: React.FC<CostBreakdownProps> = ({
+  analytics,
+  filter,
+  refreshInterval = 30000,
 }) => {
   const [costData, setCostData] = useState<CostBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
@@ -392,7 +417,7 @@ const CostBreakdownPanel: React.FC<CostBreakdownProps> = ({
     return costData.byModel.map((model, index) => ({
       label: model.modelId.split('/').pop() || model.modelId,
       value: model.cost,
-      color: `hsl(${index * 360 / costData.byModel.length}, 70%, 50%)`
+      color: `hsl(${(index * 360) / costData.byModel.length}, 70%, 50%)`,
     }));
   }, [costData]);
 
@@ -401,13 +426,17 @@ const CostBreakdownPanel: React.FC<CostBreakdownProps> = ({
   }
 
   if (!costData) {
-    return <div className="text-center py-8 text-red-500">Failed to load cost data</div>;
+    return (
+      <div className="text-center py-8 text-red-500">
+        Failed to load cost data
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Cost Breakdown</h2>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MetricCard
           title="Total Cost"
@@ -415,15 +444,13 @@ const CostBreakdownPanel: React.FC<CostBreakdownProps> = ({
           icon="💳"
           className="lg:col-span-2"
         />
-        
-        <SimpleChart
-          title="Cost by Model"
-          data={pieChartData}
-          type="pie"
-        />
+
+        <SimpleChart title="Cost by Model" data={pieChartData} type="pie" />
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Models by Cost</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Top Models by Cost
+          </h3>
           <div className="space-y-3">
             {costData.byModel.slice(0, 5).map((model, index) => (
               <div key={index} className="flex justify-between items-center">
@@ -456,9 +483,9 @@ interface AlertsPanelProps {
   refreshInterval?: number;
 }
 
-const AlertsPanel: React.FC<AlertsPanelProps> = ({ 
-  analytics, 
-  refreshInterval = 10000 
+const AlertsPanel: React.FC<AlertsPanelProps> = ({
+  analytics,
+  refreshInterval = 10000,
 }) => {
   const [alerts, setAlerts] = useState<AnalyticsAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -490,9 +517,12 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'critical':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-200';
     }
   };
 
@@ -503,7 +533,7 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Active Alerts</h2>
-      
+
       {alerts.length === 0 ? (
         <div className="bg-green-50 border border-green-200 rounded-md p-4">
           <div className="flex">
@@ -520,8 +550,8 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
       ) : (
         <div className="space-y-4">
           {alerts.map((alert) => (
-            <div 
-              key={alert.id} 
+            <div
+              key={alert.id}
               className={`border rounded-lg p-4 ${getSeverityColor(alert.severity)}`}
             >
               <div className="flex justify-between items-start">
@@ -583,19 +613,23 @@ interface AnalyticsDashboardProps {
   className?: string;
 }
 
-const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ 
-  analytics, 
-  className = '' 
+const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+  analytics,
+  className = '',
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'costs' | 'alerts'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'models' | 'costs' | 'alerts'
+  >('overview');
   const [filter, setFilter] = useState<AnalyticsFilter>({});
-  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>(
+    '24h'
+  );
 
   const updateTimeRange = (range: '1h' | '24h' | '7d' | '30d') => {
     setTimeRange(range);
     const now = new Date();
     let start: Date;
-    
+
     switch (range) {
       case '1h':
         start = new Date(now.getTime() - 60 * 60 * 1000);
@@ -610,14 +644,15 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
     }
-    
-    setFilter(prev => ({
+
+    setFilter((prev) => ({
       ...prev,
       dateRange: {
         start,
         end: now,
-        granularity: range === '1h' ? 'minute' : range === '24h' ? 'hour' : 'day'
-      }
+        granularity:
+          range === '1h' ? 'minute' : range === '24h' ? 'hour' : 'day',
+      },
     }));
   };
 
@@ -625,7 +660,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'models', label: 'Models', icon: '🤖' },
     { id: 'costs', label: 'Costs', icon: '💰' },
-    { id: 'alerts', label: 'Alerts', icon: '🚨' }
+    { id: 'alerts', label: 'Alerts', icon: '🚨' },
   ] as const;
 
   return (
@@ -633,7 +668,9 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Analytics Dashboard
+          </h1>
           <p className="mt-2 text-gray-600">
             Monitor AI usage, costs, and performance in real-time
           </p>
@@ -683,15 +720,11 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {activeTab === 'overview' && (
             <UsageMetricsPanel analytics={analytics} filter={filter} />
           )}
-          {activeTab === 'models' && (
-            <ModelStatsPanel analytics={analytics} />
-          )}
+          {activeTab === 'models' && <ModelStatsPanel analytics={analytics} />}
           {activeTab === 'costs' && (
             <CostBreakdownPanel analytics={analytics} filter={filter} />
           )}
-          {activeTab === 'alerts' && (
-            <AlertsPanel analytics={analytics} />
-          )}
+          {activeTab === 'alerts' && <AlertsPanel analytics={analytics} />}
         </div>
       </div>
     </div>
@@ -699,11 +732,11 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 };
 
 export default AnalyticsDashboard;
-export { 
-  UsageMetricsPanel, 
-  ModelStatsPanel, 
-  CostBreakdownPanel, 
+export {
+  UsageMetricsPanel,
+  ModelStatsPanel,
+  CostBreakdownPanel,
   AlertsPanel,
   MetricCard,
-  SimpleChart
-}; 
+  SimpleChart,
+};

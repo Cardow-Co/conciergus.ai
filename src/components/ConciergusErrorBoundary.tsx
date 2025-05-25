@@ -1,8 +1,15 @@
-import React, { Component, ErrorInfo, ReactNode, useState, useEffect, useCallback } from 'react';
-import type { 
+import React, {
+  Component,
+  ErrorInfo,
+  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+import type {
   ConciergusError,
   ErrorCategory,
-  ErrorSeverity
+  ErrorSeverity,
 } from '../errors/ErrorBoundary';
 import type { TelemetryData } from '../types/ai-sdk-5';
 
@@ -115,7 +122,7 @@ export interface ErrorBoundaryState {
 export interface ConciergusErrorBoundaryProps {
   /** Child components to wrap */
   children: ReactNode;
-  
+
   // === Configuration ===
   /** Error boundary configuration */
   config?: ErrorBoundaryConfig;
@@ -123,7 +130,7 @@ export interface ConciergusErrorBoundaryProps {
   fallbackMode?: FallbackMode;
   /** Enable debug mode */
   debug?: boolean;
-  
+
   // === Custom Fallback Components ===
   /** Custom fallback component for full mode */
   fallbackComponent?: React.ComponentType<FallbackComponentProps>;
@@ -131,13 +138,13 @@ export interface ConciergusErrorBoundaryProps {
   inlineFallback?: React.ComponentType<FallbackComponentProps>;
   /** Custom toast component */
   toastComponent?: React.ComponentType<FallbackComponentProps>;
-  
+
   // === Styling ===
   /** Additional CSS classes */
   className?: string;
   /** Color theme */
   theme?: 'light' | 'dark' | 'auto';
-  
+
   // === Event Handlers ===
   /** Error caught handler */
   onError?: (error: EnhancedError, errorInfo: ErrorInfo) => void;
@@ -145,13 +152,13 @@ export interface ConciergusErrorBoundaryProps {
   onRecovery?: (error: EnhancedError, success: boolean) => void;
   /** Error reported handler */
   onErrorReported?: (errorId: string, error: EnhancedError) => void;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -196,8 +203,8 @@ const generateErrorId = (): string => {
  * Enhance error with additional metadata
  */
 const enhanceError = (
-  error: Error, 
-  errorInfo: ErrorInfo, 
+  error: Error,
+  errorInfo: ErrorInfo,
   config: ErrorBoundaryConfig
 ): EnhancedError => {
   const enhanced: EnhancedError = {
@@ -207,13 +214,17 @@ const enhanceError = (
     timestamp: new Date(),
     componentStack: errorInfo.componentStack,
     context: {
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
       url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-      viewport: typeof window !== 'undefined' ? {
-        width: window.innerWidth,
-        height: window.innerHeight
-      } : null
-    }
+      viewport:
+        typeof window !== 'undefined'
+          ? {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            }
+          : null,
+    },
   };
 
   // Apply custom transformation if provided
@@ -225,47 +236,59 @@ const enhanceError = (
   if (error.message.includes('Network') || error.message.includes('fetch')) {
     enhanced.category = 'network';
     enhanced.severity = 'warning';
-    enhanced.userMessage = 'Network connection issue. Please check your internet connection.';
+    enhanced.userMessage =
+      'Network connection issue. Please check your internet connection.';
     enhanced.recoverySuggestions = [
       'Check your internet connection',
       'Try refreshing the page',
-      'Contact support if the issue persists'
+      'Contact support if the issue persists',
     ];
-  } else if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+  } else if (
+    error.message.includes('timeout') ||
+    error.message.includes('Timeout')
+  ) {
     enhanced.category = 'timeout';
     enhanced.severity = 'warning';
     enhanced.userMessage = 'Request timed out. Please try again.';
     enhanced.recoverySuggestions = [
       'Try the request again',
       'Check your internet connection',
-      'Reduce the complexity of your request'
+      'Reduce the complexity of your request',
     ];
-  } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+  } else if (
+    error.message.includes('401') ||
+    error.message.includes('Unauthorized')
+  ) {
     enhanced.category = 'authentication';
     enhanced.severity = 'error';
     enhanced.userMessage = 'Authentication failed. Please sign in again.';
     enhanced.recoverySuggestions = [
       'Sign in again',
       'Check your credentials',
-      'Contact support for assistance'
+      'Contact support for assistance',
     ];
-  } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+  } else if (
+    error.message.includes('rate limit') ||
+    error.message.includes('429')
+  ) {
     enhanced.category = 'rateLimit';
     enhanced.severity = 'warning';
-    enhanced.userMessage = 'Too many requests. Please wait a moment before trying again.';
+    enhanced.userMessage =
+      'Too many requests. Please wait a moment before trying again.';
     enhanced.recoverySuggestions = [
       'Wait a few moments before trying again',
       'Reduce the frequency of your requests',
-      'Upgrade your plan for higher limits'
+      'Upgrade your plan for higher limits',
     ];
   } else {
     enhanced.category = 'ui';
     enhanced.severity = 'error';
-    enhanced.userMessage = 'Something went wrong. We\'re working to fix this issue.';
+    enhanced.userMessage =
+      "Something went wrong. We're working to fix this issue.";
     enhanced.recoverySuggestions = [
       'Refresh the page',
       'Try again in a few moments',
-      'Contact support if the issue continues'
+      'Contact support if the issue continues',
     ];
   }
 
@@ -298,9 +321,9 @@ const reportError = async (
           category: error.category,
           severity: error.severity,
           context: error.context,
-          componentStack: error.componentStack
-        }
-      })
+          componentStack: error.componentStack,
+        },
+      }),
     });
 
     if (response.ok) {
@@ -328,7 +351,7 @@ const DefaultFallbackComponent: React.FC<FallbackComponentProps> = ({
   recoveryActions,
   onRetry,
   debug,
-  theme
+  theme,
 }) => {
   return (
     <div className={`error-boundary-fallback full-mode theme-${theme}`}>
@@ -344,7 +367,8 @@ const DefaultFallbackComponent: React.FC<FallbackComponentProps> = ({
             {error.userMessage || 'Something went wrong'}
           </h1>
           <p className="error-subtitle">
-            We apologize for the inconvenience. Please try one of the recovery options below.
+            We apologize for the inconvenience. Please try one of the recovery
+            options below.
           </p>
         </div>
 
@@ -388,7 +412,9 @@ const DefaultFallbackComponent: React.FC<FallbackComponentProps> = ({
                 {errorInfo?.componentStack && (
                   <div className="debug-field">
                     <strong>Component Stack:</strong>
-                    <pre className="component-stack">{errorInfo.componentStack}</pre>
+                    <pre className="component-stack">
+                      {errorInfo.componentStack}
+                    </pre>
                   </div>
                 )}
               </div>
@@ -412,7 +438,8 @@ const DefaultFallbackComponent: React.FC<FallbackComponentProps> = ({
 
         <div className="error-footer">
           <p>
-            If this problem persists, please contact our support team with error ID: {boundaryState.errorId}
+            If this problem persists, please contact our support team with error
+            ID: {boundaryState.errorId}
           </p>
         </div>
       </div>
@@ -427,7 +454,7 @@ const DefaultInlineFallback: React.FC<FallbackComponentProps> = ({
   error,
   recoveryActions,
   onRetry,
-  theme
+  theme,
 }) => {
   return (
     <div className={`error-boundary-fallback inline-mode theme-${theme}`}>
@@ -450,7 +477,7 @@ const DefaultInlineFallback: React.FC<FallbackComponentProps> = ({
 const DefaultToastComponent: React.FC<FallbackComponentProps> = ({
   error,
   onDismiss,
-  theme
+  theme,
 }) => {
   return (
     <div className={`error-boundary-fallback toast-mode theme-${theme}`}>
@@ -477,11 +504,14 @@ const DefaultToastComponent: React.FC<FallbackComponentProps> = ({
 
 /**
  * ConciergusErrorBoundary Component
- * 
+ *
  * Enterprise-grade error boundary with advanced error handling, recovery mechanisms,
  * telemetry integration, and comprehensive fallback strategies for AI SDK 5 applications.
  */
-class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, ErrorBoundaryState> {
+class ConciergusErrorBoundary extends Component<
+  ConciergusErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private config: ErrorBoundaryConfig;
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
@@ -495,7 +525,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
       enableStackTrace: process.env.NODE_ENV === 'development',
       maxRetryAttempts: 3,
       retryDelay: 1000,
-      ...props.config
+      ...props.config,
     };
 
     this.state = {
@@ -505,7 +535,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
       retryCount: 0,
       isRecovering: false,
       recoveryTimestamp: null,
-      errorId: null
+      errorId: null,
     };
   }
 
@@ -513,21 +543,21 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
     return {
       hasError: true,
       error: error as EnhancedError,
-      errorId: generateErrorId()
+      errorId: generateErrorId(),
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const enhancedError = enhanceError(error, errorInfo, this.config);
-    
+
     this.setState({
       error: enhancedError,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
 
     // Report error
     if (this.config.enableReporting) {
-      reportError(enhancedError, this.config).then(reportedErrorId => {
+      reportError(enhancedError, this.config).then((reportedErrorId) => {
         if (reportedErrorId) {
           this.setState({ errorId: reportedErrorId });
           this.props.onErrorReported?.(reportedErrorId, enhancedError);
@@ -540,11 +570,18 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('ConciergusErrorBoundary caught an error:', error, errorInfo);
+      console.error(
+        'ConciergusErrorBoundary caught an error:',
+        error,
+        errorInfo
+      );
     }
   }
 
-  componentDidUpdate(prevProps: ConciergusErrorBoundaryProps, prevState: ErrorBoundaryState) {
+  componentDidUpdate(
+    prevProps: ConciergusErrorBoundaryProps,
+    prevState: ErrorBoundaryState
+  ) {
     // Reset error state if children change and we were in error state
     if (prevState.hasError && !this.state.hasError) {
       this.setState({
@@ -553,7 +590,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
         retryCount: 0,
         isRecovering: false,
         recoveryTimestamp: null,
-        errorId: null
+        errorId: null,
       });
     }
   }
@@ -570,7 +607,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
     }
 
     this.setState({
-      isRecovering: true
+      isRecovering: true,
     });
 
     this.retryTimeoutId = setTimeout(() => {
@@ -580,7 +617,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
         errorInfo: null,
         retryCount: this.state.retryCount + 1,
         isRecovering: false,
-        recoveryTimestamp: new Date()
+        recoveryTimestamp: new Date(),
       });
 
       this.props.onRecovery?.(this.state.error!, true);
@@ -592,7 +629,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
       hasError: false,
       error: null,
       errorInfo: null,
-      isRecovering: false
+      isRecovering: false,
     });
   };
 
@@ -600,13 +637,16 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
     const actions: ErrorRecoveryAction[] = [];
 
     // Default retry action
-    if (this.config.enableRecovery && this.state.retryCount < this.config.maxRetryAttempts!) {
+    if (
+      this.config.enableRecovery &&
+      this.state.retryCount < this.config.maxRetryAttempts!
+    ) {
       actions.push({
         label: 'Try Again',
         handler: this.handleRetry,
         type: 'primary',
         loading: this.state.isRecovering,
-        icon: '🔄'
+        icon: '🔄',
       });
     }
 
@@ -615,7 +655,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
       label: 'Reload Page',
       handler: () => window.location.reload(),
       type: 'secondary',
-      icon: '🔄'
+      icon: '🔄',
     });
 
     // Custom actions from config
@@ -640,7 +680,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
       onRetry: this.handleRetry,
       onDismiss: this.handleDismiss,
       debug: this.props.debug || false,
-      theme: this.props.theme || 'auto'
+      theme: this.props.theme || 'auto',
     };
 
     const mode = this.props.fallbackMode || 'full';
@@ -653,16 +693,20 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
     // Render based on fallback mode
     switch (mode) {
       case 'inline':
-        const InlineComponent = this.props.inlineFallback || DefaultInlineFallback;
+        const InlineComponent =
+          this.props.inlineFallback || DefaultInlineFallback;
         return <InlineComponent {...fallbackProps} />;
-      
+
       case 'toast':
-        const ToastComponent = this.props.toastComponent || DefaultToastComponent;
+        const ToastComponent =
+          this.props.toastComponent || DefaultToastComponent;
         return <ToastComponent {...fallbackProps} />;
-      
+
       case 'banner':
         return (
-          <div className={`error-boundary-fallback banner-mode theme-${this.props.theme || 'auto'}`}>
+          <div
+            className={`error-boundary-fallback banner-mode theme-${this.props.theme || 'auto'}`}
+          >
             <div className="banner-error">
               <span className="error-icon">⚠️</span>
               <span className="error-message">
@@ -677,10 +721,12 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
             </div>
           </div>
         );
-      
+
       case 'modal':
         return (
-          <div className={`error-boundary-fallback modal-mode theme-${this.props.theme || 'auto'}`}>
+          <div
+            className={`error-boundary-fallback modal-mode theme-${this.props.theme || 'auto'}`}
+          >
             <div className="modal-backdrop">
               <div className="modal-content">
                 <DefaultFallbackComponent {...fallbackProps} />
@@ -691,7 +737,7 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
             </div>
           </div>
         );
-      
+
       case 'full':
       default:
         return <DefaultFallbackComponent {...fallbackProps} />;
@@ -709,15 +755,18 @@ class ConciergusErrorBoundary extends Component<ConciergusErrorBoundaryProps, Er
 export const useErrorHandler = (config?: ErrorBoundaryConfig) => {
   const [error, setError] = useState<EnhancedError | null>(null);
 
-  const handleError = useCallback((error: Error | EnhancedError) => {
-    const enhanced = error as EnhancedError;
-    enhanced.timestamp = enhanced.timestamp || new Date();
-    setError(enhanced);
+  const handleError = useCallback(
+    (error: Error | EnhancedError) => {
+      const enhanced = error as EnhancedError;
+      enhanced.timestamp = enhanced.timestamp || new Date();
+      setError(enhanced);
 
-    if (config?.enableReporting) {
-      reportError(enhanced, config);
-    }
-  }, [config]);
+      if (config?.enableReporting) {
+        reportError(enhanced, config);
+      }
+    },
+    [config]
+  );
 
   const clearError = useCallback(() => {
     setError(null);
@@ -727,7 +776,7 @@ export const useErrorHandler = (config?: ErrorBoundaryConfig) => {
     error,
     handleError,
     clearError,
-    hasError: error !== null
+    hasError: error !== null,
   };
 };
 
@@ -743,10 +792,10 @@ export type {
   EnhancedError,
   ErrorRecoveryAction,
   FallbackComponentProps,
-  FallbackMode
+  FallbackMode,
 };
 export {
   DefaultFallbackComponent,
   DefaultInlineFallback,
-  DefaultToastComponent
-}; 
+  DefaultToastComponent,
+};

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
-import { 
-  useCostAnalytics, 
-  useBudgetMonitor, 
-  useCostOptimization, 
-  useCostDashboard 
+import {
+  useCostAnalytics,
+  useBudgetMonitor,
+  useCostOptimization,
+  useCostDashboard,
 } from '../context/CostHooks';
 import { useGateway } from '../context/GatewayProvider';
 
@@ -35,8 +35,8 @@ const BudgetAlert: FC<{
     <div className="alert-content">
       <div className="alert-message">{alert.message}</div>
       <div className="alert-details">
-        ${alert.currentSpending.toFixed(2)} / ${alert.budgetLimit.toFixed(2)} 
-        ({(alert.percentageUsed * 100).toFixed(1)}%)
+        ${alert.currentSpending.toFixed(2)} / ${alert.budgetLimit.toFixed(2)}(
+        {(alert.percentageUsed * 100).toFixed(1)}%)
       </div>
     </div>
   </div>
@@ -53,15 +53,16 @@ const CostTrendChart: FC<{
     <h5>{title}</h5>
     <div className="chart-container">
       {data.map((point, index) => {
-        const maxCost = Math.max(...data.map(d => d.cost));
+        const maxCost = Math.max(...data.map((d) => d.cost));
         const height = maxCost > 0 ? (point.cost / maxCost) * 100 : 0;
-        
+
         return (
-          <div key={index} className="chart-bar" title={`${point.time}: $${point.cost.toFixed(4)}`}>
-            <div 
-              className="bar-fill" 
-              style={{ height: `${height}%` }}
-            />
+          <div
+            key={index}
+            className="chart-bar"
+            title={`${point.time}: $${point.cost.toFixed(4)}`}
+          >
+            <div className="bar-fill" style={{ height: `${height}%` }} />
             <div className="bar-label">{point.time}</div>
           </div>
         );
@@ -82,27 +83,37 @@ const CostForecast: FC<{
     <div className="forecast-metrics">
       <div className="forecast-item">
         <span className="label">Current Usage:</span>
-        <span className="value">${forecast.currentUsage?.toFixed(2) || '0.00'}</span>
+        <span className="value">
+          ${forecast.currentUsage?.toFixed(2) || '0.00'}
+        </span>
       </div>
       <div className="forecast-item">
         <span className="label">Projected Usage:</span>
-        <span className="value">${forecast.projectedUsage?.toFixed(2) || '0.00'}</span>
+        <span className="value">
+          ${forecast.projectedUsage?.toFixed(2) || '0.00'}
+        </span>
       </div>
       <div className="forecast-item">
         <span className="label">Budget Remaining:</span>
-        <span className={`value ${forecast.budgetRemaining < 0 ? 'negative' : ''}`}>
+        <span
+          className={`value ${forecast.budgetRemaining < 0 ? 'negative' : ''}`}
+        >
           ${forecast.budgetRemaining?.toFixed(2) || '0.00'}
         </span>
       </div>
     </div>
-    
+
     {forecast.recommendedActions && forecast.recommendedActions.length > 0 && (
       <div className="forecast-recommendations">
         <h6>Recommendations:</h6>
         {forecast.recommendedActions.map((action, index) => (
           <div key={index} className="recommendation-item">
-            <div className="recommendation-type">{action.type.replace('_', ' ')}</div>
-            <div className="recommendation-description">{action.description}</div>
+            <div className="recommendation-type">
+              {action.type.replace('_', ' ')}
+            </div>
+            <div className="recommendation-description">
+              {action.description}
+            </div>
             <div className="recommendation-saving">
               Potential saving: ${action.potentialSaving.toFixed(2)}
             </div>
@@ -136,20 +147,24 @@ const ModelCostComparison: FC<{
           <span>Action</span>
         </div>
         {comparison.map((model, index) => (
-          <div 
-            key={model.modelId} 
+          <div
+            key={model.modelId}
             className={`table-row ${model.modelId === currentModel ? 'current' : ''}`}
           >
             <span className="model-name">
               {model.modelId}
-              {model.modelId === currentModel && <span className="current-badge">Current</span>}
+              {model.modelId === currentModel && (
+                <span className="current-badge">Current</span>
+              )}
             </span>
             <span className="model-cost">${model.averageCost.toFixed(4)}</span>
-            <span className="model-quality">{(model.qualityScore * 100).toFixed(0)}%</span>
+            <span className="model-quality">
+              {(model.qualityScore * 100).toFixed(0)}%
+            </span>
             <span className="model-value">{model.valueScore.toFixed(2)}</span>
             <span className="model-action">
               {model.modelId !== currentModel && onModelSelect && (
-                <button 
+                <button
                   onClick={() => onModelSelect(model.modelId)}
                   className="switch-model-btn"
                 >
@@ -175,38 +190,40 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
   showOptimization = true,
   showTrends = true,
   showInsights = true,
-  refreshInterval = 10000
+  refreshInterval = 10000,
 }) => {
   const { currentModel, setCurrentModel, availableModels } = useGateway();
-  
+
   // Cost analytics hooks
-  const { 
-    currentSpending, 
-    costMetrics, 
-    forecast, 
+  const {
+    currentSpending,
+    costMetrics,
+    forecast,
     refresh: refreshAnalytics,
     updateBudget,
-    exportData
+    exportData,
   } = useCostAnalytics(refreshInterval);
-  
-  const { 
-    alerts, 
-    isOverBudget, 
-    budgetUtilization, 
-    timeUntilReset, 
-    recommendations 
+
+  const {
+    alerts,
+    isOverBudget,
+    budgetUtilization,
+    timeUntilReset,
+    recommendations,
   } = useBudgetMonitor();
-  
+
   const { getOptimalModel, autoOptimize } = useCostOptimization();
   const { summary, trends, insights } = useCostDashboard();
 
   // Local state
-  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    'daily' | 'weekly' | 'monthly'
+  >('daily');
   const [showBudgetSettings, setShowBudgetSettings] = useState(false);
   const [budgetLimits, setBudgetLimits] = useState({
     daily: 50,
     weekly: 300,
-    monthly: 1000
+    monthly: 1000,
   });
 
   // Handle budget update
@@ -214,7 +231,7 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
     updateBudget({
       dailyLimit: budgetLimits.daily,
       weeklyLimit: budgetLimits.weekly,
-      monthlyLimit: budgetLimits.monthly
+      monthlyLimit: budgetLimits.monthly,
     });
     setShowBudgetSettings(false);
   }, [updateBudget, budgetLimits]);
@@ -224,7 +241,9 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
     if (isOverBudget) {
       const optimizedModel = autoOptimize(currentModel);
       if (optimizedModel && optimizedModel !== currentModel) {
-        console.warn(`Auto-switching to ${optimizedModel} due to budget constraints`);
+        console.warn(
+          `Auto-switching to ${optimizedModel} due to budget constraints`
+        );
       }
     }
   }, [isOverBudget, currentModel, autoOptimize]);
@@ -234,8 +253,10 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
     'cost-analytics-dashboard',
     compactView ? 'compact' : '',
     isOverBudget ? 'over-budget' : '',
-    className
-  ].filter(Boolean).join(' ');
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={containerClasses}>
@@ -246,18 +267,24 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
           <button onClick={refreshAnalytics} className="refresh-btn">
             🔄 Refresh
           </button>
-          <button onClick={() => setShowBudgetSettings(!showBudgetSettings)} className="settings-btn">
+          <button
+            onClick={() => setShowBudgetSettings(!showBudgetSettings)}
+            className="settings-btn"
+          >
             ⚙️ Budget Settings
           </button>
-          <button onClick={() => {
-            const data = exportData('csv');
-            const blob = new Blob([data], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'cost-analytics.csv';
-            a.click();
-          }} className="export-btn">
+          <button
+            onClick={() => {
+              const data = exportData('csv');
+              const blob = new Blob([data], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'cost-analytics.csv';
+              a.click();
+            }}
+            className="export-btn"
+          >
             📊 Export Data
           </button>
         </div>
@@ -274,7 +301,12 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
                 <input
                   type="number"
                   value={budgetLimits.daily}
-                  onChange={(e) => setBudgetLimits(prev => ({ ...prev, daily: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setBudgetLimits((prev) => ({
+                      ...prev,
+                      daily: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
               <div className="input-group">
@@ -282,7 +314,12 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
                 <input
                   type="number"
                   value={budgetLimits.weekly}
-                  onChange={(e) => setBudgetLimits(prev => ({ ...prev, weekly: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setBudgetLimits((prev) => ({
+                      ...prev,
+                      weekly: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
               <div className="input-group">
@@ -290,13 +327,25 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
                 <input
                   type="number"
                   value={budgetLimits.monthly}
-                  onChange={(e) => setBudgetLimits(prev => ({ ...prev, monthly: Number(e.target.value) }))}
+                  onChange={(e) =>
+                    setBudgetLimits((prev) => ({
+                      ...prev,
+                      monthly: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
             </div>
             <div className="modal-actions">
-              <button onClick={handleBudgetUpdate} className="save-btn">Save</button>
-              <button onClick={() => setShowBudgetSettings(false)} className="cancel-btn">Cancel</button>
+              <button onClick={handleBudgetUpdate} className="save-btn">
+                Save
+              </button>
+              <button
+                onClick={() => setShowBudgetSettings(false)}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -318,11 +367,13 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
         <div className="summary-grid">
           <div className="summary-card">
             <div className="card-label">Today</div>
-            <div className="card-value">${summary.totalSpentToday.toFixed(2)}</div>
+            <div className="card-value">
+              ${summary.totalSpentToday.toFixed(2)}
+            </div>
             <div className="card-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${budgetUtilization.daily * 100}%` }}
                 />
               </div>
@@ -335,11 +386,13 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
 
           <div className="summary-card">
             <div className="card-label">This Week</div>
-            <div className="card-value">${summary.totalSpentThisWeek.toFixed(2)}</div>
+            <div className="card-value">
+              ${summary.totalSpentThisWeek.toFixed(2)}
+            </div>
             <div className="card-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${budgetUtilization.weekly * 100}%` }}
                 />
               </div>
@@ -352,11 +405,13 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
 
           <div className="summary-card">
             <div className="card-label">This Month</div>
-            <div className="card-value">${summary.totalSpentThisMonth.toFixed(2)}</div>
+            <div className="card-value">
+              ${summary.totalSpentThisMonth.toFixed(2)}
+            </div>
             <div className="card-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${budgetUtilization.monthly * 100}%` }}
                 />
               </div>
@@ -369,9 +424,15 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
 
           <div className="summary-card">
             <div className="card-label">Avg Cost/Request</div>
-            <div className="card-value">${summary.averageCostPerRequest.toFixed(4)}</div>
-            <div className="card-detail">Total Requests: {summary.requestCount}</div>
-            <div className="card-detail">Most Efficient: {summary.mostEfficientModel}</div>
+            <div className="card-value">
+              ${summary.averageCostPerRequest.toFixed(4)}
+            </div>
+            <div className="card-detail">
+              Total Requests: {summary.requestCount}
+            </div>
+            <div className="card-detail">
+              Most Efficient: {summary.mostEfficientModel}
+            </div>
           </div>
         </div>
       </div>
@@ -381,16 +442,16 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
         <div className="trends-section">
           <h4>Cost Trends</h4>
           <div className="trends-grid">
-            <CostTrendChart 
-              data={trends.hourlySpending} 
-              title="Hourly Spending (Last 24h)" 
+            <CostTrendChart
+              data={trends.hourlySpending}
+              title="Hourly Spending (Last 24h)"
             />
-            <CostTrendChart 
-              data={trends.dailySpending} 
-              title="Daily Spending (Last 7d)" 
+            <CostTrendChart
+              data={trends.dailySpending}
+              title="Daily Spending (Last 7d)"
             />
           </div>
-          
+
           <div className="model-usage-breakdown">
             <h5>Model Usage Breakdown</h5>
             <div className="usage-list">
@@ -398,8 +459,12 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
                 <div key={index} className="usage-item">
                   <span className="model-name">{usage.model}</span>
                   <span className="usage-cost">${usage.cost.toFixed(2)}</span>
-                  <span className="usage-requests">{usage.requests} requests</span>
-                  <span className="usage-avg">${(usage.cost / usage.requests).toFixed(4)}/req</span>
+                  <span className="usage-requests">
+                    {usage.requests} requests
+                  </span>
+                  <span className="usage-avg">
+                    ${(usage.cost / usage.requests).toFixed(4)}/req
+                  </span>
                 </div>
               ))}
             </div>
@@ -412,7 +477,7 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
         <div className="forecast-section">
           <h4>Cost Forecast</h4>
           <div className="period-selector">
-            {(['daily', 'weekly', 'monthly'] as const).map(period => (
+            {(['daily', 'weekly', 'monthly'] as const).map((period) => (
               <button
                 key={period}
                 className={`period-btn ${selectedPeriod === period ? 'active' : ''}`}
@@ -422,7 +487,10 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
               </button>
             ))}
           </div>
-          <CostForecast forecast={forecast[selectedPeriod]} period={selectedPeriod} />
+          <CostForecast
+            forecast={forecast[selectedPeriod]}
+            period={selectedPeriod}
+          />
         </div>
       )}
 
@@ -454,7 +522,9 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
                 <div className="insight-message">{insight.message}</div>
                 <div className="insight-impact">
                   Impact: ${insight.impact.toFixed(2)}
-                  {insight.actionable && <span className="actionable-badge">Actionable</span>}
+                  {insight.actionable && (
+                    <span className="actionable-badge">Actionable</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -479,4 +549,4 @@ export const CostAnalyticsDashboard: FC<CostAnalyticsDashboardProps> = ({
   );
 };
 
-export default CostAnalyticsDashboard; 
+export default CostAnalyticsDashboard;

@@ -6,8 +6,12 @@ export interface MockSpan {
   spanContext: () => { traceId: string; spanId: string };
   setAttribute: jest.MockedFunction<(key: string, value: any) => void>;
   setAttributes: jest.MockedFunction<(attributes: Record<string, any>) => void>;
-  addEvent: jest.MockedFunction<(name: string, attributes?: Record<string, any>) => void>;
-  setStatus: jest.MockedFunction<(status: { code: number; message?: string }) => void>;
+  addEvent: jest.MockedFunction<
+    (name: string, attributes?: Record<string, any>) => void
+  >;
+  setStatus: jest.MockedFunction<
+    (status: { code: number; message?: string }) => void
+  >;
   end: jest.MockedFunction<(endTime?: number) => void>;
   recordException: jest.MockedFunction<(exception: Error) => void>;
   updateName: jest.MockedFunction<(name: string) => void>;
@@ -17,7 +21,9 @@ export interface MockSpan {
 // Mock tracer interface
 export interface MockTracer {
   startSpan: jest.MockedFunction<(name: string, options?: any) => MockSpan>;
-  startActiveSpan: jest.MockedFunction<(name: string, fn: (span: MockSpan) => any) => any>;
+  startActiveSpan: jest.MockedFunction<
+    (name: string, fn: (span: MockSpan) => any) => any
+  >;
 }
 
 // Mock meter interface
@@ -25,18 +31,21 @@ export interface MockMeter {
   createCounter: jest.MockedFunction<(name: string, options?: any) => any>;
   createHistogram: jest.MockedFunction<(name: string, options?: any) => any>;
   createGauge: jest.MockedFunction<(name: string, options?: any) => any>;
-  createUpDownCounter: jest.MockedFunction<(name: string, options?: any) => any>;
+  createUpDownCounter: jest.MockedFunction<
+    (name: string, options?: any) => any
+  >;
 }
 
 let mockIdCounter = 0;
-const generateMockId = (prefix: string) => `${prefix}-${Date.now()}-${++mockIdCounter}`;
+const generateMockId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${++mockIdCounter}`;
 
- // Create mock span
- export const createMockSpan = (): MockSpan => ({
-   spanContext: jest.fn().mockReturnValue({
+// Create mock span
+export const createMockSpan = (): MockSpan => ({
+  spanContext: jest.fn().mockReturnValue({
     traceId: generateMockId('mock-trace-id'),
     spanId: generateMockId('mock-span-id'),
-   }),
+  }),
   setAttribute: jest.fn(),
   setAttributes: jest.fn(),
   addEvent: jest.fn(),
@@ -50,10 +59,12 @@ const generateMockId = (prefix: string) => `${prefix}-${Date.now()}-${++mockIdCo
 // Create mock tracer
 export const createMockTracer = (): MockTracer => ({
   startSpan: jest.fn().mockReturnValue(createMockSpan()),
-  startActiveSpan: jest.fn().mockImplementation((name: string, fn: (span: MockSpan) => any) => {
-    const span = createMockSpan();
-    return fn(span);
-  }),
+  startActiveSpan: jest
+    .fn()
+    .mockImplementation((name: string, fn: (span: MockSpan) => any) => {
+      const span = createMockSpan();
+      return fn(span);
+    }),
 });
 
 // Create mock meter
@@ -158,17 +169,19 @@ export const OTLPMetricExporter = jest.fn().mockImplementation(() => ({
 }));
 
 export const ConsoleSpanExporter = jest.fn().mockImplementation(() => ({
-   export: jest.fn().mockImplementation((spans, callback) => {
-     callback({ code: 0 }); // SUCCESS
-   }),
-   shutdown: jest.fn().mockResolvedValue(undefined),
- }));
-
-// Mock metric readers
-export const PeriodicExportingMetricReader = jest.fn().mockImplementation(() => ({
-  collect: jest.fn().mockResolvedValue(undefined),
+  export: jest.fn().mockImplementation((spans, callback) => {
+    callback({ code: 0 }); // SUCCESS
+  }),
   shutdown: jest.fn().mockResolvedValue(undefined),
 }));
+
+// Mock metric readers
+export const PeriodicExportingMetricReader = jest
+  .fn()
+  .mockImplementation(() => ({
+    collect: jest.fn().mockResolvedValue(undefined),
+    shutdown: jest.fn().mockResolvedValue(undefined),
+  }));
 
 // Mock resources
 export const Resource = {
@@ -182,7 +195,7 @@ export const Resource = {
     attributes: {},
   },
   merge: jest.fn().mockImplementation((...resources) => ({
-    attributes: Object.assign({}, ...resources.map(r => r.attributes)),
+    attributes: Object.assign({}, ...resources.map((r) => r.attributes)),
   })),
 };
 
@@ -212,7 +225,7 @@ export const getWebAutoInstrumentations = jest.fn().mockReturnValue([
 
 export const getNodeAutoInstrumentations = jest.fn().mockReturnValue([
   {
-    instrumentationName: 'mock-node-instrumentation', 
+    instrumentationName: 'mock-node-instrumentation',
     enable: jest.fn(),
     disable: jest.fn(),
   },
@@ -230,11 +243,13 @@ export const DocumentLoadInstrumentation = jest.fn().mockImplementation(() => ({
   disable: jest.fn(),
 }));
 
-export const UserInteractionInstrumentation = jest.fn().mockImplementation(() => ({
-  instrumentationName: 'mock-user-interaction-instrumentation',
-  enable: jest.fn(),
-  disable: jest.fn(),
-}));
+export const UserInteractionInstrumentation = jest
+  .fn()
+  .mockImplementation(() => ({
+    instrumentationName: 'mock-user-interaction-instrumentation',
+    enable: jest.fn(),
+    disable: jest.fn(),
+  }));
 
 // Mock zone context manager
 export const ZoneContextManager = jest.fn().mockImplementation(() => ({
@@ -269,9 +284,11 @@ export const testUtils = {
     meterProvider: new MeterProvider(),
   }),
 
-  createMockSpanWithEvents: (events: Array<{ name: string; attributes?: Record<string, any> }> = []) => {
+  createMockSpanWithEvents: (
+    events: Array<{ name: string; attributes?: Record<string, any> }> = []
+  ) => {
     const span = createMockSpan();
-    events.forEach(event => span.addEvent(event.name, event.attributes));
+    events.forEach((event) => span.addEvent(event.name, event.attributes));
     return span;
   },
 
@@ -284,7 +301,10 @@ export const testUtils = {
       return result;
     } catch (error) {
       span.recordException(error as Error);
-      span.setStatus({ code: SpanStatusCode.ERROR, message: (error as Error).message });
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: (error as Error).message,
+      });
       span.end();
       throw error;
     }
@@ -327,4 +347,4 @@ const openTelemetryMock = {
   testUtils,
 };
 
-export default openTelemetryMock; 
+export default openTelemetryMock;

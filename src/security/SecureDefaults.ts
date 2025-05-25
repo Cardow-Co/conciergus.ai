@@ -3,7 +3,13 @@
  * Provides explicit secure defaults with opt-out patterns and advanced configuration validation
  */
 
-import { SecurityCore, SecurityConfig, SecurityLevel, Environment, SecurityWarning } from './SecurityCore';
+import {
+  SecurityCore,
+  SecurityConfig,
+  SecurityLevel,
+  Environment,
+  SecurityWarning,
+} from './SecurityCore';
 import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
 
 /**
@@ -22,9 +28,9 @@ export interface ConfigurationOverride {
  * Security policy enforcement levels
  */
 export enum PolicyEnforcement {
-  ADVISORY = 'advisory',      // Only warn about insecure configurations
-  STRICT = 'strict',          // Prevent insecure configurations 
-  ENFORCED = 'enforced'       // Block application startup with insecure config
+  ADVISORY = 'advisory', // Only warn about insecure configurations
+  STRICT = 'strict', // Prevent insecure configurations
+  ENFORCED = 'enforced', // Block application startup with insecure config
 }
 
 /**
@@ -81,17 +87,20 @@ export class SecureDefaultsManager {
           valid: true,
           warnings: [],
           errors: [],
-          suggestions: []
+          suggestions: [],
         };
 
-        if (config.environment === Environment.PRODUCTION || config.environment === 'production') {
+        if (
+          config.environment === Environment.PRODUCTION ||
+          config.environment === 'production'
+        ) {
           if (config.errorHandling.exposeStackTrace) {
             result.valid = false;
             result.errors.push({
               level: 'error',
               message: 'Stack traces must not be exposed in production',
               recommendation: 'Set errorHandling.exposeStackTrace to false',
-              configPath: 'errorHandling.exposeStackTrace'
+              configPath: 'errorHandling.exposeStackTrace',
             });
           }
 
@@ -101,7 +110,7 @@ export class SecureDefaultsManager {
               level: 'error',
               message: 'Error details must not be exposed in production',
               recommendation: 'Set errorHandling.exposeErrorDetails to false',
-              configPath: 'errorHandling.exposeErrorDetails'
+              configPath: 'errorHandling.exposeErrorDetails',
             });
           }
 
@@ -110,8 +119,9 @@ export class SecureDefaultsManager {
             result.errors.push({
               level: 'error',
               message: 'AI injection protection must be enabled in production',
-              recommendation: 'Set aiSecurity.enableInjectionProtection to true',
-              configPath: 'aiSecurity.enableInjectionProtection'
+              recommendation:
+                'Set aiSecurity.enableInjectionProtection to true',
+              configPath: 'aiSecurity.enableInjectionProtection',
             });
           }
 
@@ -120,13 +130,13 @@ export class SecureDefaultsManager {
               level: 'warning',
               message: 'Rate limiting should be enabled in production',
               recommendation: 'Set rateLimiting.enabled to true',
-              configPath: 'rateLimiting.enabled'
+              configPath: 'rateLimiting.enabled',
             });
           }
         }
 
         return result;
-      }
+      },
     });
 
     // Input validation security validator
@@ -139,7 +149,7 @@ export class SecureDefaultsManager {
           valid: true,
           warnings: [],
           errors: [],
-          suggestions: []
+          suggestions: [],
         };
 
         if (!config.validation.enabled) {
@@ -147,7 +157,7 @@ export class SecureDefaultsManager {
             level: 'warning',
             message: 'Input validation is disabled',
             recommendation: 'Enable input validation for security',
-            configPath: 'validation.enabled'
+            configPath: 'validation.enabled',
           });
         }
 
@@ -156,7 +166,7 @@ export class SecureDefaultsManager {
             level: 'warning',
             message: 'Maximum input length is very high',
             recommendation: 'Consider reducing maxInputLength to prevent abuse',
-            configPath: 'validation.maxInputLength'
+            configPath: 'validation.maxInputLength',
           });
         }
 
@@ -165,12 +175,12 @@ export class SecureDefaultsManager {
             level: 'warning',
             message: 'Input sanitization is not enabled by default',
             recommendation: 'Enable sanitizeByDefault for better security',
-            configPath: 'validation.sanitizeByDefault'
+            configPath: 'validation.sanitizeByDefault',
           });
         }
 
         return result;
-      }
+      },
     });
 
     // AI security validator
@@ -183,15 +193,16 @@ export class SecureDefaultsManager {
           valid: true,
           warnings: [],
           errors: [],
-          suggestions: []
+          suggestions: [],
         };
 
         if (!config.aiSecurity.enablePromptSanitization) {
           result.warnings.push({
             level: 'warning',
             message: 'AI prompt sanitization is disabled',
-            recommendation: 'Enable prompt sanitization to prevent injection attacks',
-            configPath: 'aiSecurity.enablePromptSanitization'
+            recommendation:
+              'Enable prompt sanitization to prevent injection attacks',
+            configPath: 'aiSecurity.enablePromptSanitization',
           });
         }
 
@@ -199,8 +210,9 @@ export class SecureDefaultsManager {
           result.warnings.push({
             level: 'warning',
             message: 'AI content filtering is disabled',
-            recommendation: 'Enable content filtering to prevent harmful outputs',
-            configPath: 'aiSecurity.enableContentFiltering'
+            recommendation:
+              'Enable content filtering to prevent harmful outputs',
+            configPath: 'aiSecurity.enableContentFiltering',
           });
         }
 
@@ -208,13 +220,14 @@ export class SecureDefaultsManager {
           result.warnings.push({
             level: 'warning',
             message: 'Maximum AI prompt length is very high',
-            recommendation: 'Consider reducing maxPromptLength to prevent abuse',
-            configPath: 'aiSecurity.maxPromptLength'
+            recommendation:
+              'Consider reducing maxPromptLength to prevent abuse',
+            configPath: 'aiSecurity.maxPromptLength',
           });
         }
 
         return result;
-      }
+      },
     });
 
     // Content security validator
@@ -227,15 +240,19 @@ export class SecureDefaultsManager {
           valid: true,
           warnings: [],
           errors: [],
-          suggestions: []
+          suggestions: [],
         };
 
-        if (!config.contentSecurity.enableCSP && (config.environment === Environment.PRODUCTION || config.environment === 'production')) {
+        if (
+          !config.contentSecurity.enableCSP &&
+          (config.environment === Environment.PRODUCTION ||
+            config.environment === 'production')
+        ) {
           result.warnings.push({
             level: 'warning',
             message: 'Content Security Policy is disabled in production',
             recommendation: 'Enable CSP for better security',
-            configPath: 'contentSecurity.enableCSP'
+            configPath: 'contentSecurity.enableCSP',
           });
         }
 
@@ -244,7 +261,7 @@ export class SecureDefaultsManager {
             level: 'warning',
             message: 'Inline scripts are allowed',
             recommendation: 'Disable inline scripts for better security',
-            configPath: 'contentSecurity.allowInlineScripts'
+            configPath: 'contentSecurity.allowInlineScripts',
           });
         }
 
@@ -253,12 +270,12 @@ export class SecureDefaultsManager {
             level: 'warning',
             message: 'Wildcard trusted domains pose security risks',
             recommendation: 'Specify explicit trusted domains instead of "*"',
-            configPath: 'contentSecurity.trustedDomains'
+            configPath: 'contentSecurity.trustedDomains',
           });
         }
 
         return result;
-      }
+      },
     });
   }
 
@@ -291,7 +308,7 @@ export class SecureDefaultsManager {
       valid: true,
       warnings: [],
       errors: [],
-      suggestions: []
+      suggestions: [],
     };
 
     for (const [name, validator] of this.validators) {
@@ -302,12 +319,12 @@ export class SecureDefaultsManager {
 
       try {
         const result = validator.validator(config);
-        
+
         // Combine results
         combinedResult.warnings.push(...result.warnings);
         combinedResult.errors.push(...result.errors);
         combinedResult.suggestions.push(...result.suggestions);
-        
+
         if (!result.valid) {
           combinedResult.valid = false;
         }
@@ -323,7 +340,7 @@ export class SecureDefaultsManager {
             warnings: result.warnings.length.toString(),
             errors: result.errors.length.toString(),
             environment: config.environment,
-            securityLevel: config.level
+            securityLevel: config.level,
           }
         );
       } catch (error) {
@@ -331,7 +348,7 @@ export class SecureDefaultsManager {
           level: 'error',
           message: `Validator '${name}' failed: ${error}`,
           recommendation: 'Check validator implementation',
-          configPath: 'validator.error'
+          configPath: 'validator.error',
         });
         combinedResult.valid = false;
       }
@@ -353,9 +370,12 @@ export class SecureDefaultsManager {
   ): { config: SecurityConfig; warnings: SecurityWarning[] } {
     // Create a base configuration directly without relying on SecurityCore singleton
     // Use environment from overrides if provided, otherwise default based on NODE_ENV
-    const defaultEnvironment = process.env.NODE_ENV === 'test' ? Environment.TEST : Environment.DEVELOPMENT;
+    const defaultEnvironment =
+      process.env.NODE_ENV === 'test'
+        ? Environment.TEST
+        : Environment.DEVELOPMENT;
     const environment = overrides.environment || defaultEnvironment;
-    
+
     // Create base configuration manually (same logic as SecurityCore.createConfig)
     const baseConfig: SecurityConfig = {
       level: baseLevel,
@@ -363,31 +383,50 @@ export class SecureDefaultsManager {
       validation: {
         enabled: true,
         strictMode: baseLevel !== SecurityLevel.RELAXED,
-        maxInputLength: baseLevel === SecurityLevel.ENTERPRISE ? 5000 : 
-                       baseLevel === SecurityLevel.STRICT ? 10000 : 
-                       baseLevel === SecurityLevel.STANDARD ? 50000 : 100000,
-        allowedContentTypes: baseLevel === SecurityLevel.ENTERPRISE || baseLevel === SecurityLevel.STRICT ? 
-                           ['application/json'] : 
-                           baseLevel === SecurityLevel.STANDARD ? 
-                           ['application/json', 'text/plain'] : 
-                           ['application/json', 'text/plain', 'text/html'],
+        maxInputLength:
+          baseLevel === SecurityLevel.ENTERPRISE
+            ? 5000
+            : baseLevel === SecurityLevel.STRICT
+              ? 10000
+              : baseLevel === SecurityLevel.STANDARD
+                ? 50000
+                : 100000,
+        allowedContentTypes:
+          baseLevel === SecurityLevel.ENTERPRISE ||
+          baseLevel === SecurityLevel.STRICT
+            ? ['application/json']
+            : baseLevel === SecurityLevel.STANDARD
+              ? ['application/json', 'text/plain']
+              : ['application/json', 'text/plain', 'text/html'],
         sanitizeByDefault: baseLevel !== SecurityLevel.RELAXED,
       },
       errorHandling: {
         exposeStackTrace: baseLevel === SecurityLevel.RELAXED,
         exposeErrorDetails: baseLevel === SecurityLevel.RELAXED,
-        logSensitiveErrors: baseLevel !== SecurityLevel.STRICT && baseLevel !== SecurityLevel.ENTERPRISE,
-        genericErrorMessage: baseLevel === SecurityLevel.ENTERPRISE ? 'Access denied.' :
-                            baseLevel === SecurityLevel.STRICT ? 'Request could not be processed.' :
-                            'An error occurred while processing your request.',
+        logSensitiveErrors:
+          baseLevel !== SecurityLevel.STRICT &&
+          baseLevel !== SecurityLevel.ENTERPRISE,
+        genericErrorMessage:
+          baseLevel === SecurityLevel.ENTERPRISE
+            ? 'Access denied.'
+            : baseLevel === SecurityLevel.STRICT
+              ? 'Request could not be processed.'
+              : 'An error occurred while processing your request.',
       },
       rateLimiting: {
         enabled: baseLevel !== SecurityLevel.RELAXED,
         windowMs: 60000,
-        maxRequests: baseLevel === SecurityLevel.ENTERPRISE ? 20 :
-                    baseLevel === SecurityLevel.STRICT ? 50 :
-                    baseLevel === SecurityLevel.STANDARD ? 100 : 1000,
-        skipSuccessfulRequests: baseLevel === SecurityLevel.STRICT || baseLevel === SecurityLevel.ENTERPRISE,
+        maxRequests:
+          baseLevel === SecurityLevel.ENTERPRISE
+            ? 20
+            : baseLevel === SecurityLevel.STRICT
+              ? 50
+              : baseLevel === SecurityLevel.STANDARD
+                ? 100
+                : 1000,
+        skipSuccessfulRequests:
+          baseLevel === SecurityLevel.STRICT ||
+          baseLevel === SecurityLevel.ENTERPRISE,
       },
       contentSecurity: {
         enableCSP: baseLevel !== SecurityLevel.RELAXED,
@@ -397,26 +436,36 @@ export class SecureDefaultsManager {
       },
       aiSecurity: {
         enablePromptSanitization: baseLevel !== SecurityLevel.RELAXED,
-        maxPromptLength: baseLevel === SecurityLevel.ENTERPRISE ? 2000 :
-                        baseLevel === SecurityLevel.STRICT ? 5000 :
-                        baseLevel === SecurityLevel.STANDARD ? 10000 : 50000,
+        maxPromptLength:
+          baseLevel === SecurityLevel.ENTERPRISE
+            ? 2000
+            : baseLevel === SecurityLevel.STRICT
+              ? 5000
+              : baseLevel === SecurityLevel.STANDARD
+                ? 10000
+                : 50000,
         enableContentFiltering: baseLevel !== SecurityLevel.RELAXED,
         logAIInteractions: baseLevel !== SecurityLevel.RELAXED,
         enableInjectionProtection: baseLevel !== SecurityLevel.RELAXED,
       },
       customOptions: {},
     };
-    
+
     // Track overrides that weaken security
     const securityOverrides: ConfigurationOverride[] = [];
-    
-    this.trackSecurityOverrides(baseConfig, overrides, securityOverrides, optOutAcknowledgment);
-    
+
+    this.trackSecurityOverrides(
+      baseConfig,
+      overrides,
+      securityOverrides,
+      optOutAcknowledgment
+    );
+
     // Create final configuration
     const finalConfig = {
       ...baseConfig,
       ...overrides,
-      level: baseLevel
+      level: baseLevel,
     } as SecurityConfig;
 
     // Validate the final configuration
@@ -430,7 +479,7 @@ export class SecureDefaultsManager {
 
     return {
       config: finalConfig,
-      warnings: validationResult.warnings
+      warnings: validationResult.warnings,
     };
   }
 
@@ -470,7 +519,7 @@ export class SecureDefaultsManager {
   } {
     const validationResult = this.validateConfiguration(config);
     const score = this.calculateSecurityScore(config, validationResult);
-    
+
     return {
       compliant: validationResult.valid && validationResult.errors.length === 0,
       score,
@@ -479,9 +528,9 @@ export class SecureDefaultsManager {
         overrides: this.getSecurityOverrides(),
         recommendations: [
           ...validationResult.suggestions,
-          ...this.generateAdditionalRecommendations(config)
-        ]
-      }
+          ...this.generateAdditionalRecommendations(config),
+        ],
+      },
     };
   }
 
@@ -489,10 +538,14 @@ export class SecureDefaultsManager {
    * Helper method to determine if validator should be skipped
    */
   private shouldSkipValidator(enforcement: PolicyEnforcement): boolean {
-    const levelOrder = [PolicyEnforcement.ADVISORY, PolicyEnforcement.STRICT, PolicyEnforcement.ENFORCED];
+    const levelOrder = [
+      PolicyEnforcement.ADVISORY,
+      PolicyEnforcement.STRICT,
+      PolicyEnforcement.ENFORCED,
+    ];
     const currentIndex = levelOrder.indexOf(this.enforcementLevel);
     const validatorIndex = levelOrder.indexOf(enforcement);
-    
+
     return validatorIndex > currentIndex;
   }
 
@@ -514,14 +567,14 @@ export class SecureDefaultsManager {
       'aiSecurity.enableInjectionProtection',
       'aiSecurity.enablePromptSanitization',
       'aiSecurity.enableContentFiltering',
-      'contentSecurity.enableCSP'
+      'contentSecurity.enableCSP',
     ];
 
     // Check each override path
     for (const path of securityRelevantPaths) {
       const currentValue = this.getNestedValue(baseConfig, path);
       const overrideValue = this.getNestedValue(overrides, path);
-      
+
       if (overrideValue !== undefined && overrideValue !== currentValue) {
         trackedOverrides.push({
           path,
@@ -529,7 +582,7 @@ export class SecureDefaultsManager {
           newValue: overrideValue,
           isSecurityRelevant: true,
           optOutReason: optOutAcknowledgment?.reason,
-          acknowledgedRisks: optOutAcknowledgment?.acknowledgedRisks || false
+          acknowledgedRisks: optOutAcknowledgment?.acknowledgedRisks || false,
         });
       }
     }
@@ -546,17 +599,19 @@ export class SecureDefaultsManager {
    * Log security overrides for auditing
    */
   private logSecurityOverrides(overrides: ConfigurationOverride[]): void {
-    overrides.forEach(override => {
+    overrides.forEach((override) => {
       ConciergusOpenTelemetry.createSpan(
         'conciergus-security',
         'security-override',
         (span) => {
           span?.setAttributes({
             'security.override.path': override.path,
-            'security.override.originalValue': JSON.stringify(override.originalValue),
+            'security.override.originalValue': JSON.stringify(
+              override.originalValue
+            ),
             'security.override.newValue': JSON.stringify(override.newValue),
             'security.override.acknowledged': override.acknowledgedRisks,
-            'security.override.reason': override.optOutReason || 'not-provided'
+            'security.override.reason': override.optOutReason || 'not-provided',
           });
         }
       );
@@ -573,23 +628,35 @@ export class SecureDefaultsManager {
   /**
    * Calculate security score based on configuration
    */
-  private calculateSecurityScore(config: SecurityConfig, validation: ValidationResult): number {
+  private calculateSecurityScore(
+    config: SecurityConfig,
+    validation: ValidationResult
+  ): number {
     let score = 100;
-    
+
     // Deduct points for errors and warnings
     score -= validation.errors.length * 20;
     score -= validation.warnings.length * 10;
-    
+
     // Bonus points for strict configurations
-    if (config.level === SecurityLevel.ENTERPRISE || config.level === 'enterprise') score += 10;
-    if (config.level === SecurityLevel.STRICT || config.level === 'strict') score += 5;
-    
+    if (
+      config.level === SecurityLevel.ENTERPRISE ||
+      config.level === 'enterprise'
+    )
+      score += 10;
+    if (config.level === SecurityLevel.STRICT || config.level === 'strict')
+      score += 5;
+
     // Environment bonuses
-    if ((config.environment === Environment.PRODUCTION || config.environment === 'production') && 
-        config.level !== SecurityLevel.RELAXED && config.level !== 'relaxed') {
+    if (
+      (config.environment === Environment.PRODUCTION ||
+        config.environment === 'production') &&
+      config.level !== SecurityLevel.RELAXED &&
+      config.level !== 'relaxed'
+    ) {
       score += 5;
     }
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
@@ -598,20 +665,29 @@ export class SecureDefaultsManager {
    */
   private generateAdditionalRecommendations(config: SecurityConfig): string[] {
     const recommendations: string[] = [];
-    
-    if ((config.level === SecurityLevel.RELAXED || config.level === 'relaxed') && 
-        (config.environment === Environment.PRODUCTION || config.environment === 'production')) {
-      recommendations.push('Consider upgrading to STANDARD or STRICT security level for production');
+
+    if (
+      (config.level === SecurityLevel.RELAXED || config.level === 'relaxed') &&
+      (config.environment === Environment.PRODUCTION ||
+        config.environment === 'production')
+    ) {
+      recommendations.push(
+        'Consider upgrading to STANDARD or STRICT security level for production'
+      );
     }
-    
+
     if (!config.aiSecurity.logAIInteractions) {
-      recommendations.push('Enable AI interaction logging for better auditability');
+      recommendations.push(
+        'Enable AI interaction logging for better auditability'
+      );
     }
-    
+
     if (config.rateLimiting.maxRequests > 1000) {
-      recommendations.push('Consider lowering rate limit for better DDoS protection');
+      recommendations.push(
+        'Consider lowering rate limit for better DDoS protection'
+      );
     }
-    
+
     return recommendations;
   }
 }
@@ -636,13 +712,13 @@ export class SecureConfigurationHelpers {
     };
   }): { config: SecurityConfig; warnings: SecurityWarning[] } {
     const manager = SecureDefaultsManager.getInstance();
-    
+
     // Merge environment into overrides if provided
     const overrides = { ...options.overrides };
     if (options.environment) {
       overrides.environment = options.environment;
     }
-    
+
     // Use the same approach as createSecureConfigurationWithOptOut
     return manager.createSecureConfigurationWithOptOut(
       options.level || SecurityLevel.STANDARD,
@@ -656,12 +732,17 @@ export class SecureConfigurationHelpers {
    */
   static validateAndEnforce(config: SecurityConfig): ValidationResult {
     const result = secureDefaultsManager.validateConfiguration(config);
-    
-    if (!result.valid && secureDefaultsManager['enforcementLevel'] === PolicyEnforcement.ENFORCED) {
-      const errorMessages = result.errors.map(e => e.message).join(', ');
-      throw new Error(`Security configuration validation failed: ${errorMessages}`);
+
+    if (
+      !result.valid &&
+      secureDefaultsManager['enforcementLevel'] === PolicyEnforcement.ENFORCED
+    ) {
+      const errorMessages = result.errors.map((e) => e.message).join(', ');
+      throw new Error(
+        `Security configuration validation failed: ${errorMessages}`
+      );
     }
-    
+
     return result;
   }
 
@@ -670,7 +751,7 @@ export class SecureConfigurationHelpers {
    */
   static getBestPracticesForEnvironment(environment: Environment): string[] {
     const practices: string[] = [];
-    
+
     switch (environment) {
       case Environment.PRODUCTION:
         practices.push(
@@ -705,7 +786,7 @@ export class SecureConfigurationHelpers {
         );
         break;
     }
-    
+
     return practices;
   }
-} 
+}

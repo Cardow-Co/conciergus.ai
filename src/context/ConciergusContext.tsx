@@ -28,11 +28,11 @@ export interface AIGatewayConfig {
  * Configuration for ChatStore (AI SDK 5)
  */
 export interface ChatStoreConfig<TMetadataSchema = unknown> {
-   /** Maximum number of steps in a conversation */
-   maxSteps?: number;
-   /** Initial chat configurations */
-   chats?: Record<string, any>;
-   /** Schema for message metadata */
+  /** Maximum number of steps in a conversation */
+  maxSteps?: number;
+  /** Initial chat configurations */
+  chats?: Record<string, any>;
+  /** Schema for message metadata */
   messageMetadataSchema?: TMetadataSchema;
   /** Enable persistent storage */
   enablePersistence?: boolean;
@@ -230,7 +230,10 @@ export interface ConciergusConfig {
   /** Enable debug mode for verbose logging */
   enableDebug?: boolean;
   /** Custom error boundary component */
-  errorBoundary?: React.ComponentType<{ error: Error; errorInfo?: React.ErrorInfo }>;
+  errorBoundary?: React.ComponentType<{
+    error: Error;
+    errorInfo?: React.ErrorInfo;
+  }>;
 
   // === Event Handlers ===
   /** Callback when model is changed */

@@ -16,4 +16,4 @@ if (typeof expect !== 'undefined' && expect.extend) {
   });
 }
 
-module.exports = {}; 
+module.exports = {};

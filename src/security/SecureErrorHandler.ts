@@ -19,7 +19,7 @@ export enum ErrorType {
   NETWORK = 'network',
   AI_SERVICE = 'ai_service',
   SECURITY = 'security',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 /**
@@ -55,36 +55,161 @@ export interface InternalError {
  * Secure error handler class
  */
 export class SecureErrorHandler {
-  private static errorCodeMap = new Map<string, { type: ErrorType; message: string; retryable: boolean }>([
+  private static errorCodeMap = new Map<
+    string,
+    { type: ErrorType; message: string; retryable: boolean }
+  >([
     // Validation errors
-    ['VALIDATION_FAILED', { type: ErrorType.VALIDATION, message: 'Invalid input provided', retryable: false }],
-    ['INPUT_TOO_LONG', { type: ErrorType.VALIDATION, message: 'Input exceeds maximum length', retryable: false }],
-    ['INVALID_FORMAT', { type: ErrorType.VALIDATION, message: 'Invalid data format', retryable: false }],
-    ['MALICIOUS_INPUT', { type: ErrorType.SECURITY, message: 'Input rejected for security reasons', retryable: false }],
-    
+    [
+      'VALIDATION_FAILED',
+      {
+        type: ErrorType.VALIDATION,
+        message: 'Invalid input provided',
+        retryable: false,
+      },
+    ],
+    [
+      'INPUT_TOO_LONG',
+      {
+        type: ErrorType.VALIDATION,
+        message: 'Input exceeds maximum length',
+        retryable: false,
+      },
+    ],
+    [
+      'INVALID_FORMAT',
+      {
+        type: ErrorType.VALIDATION,
+        message: 'Invalid data format',
+        retryable: false,
+      },
+    ],
+    [
+      'MALICIOUS_INPUT',
+      {
+        type: ErrorType.SECURITY,
+        message: 'Input rejected for security reasons',
+        retryable: false,
+      },
+    ],
+
     // Authentication/Authorization errors
-    ['AUTH_REQUIRED', { type: ErrorType.AUTHENTICATION, message: 'Authentication required', retryable: false }],
-    ['AUTH_INVALID', { type: ErrorType.AUTHENTICATION, message: 'Invalid credentials', retryable: false }],
-    ['AUTH_EXPIRED', { type: ErrorType.AUTHENTICATION, message: 'Authentication expired', retryable: false }],
-    ['PERMISSION_DENIED', { type: ErrorType.AUTHORIZATION, message: 'Insufficient permissions', retryable: false }],
-    
+    [
+      'AUTH_REQUIRED',
+      {
+        type: ErrorType.AUTHENTICATION,
+        message: 'Authentication required',
+        retryable: false,
+      },
+    ],
+    [
+      'AUTH_INVALID',
+      {
+        type: ErrorType.AUTHENTICATION,
+        message: 'Invalid credentials',
+        retryable: false,
+      },
+    ],
+    [
+      'AUTH_EXPIRED',
+      {
+        type: ErrorType.AUTHENTICATION,
+        message: 'Authentication expired',
+        retryable: false,
+      },
+    ],
+    [
+      'PERMISSION_DENIED',
+      {
+        type: ErrorType.AUTHORIZATION,
+        message: 'Insufficient permissions',
+        retryable: false,
+      },
+    ],
+
     // Rate limiting
-    ['RATE_LIMITED', { type: ErrorType.RATE_LIMIT, message: 'Rate limit exceeded', retryable: true }],
-    ['TOO_MANY_REQUESTS', { type: ErrorType.RATE_LIMIT, message: 'Too many requests', retryable: true }],
-    
+    [
+      'RATE_LIMITED',
+      {
+        type: ErrorType.RATE_LIMIT,
+        message: 'Rate limit exceeded',
+        retryable: true,
+      },
+    ],
+    [
+      'TOO_MANY_REQUESTS',
+      {
+        type: ErrorType.RATE_LIMIT,
+        message: 'Too many requests',
+        retryable: true,
+      },
+    ],
+
     // Server errors
-    ['INTERNAL_ERROR', { type: ErrorType.SERVER, message: 'Internal server error', retryable: true }],
-    ['SERVICE_UNAVAILABLE', { type: ErrorType.SERVER, message: 'Service temporarily unavailable', retryable: true }],
-    ['TIMEOUT', { type: ErrorType.NETWORK, message: 'Request timeout', retryable: true }],
-    
+    [
+      'INTERNAL_ERROR',
+      {
+        type: ErrorType.SERVER,
+        message: 'Internal server error',
+        retryable: true,
+      },
+    ],
+    [
+      'SERVICE_UNAVAILABLE',
+      {
+        type: ErrorType.SERVER,
+        message: 'Service temporarily unavailable',
+        retryable: true,
+      },
+    ],
+    [
+      'TIMEOUT',
+      { type: ErrorType.NETWORK, message: 'Request timeout', retryable: true },
+    ],
+
     // AI service errors
-    ['AI_SERVICE_ERROR', { type: ErrorType.AI_SERVICE, message: 'AI service error', retryable: true }],
-    ['AI_RESPONSE_INVALID', { type: ErrorType.AI_SERVICE, message: 'Invalid AI response', retryable: true }],
-    ['AI_QUOTA_EXCEEDED', { type: ErrorType.AI_SERVICE, message: 'AI service quota exceeded', retryable: true }],
-    
+    [
+      'AI_SERVICE_ERROR',
+      {
+        type: ErrorType.AI_SERVICE,
+        message: 'AI service error',
+        retryable: true,
+      },
+    ],
+    [
+      'AI_RESPONSE_INVALID',
+      {
+        type: ErrorType.AI_SERVICE,
+        message: 'Invalid AI response',
+        retryable: true,
+      },
+    ],
+    [
+      'AI_QUOTA_EXCEEDED',
+      {
+        type: ErrorType.AI_SERVICE,
+        message: 'AI service quota exceeded',
+        retryable: true,
+      },
+    ],
+
     // Security errors
-    ['SECURITY_VIOLATION', { type: ErrorType.SECURITY, message: 'Security policy violation', retryable: false }],
-    ['INJECTION_DETECTED', { type: ErrorType.SECURITY, message: 'Malicious input detected', retryable: false }],
+    [
+      'SECURITY_VIOLATION',
+      {
+        type: ErrorType.SECURITY,
+        message: 'Security policy violation',
+        retryable: false,
+      },
+    ],
+    [
+      'INJECTION_DETECTED',
+      {
+        type: ErrorType.SECURITY,
+        message: 'Malicious input detected',
+        retryable: false,
+      },
+    ],
   ]);
 
   /**
@@ -97,20 +222,25 @@ export class SecureErrorHandler {
   ): SanitizedError {
     const securityCore = getSecurityCore();
     const config = securityCore.getConfig();
-    
+
     const timestamp = new Date().toISOString();
-    
+
     // Create internal error representation
-    const internalError = this.createInternalError(error, requestId, timestamp, context);
-    
+    const internalError = this.createInternalError(
+      error,
+      requestId,
+      timestamp,
+      context
+    );
+
     // Log the internal error
     this.logError(internalError);
-    
+
     // Determine error classification and sanitize accordingly
     const errorInfo = this.errorCodeMap.get(internalError.code) || {
       type: ErrorType.UNKNOWN,
       message: config.errorHandling.genericErrorMessage,
-      retryable: false
+      retryable: false,
     };
 
     // Create sanitized error for client
@@ -120,7 +250,7 @@ export class SecureErrorHandler {
       code: internalError.code,
       timestamp,
       retryable: errorInfo.retryable,
-      ...(requestId && { requestId })
+      ...(requestId && { requestId }),
     };
 
     // Add additional details based on security level
@@ -155,31 +285,49 @@ export class SecureErrorHandler {
     // Handle different error types
     if (error instanceof Error) {
       originalError = error;
-      
+
       // Classify error based on message and type
-      if (error.name === 'ValidationError' || error.message.includes('validation')) {
+      if (
+        error.name === 'ValidationError' ||
+        error.message.includes('validation')
+      ) {
         code = 'VALIDATION_FAILED';
         type = ErrorType.VALIDATION;
-      } else if (error.message.includes('auth') || error.message.includes('unauthorized')) {
+      } else if (
+        error.message.includes('auth') ||
+        error.message.includes('unauthorized')
+      ) {
         code = 'AUTH_REQUIRED';
         type = ErrorType.AUTHENTICATION;
         sensitive = true;
         classification = 'internal';
-      } else if (error.message.includes('permission') || error.message.includes('forbidden')) {
+      } else if (
+        error.message.includes('permission') ||
+        error.message.includes('forbidden')
+      ) {
         code = 'PERMISSION_DENIED';
         type = ErrorType.AUTHORIZATION;
         sensitive = true;
         classification = 'internal';
-      } else if (error.message.includes('rate limit') || error.message.includes('too many')) {
+      } else if (
+        error.message.includes('rate limit') ||
+        error.message.includes('too many')
+      ) {
         code = 'RATE_LIMITED';
         type = ErrorType.RATE_LIMIT;
       } else if (error.message.includes('timeout')) {
         code = 'TIMEOUT';
         type = ErrorType.NETWORK;
-      } else if (error.message.includes('AI') || error.message.includes('model')) {
+      } else if (
+        error.message.includes('AI') ||
+        error.message.includes('model')
+      ) {
         code = 'AI_SERVICE_ERROR';
         type = ErrorType.AI_SERVICE;
-      } else if (error.message.includes('security') || error.message.includes('injection')) {
+      } else if (
+        error.message.includes('security') ||
+        error.message.includes('injection')
+      ) {
         code = 'SECURITY_VIOLATION';
         type = ErrorType.SECURITY;
         sensitive = true;
@@ -205,7 +353,7 @@ export class SecureErrorHandler {
       code,
       timestamp: timestamp || new Date().toISOString(),
       sensitive,
-      classification
+      classification,
     };
 
     // Only add optional properties if they have values
@@ -213,7 +361,10 @@ export class SecureErrorHandler {
       result.requestId = requestId;
     }
 
-    if (config.errorHandling.exposeStackTrace && originalError.stack !== undefined) {
+    if (
+      config.errorHandling.exposeStackTrace &&
+      originalError.stack !== undefined
+    ) {
       result.stack = originalError.stack;
     }
 
@@ -243,7 +394,7 @@ export class SecureErrorHandler {
         code: internalError.code,
         requestId: internalError.requestId,
         classification: internalError.classification,
-        context: internalError.context
+        context: internalError.context,
       }
     );
 
@@ -257,9 +408,10 @@ export class SecureErrorHandler {
           'error.code': internalError.code,
           'error.classification': internalError.classification,
           'error.sensitive': internalError.sensitive,
-          'error.retryable': this.errorCodeMap.get(internalError.code)?.retryable || false,
+          'error.retryable':
+            this.errorCodeMap.get(internalError.code)?.retryable || false,
           'security.level': config.level,
-          'security.environment': config.environment
+          'security.environment': config.environment,
         });
 
         if (internalError.requestId) {
@@ -275,7 +427,7 @@ export class SecureErrorHandler {
             type: internalError.type,
             code: internalError.code,
             classification: internalError.classification,
-            environment: config.environment
+            environment: config.environment,
           }
         );
       }
@@ -286,8 +438,12 @@ export class SecureErrorHandler {
       const logMethod = this.getConsoleLogMethod(internalError);
       logMethod(`🚨 ${logEntry.message}`, {
         ...logEntry,
-        ...(config.errorHandling.exposeStackTrace && { stack: internalError.stack }),
-        ...(config.errorHandling.exposeErrorDetails && { context: internalError.context })
+        ...(config.errorHandling.exposeStackTrace && {
+          stack: internalError.stack,
+        }),
+        ...(config.errorHandling.exposeErrorDetails && {
+          context: internalError.context,
+        }),
       });
     }
   }
@@ -317,7 +473,9 @@ export class SecureErrorHandler {
   /**
    * Get appropriate console log method
    */
-  private static getConsoleLogMethod(internalError: InternalError): typeof console.log {
+  private static getConsoleLogMethod(
+    internalError: InternalError
+  ): typeof console.log {
     const level = this.getLogLevel(internalError);
     switch (level) {
       case 'error':
@@ -334,13 +492,26 @@ export class SecureErrorHandler {
   /**
    * Sanitize error context to remove sensitive information
    */
-  private static sanitizeContext(context: Record<string, any>): Record<string, any> {
+  private static sanitizeContext(
+    context: Record<string, any>
+  ): Record<string, any> {
     const sanitized: Record<string, any> = {};
 
     Object.entries(context).forEach(([key, value]) => {
       // Skip sensitive keys
-      const sensitiveKeys = ['password', 'token', 'secret', 'key', 'auth', 'credential'];
-      if (sensitiveKeys.some(sensitiveKey => key.toLowerCase().includes(sensitiveKey))) {
+      const sensitiveKeys = [
+        'password',
+        'token',
+        'secret',
+        'key',
+        'auth',
+        'credential',
+      ];
+      if (
+        sensitiveKeys.some((sensitiveKey) =>
+          key.toLowerCase().includes(sensitiveKey)
+        )
+      ) {
         sanitized[key] = '[REDACTED]';
         return;
       }
@@ -362,15 +533,24 @@ export class SecureErrorHandler {
   /**
    * Sanitize error details for client consumption
    */
-  private static sanitizeErrorDetails(context?: Record<string, any>): Record<string, any> | undefined {
+  private static sanitizeErrorDetails(
+    context?: Record<string, any>
+  ): Record<string, any> | undefined {
     if (!context) return undefined;
 
     const sanitized = this.sanitizeContext(context);
-    
+
     // Only include safe details
     const safeDetails: Record<string, any> = {};
-    const allowedKeys = ['field', 'value', 'expected', 'received', 'limit', 'retryAfter'];
-    
+    const allowedKeys = [
+      'field',
+      'value',
+      'expected',
+      'received',
+      'limit',
+      'retryAfter',
+    ];
+
     Object.entries(sanitized).forEach(([key, value]) => {
       if (allowedKeys.includes(key) || !key.toLowerCase().includes('error')) {
         safeDetails[key] = value;
@@ -383,10 +563,14 @@ export class SecureErrorHandler {
   /**
    * Create a validation error
    */
-  static createValidationError(message: string, field?: string, value?: any): SanitizedError {
+  static createValidationError(
+    message: string,
+    field?: string,
+    value?: any
+  ): SanitizedError {
     const error = new Error(message);
     error.name = 'ValidationError';
-    
+
     return this.sanitizeError(error, undefined, { field, value });
   }
 
@@ -396,8 +580,12 @@ export class SecureErrorHandler {
   static createSecurityError(message: string, threat?: any): SanitizedError {
     const error = new Error(`Security violation: ${message}`);
     error.name = 'SecurityError';
-    
-    return this.sanitizeError(error, undefined, { threat: threat ? SecurityUtils.hashForLogging(JSON.stringify(threat)) : undefined });
+
+    return this.sanitizeError(error, undefined, {
+      threat: threat
+        ? SecurityUtils.hashForLogging(JSON.stringify(threat))
+        : undefined,
+    });
   }
 
   /**
@@ -406,7 +594,7 @@ export class SecureErrorHandler {
   static createRateLimitError(retryAfter: number): SanitizedError {
     const error = new Error('Rate limit exceeded');
     error.name = 'RateLimitError';
-    
+
     return this.sanitizeError(error, undefined, { retryAfter });
   }
 
@@ -422,7 +610,7 @@ export class SecureErrorHandler {
    */
   static getRetryDelay(error: SanitizedError): number {
     if (!error.retryable) return 0;
-    
+
     // Extract retry-after from details if available
     const retryAfter = error.details?.retryAfter;
     if (typeof retryAfter === 'number') {
@@ -480,5 +668,5 @@ export const {
   createRateLimitError,
   isRetryable,
   getRetryDelay,
-  getHttpStatusFromErrorType
-} = SecureErrorHandler; 
+  getHttpStatusFromErrorType,
+} = SecureErrorHandler;

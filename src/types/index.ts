@@ -14,7 +14,7 @@ export type {
   ReasoningStep,
   ToolCall,
   StreamingState,
-  
+
   // Component prop interfaces
   EnhancedMessageListProps as MessageListProps,
   EnhancedMessageItemProps as MessageItemProps,
@@ -22,12 +22,12 @@ export type {
   ReasoningTraceProps,
   SourcesDisplayProps,
   StreamingIndicatorProps,
-  
+
   // Type unions for convenience
   StreamPartType,
   StreamingType,
   ReasoningType,
   SourceType,
   ToolCallState,
-  TelemetryEventType
-} from './ai-sdk-5'; 
+  TelemetryEventType,
+} from './ai-sdk-5';

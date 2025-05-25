@@ -10,9 +10,9 @@ import { ConciergusOpenTelemetry } from '../telemetry/OpenTelemetryConfig';
  */
 export enum SecurityLevel {
   RELAXED = 'relaxed',
-  STANDARD = 'standard', 
+  STANDARD = 'standard',
   STRICT = 'strict',
-  ENTERPRISE = 'enterprise'
+  ENTERPRISE = 'enterprise',
 }
 
 /**
@@ -22,7 +22,7 @@ export enum Environment {
   DEVELOPMENT = 'development',
   TEST = 'test',
   STAGING = 'staging',
-  PRODUCTION = 'production'
+  PRODUCTION = 'production',
 }
 
 /**
@@ -31,7 +31,7 @@ export enum Environment {
 export interface SecurityConfig {
   level: SecurityLevel;
   environment: Environment;
-  
+
   // Input validation settings
   validation: {
     enabled: boolean;
@@ -40,7 +40,7 @@ export interface SecurityConfig {
     allowedContentTypes: string[];
     sanitizeByDefault: boolean;
   };
-  
+
   // Error handling settings
   errorHandling: {
     exposeStackTrace: boolean;
@@ -48,7 +48,7 @@ export interface SecurityConfig {
     logSensitiveErrors: boolean;
     genericErrorMessage: string;
   };
-  
+
   // Rate limiting settings
   rateLimiting: {
     enabled: boolean;
@@ -56,7 +56,7 @@ export interface SecurityConfig {
     maxRequests: number;
     skipSuccessfulRequests: boolean;
   };
-  
+
   // Content security settings
   contentSecurity: {
     enableCSP: boolean;
@@ -64,7 +64,7 @@ export interface SecurityConfig {
     allowInlineStyles: boolean;
     trustedDomains: string[];
   };
-  
+
   // AI-specific security settings
   aiSecurity: {
     enablePromptSanitization: boolean;
@@ -73,7 +73,7 @@ export interface SecurityConfig {
     logAIInteractions: boolean;
     enableInjectionProtection: boolean;
   };
-  
+
   // Custom security options
   customOptions: Record<string, any>;
 }
@@ -116,7 +116,7 @@ const DEFAULT_CONFIGS: Record<SecurityLevel, Partial<SecurityConfig>> = {
       enableInjectionProtection: false,
     },
   },
-  
+
   [SecurityLevel.STANDARD]: {
     validation: {
       enabled: true,
@@ -151,7 +151,7 @@ const DEFAULT_CONFIGS: Record<SecurityLevel, Partial<SecurityConfig>> = {
       enableInjectionProtection: true,
     },
   },
-  
+
   [SecurityLevel.STRICT]: {
     validation: {
       enabled: true,
@@ -186,7 +186,7 @@ const DEFAULT_CONFIGS: Record<SecurityLevel, Partial<SecurityConfig>> = {
       enableInjectionProtection: true,
     },
   },
-  
+
   [SecurityLevel.ENTERPRISE]: {
     validation: {
       enabled: true,
@@ -285,7 +285,7 @@ export class SecurityCore {
     const environment = this.detectEnvironment();
     const defaultLevel = this.getDefaultSecurityLevel(environment);
     const baseConfig = DEFAULT_CONFIGS[defaultLevel];
-    
+
     return {
       level: defaultLevel,
       environment,
@@ -322,7 +322,7 @@ export class SecurityCore {
    */
   private detectEnvironment(): Environment {
     const nodeEnv = process.env.NODE_ENV?.toLowerCase();
-    
+
     switch (nodeEnv) {
       case 'production':
         return Environment.PRODUCTION;
@@ -366,7 +366,7 @@ export class SecurityCore {
           level: 'error',
           message: 'Stack traces should not be exposed in production',
           recommendation: 'Set errorHandling.exposeStackTrace to false',
-          configPath: 'errorHandling.exposeStackTrace'
+          configPath: 'errorHandling.exposeStackTrace',
         });
       }
 
@@ -375,7 +375,7 @@ export class SecurityCore {
           level: 'error',
           message: 'Error details should not be exposed in production',
           recommendation: 'Set errorHandling.exposeErrorDetails to false',
-          configPath: 'errorHandling.exposeErrorDetails'
+          configPath: 'errorHandling.exposeErrorDetails',
         });
       }
 
@@ -384,7 +384,7 @@ export class SecurityCore {
           level: 'warning',
           message: 'Rate limiting is disabled in production',
           recommendation: 'Enable rate limiting for production environments',
-          configPath: 'rateLimiting.enabled'
+          configPath: 'rateLimiting.enabled',
         });
       }
 
@@ -393,7 +393,7 @@ export class SecurityCore {
           level: 'error',
           message: 'AI injection protection is disabled in production',
           recommendation: 'Enable AI injection protection for production',
-          configPath: 'aiSecurity.enableInjectionProtection'
+          configPath: 'aiSecurity.enableInjectionProtection',
         });
       }
     }
@@ -404,7 +404,7 @@ export class SecurityCore {
         level: 'warning',
         message: 'Maximum input length is very high',
         recommendation: 'Consider reducing maxInputLength to prevent abuse',
-        configPath: 'validation.maxInputLength'
+        configPath: 'validation.maxInputLength',
       });
     }
 
@@ -413,12 +413,12 @@ export class SecurityCore {
         level: 'warning',
         message: 'Wildcard trusted domains pose security risks',
         recommendation: 'Specify explicit trusted domains instead of "*"',
-        configPath: 'contentSecurity.trustedDomains'
+        configPath: 'contentSecurity.trustedDomains',
       });
     }
 
     // Log warnings using telemetry
-    this.warnings.forEach(warning => {
+    this.warnings.forEach((warning) => {
       ConciergusOpenTelemetry.createSpan(
         'conciergus-security',
         'security-warning',
@@ -429,9 +429,9 @@ export class SecurityCore {
             'security.warning.recommendation': warning.recommendation,
             'security.warning.configPath': warning.configPath,
             'security.environment': this.config.environment,
-            'security.level': this.config.level
+            'security.level': this.config.level,
           });
-          
+
           // Also record as metric for monitoring
           ConciergusOpenTelemetry.recordMetric(
             'conciergus-security',
@@ -440,7 +440,7 @@ export class SecurityCore {
             {
               level: warning.level,
               environment: this.config.environment,
-              securityLevel: this.config.level
+              securityLevel: this.config.level,
             }
           );
         }
@@ -448,11 +448,17 @@ export class SecurityCore {
 
       // Log to console for immediate visibility
       if (warning.level === 'error') {
-        console.error(`🚨 Security Error: ${warning.message} (${warning.recommendation})`);
+        console.error(
+          `🚨 Security Error: ${warning.message} (${warning.recommendation})`
+        );
       } else if (warning.level === 'warning') {
-        console.warn(`⚠️ Security Warning: ${warning.message} (${warning.recommendation})`);
+        console.warn(
+          `⚠️ Security Warning: ${warning.message} (${warning.recommendation})`
+        );
       } else {
-        console.info(`ℹ️ Security Info: ${warning.message} (${warning.recommendation})`);
+        console.info(
+          `ℹ️ Security Info: ${warning.message} (${warning.recommendation})`
+        );
       }
     });
   }
@@ -537,23 +543,23 @@ export class SecurityCore {
       warnings: this.getWarnings(),
       enabledFeatures: [
         'validation',
-        'rateLimiting', 
+        'rateLimiting',
         'promptSanitization',
         'contentFiltering',
-        'injectionProtection'
-      ].filter(feature => this.isFeatureEnabled(feature)),
+        'injectionProtection',
+      ].filter((feature) => this.isFeatureEnabled(feature)),
       limits: {
         inputLength: this.getLimit('inputLength'),
         promptLength: this.getLimit('promptLength'),
         requestsPerMinute: this.getLimit('requestsPerMinute'),
         rateLimitWindow: this.getLimit('rateLimitWindow'),
-      }
+      },
     };
   }
 }
 
 // Export singleton instance getter
-export const getSecurityCore = (config?: Partial<SecurityConfig>) => 
+export const getSecurityCore = (config?: Partial<SecurityConfig>) =>
   SecurityCore.getInstance(config);
 
 // Export default secure configuration
@@ -567,4 +573,4 @@ export const createSecureConfig = (
     ...DEFAULT_CONFIGS[level],
     ...overrides,
   } as SecurityConfig;
-}; 
+};

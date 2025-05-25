@@ -5,20 +5,23 @@
 
 import { EventEmitter } from 'events';
 import { EnterpriseTelemetryManager } from './EnterpriseTelemetryManager';
-import { AISDKTelemetryIntegration, type AIOperationTelemetry } from './AISDKTelemetryIntegration';
+import {
+  AISDKTelemetryIntegration,
+  type AIOperationTelemetry,
+} from './AISDKTelemetryIntegration';
 import { AnalyticsEngine } from './AnalyticsEngine';
 
 /**
  * Performance metric types that can be monitored
  */
-export type PerformanceMetricType = 
-  | 'latency' 
-  | 'throughput' 
-  | 'error_rate' 
-  | 'success_rate' 
-  | 'token_usage' 
-  | 'cost' 
-  | 'memory_usage' 
+export type PerformanceMetricType =
+  | 'latency'
+  | 'throughput'
+  | 'error_rate'
+  | 'success_rate'
+  | 'token_usage'
+  | 'cost'
+  | 'memory_usage'
   | 'cpu_usage'
   | 'queue_depth'
   | 'concurrent_requests';
@@ -44,7 +47,14 @@ export interface PerformanceThreshold {
  * Alert action configuration
  */
 export interface AlertAction {
-  type: 'email' | 'webhook' | 'slack' | 'log' | 'sms' | 'auto_scale' | 'circuit_breaker';
+  type:
+    | 'email'
+    | 'webhook'
+    | 'slack'
+    | 'log'
+    | 'sms'
+    | 'auto_scale'
+    | 'circuit_breaker';
   target: string;
   message?: string;
   metadata?: Record<string, any>;
@@ -163,17 +173,17 @@ export class PerformanceMonitor extends EventEmitter {
   private telemetryManager: EnterpriseTelemetryManager | null = null;
   private aiTelemetry: AISDKTelemetryIntegration | null = null;
   private analyticsEngine: AnalyticsEngine | null = null;
-  
+
   private metrics: Map<string, PerformanceMetricData[]> = new Map();
   private alerts: Map<string, PerformanceAlert> = new Map();
   private thresholds: Map<string, PerformanceThreshold> = new Map();
   private stats: Map<string, PerformanceStats> = new Map();
   private violationCounts: Map<string, number> = new Map();
-  
+
   private aggregationTimer: NodeJS.Timeout | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
   private healthCheckTimer: NodeJS.Timeout | null = null;
-  
+
   private circuitBreakerOpen = false;
   private lastCircuitBreakerReset = Date.now();
 
@@ -220,9 +230,12 @@ export class PerformanceMonitor extends EventEmitter {
 
     // Subscribe to analytics events if available
     if (this.analyticsEngine) {
-      this.analyticsEngine.on('operation_recorded', (operation: AIOperationTelemetry) => {
-        this.recordOperationMetrics(operation);
-      });
+      this.analyticsEngine.on(
+        'operation_recorded',
+        (operation: AIOperationTelemetry) => {
+          this.recordOperationMetrics(operation);
+        }
+      );
       console.log('Performance Monitor integrated with Analytics Engine');
     }
   }
@@ -231,7 +244,7 @@ export class PerformanceMonitor extends EventEmitter {
    * Set up monitoring thresholds
    */
   private setupThresholds(): void {
-    this.config.thresholds.forEach(threshold => {
+    this.config.thresholds.forEach((threshold) => {
       this.addThreshold(threshold);
     });
   }
@@ -248,9 +261,12 @@ export class PerformanceMonitor extends EventEmitter {
     }, this.config.aggregationInterval);
 
     // Start cleanup process
-    this.cleanupTimer = setInterval(() => {
-      this.cleanupOldData();
-    }, 60 * 60 * 1000); // Every hour
+    this.cleanupTimer = setInterval(
+      () => {
+        this.cleanupOldData();
+      },
+      60 * 60 * 1000
+    ); // Every hour
 
     // Start health checks
     this.healthCheckTimer = setInterval(() => {
@@ -272,7 +288,7 @@ export class PerformanceMonitor extends EventEmitter {
     const labels = {
       model: operation.model,
       operationType: operation.metadata.operationType,
-      success: operation.success.toString()
+      success: operation.success.toString(),
     };
 
     // Record latency
@@ -282,7 +298,12 @@ export class PerformanceMonitor extends EventEmitter {
 
     // Record token usage
     if (operation.tokenUsage) {
-      this.recordMetric('token_usage', operation.tokenUsage.total, labels, 'ai_operation');
+      this.recordMetric(
+        'token_usage',
+        operation.tokenUsage.total,
+        labels,
+        'ai_operation'
+      );
     }
 
     // Record cost
@@ -291,7 +312,12 @@ export class PerformanceMonitor extends EventEmitter {
     }
 
     // Record error rate
-    this.recordMetric('error_rate', operation.success ? 0 : 1, labels, 'ai_operation');
+    this.recordMetric(
+      'error_rate',
+      operation.success ? 0 : 1,
+      labels,
+      'ai_operation'
+    );
 
     // Check thresholds
     this.checkThresholds(timestamp);
@@ -311,7 +337,7 @@ export class PerformanceMonitor extends EventEmitter {
       metric,
       value,
       labels,
-      source
+      source,
     };
 
     const key = this.getMetricKey(metric, labels);
@@ -334,11 +360,21 @@ export class PerformanceMonitor extends EventEmitter {
   recordSystemMetrics(): void {
     if (typeof process !== 'undefined' && process.memoryUsage) {
       const memUsage = process.memoryUsage();
-      this.recordMetric('memory_usage', memUsage.heapUsed / 1024 / 1024, {}, 'system'); // MB
+      this.recordMetric(
+        'memory_usage',
+        memUsage.heapUsed / 1024 / 1024,
+        {},
+        'system'
+      ); // MB
     }
 
     // Record concurrent request count (would be implemented based on your system)
-    this.recordMetric('concurrent_requests', this.getCurrentConcurrentRequests(), {}, 'system');
+    this.recordMetric(
+      'concurrent_requests',
+      this.getCurrentConcurrentRequests(),
+      {},
+      'system'
+    );
   }
 
   /**
@@ -364,18 +400,33 @@ export class PerformanceMonitor extends EventEmitter {
     this.thresholds.forEach((threshold, id) => {
       if (!threshold.enabled) return;
 
-      const currentValue = this.getCurrentMetricValue(threshold.metric, threshold.timeWindow);
+      const currentValue = this.getCurrentMetricValue(
+        threshold.metric,
+        threshold.timeWindow
+      );
       if (currentValue === null) return;
 
-      const violated = this.evaluateThreshold(currentValue, threshold.operator, threshold.value);
-      
+      const violated = this.evaluateThreshold(
+        currentValue,
+        threshold.operator,
+        threshold.value
+      );
+
       if (violated) {
         const currentViolations = (this.violationCounts.get(id) || 0) + 1;
         this.violationCounts.set(id, currentViolations);
 
         // Check if we need consecutive violations
-        if (!threshold.consecutive || currentViolations >= threshold.consecutive) {
-          this.triggerAlert(threshold, currentValue, timestamp, currentViolations);
+        if (
+          !threshold.consecutive ||
+          currentViolations >= threshold.consecutive
+        ) {
+          this.triggerAlert(
+            threshold,
+            currentValue,
+            timestamp,
+            currentViolations
+          );
         }
       } else {
         // Reset violation count on successful check
@@ -387,15 +438,26 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Evaluate threshold condition
    */
-  private evaluateThreshold(value: number, operator: string, threshold: number): boolean {
+  private evaluateThreshold(
+    value: number,
+    operator: string,
+    threshold: number
+  ): boolean {
     switch (operator) {
-      case '>': return value > threshold;
-      case '<': return value < threshold;
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '=': return Math.abs(value - threshold) < 0.001; // Float equality
-      case '!=': return Math.abs(value - threshold) >= 0.001;
-      default: return false;
+      case '>':
+        return value > threshold;
+      case '<':
+        return value < threshold;
+      case '>=':
+        return value >= threshold;
+      case '<=':
+        return value <= threshold;
+      case '=':
+        return Math.abs(value - threshold) < 0.001; // Float equality
+      case '!=':
+        return Math.abs(value - threshold) >= 0.001;
+      default:
+        return false;
     }
   }
 
@@ -426,18 +488,18 @@ export class PerformanceMonitor extends EventEmitter {
       message: `${threshold.name}: ${threshold.metric} (${currentValue}) ${threshold.operator} ${threshold.value}`,
       context: {
         timeWindow: threshold.timeWindow,
-        consecutiveViolations
+        consecutiveViolations,
       },
       acknowledged: false,
       resolved: false,
-      escalated: false
+      escalated: false,
     };
 
     this.alerts.set(alertId, alert);
     this.emit('alert_triggered', alert);
 
     // Execute alert actions
-    threshold.actions.forEach(action => {
+    threshold.actions.forEach((action) => {
       if (action.enabled) {
         this.executeAlertAction(action, alert, threshold);
       }
@@ -461,34 +523,41 @@ export class PerformanceMonitor extends EventEmitter {
       case 'log':
         console.error(`[ALERT] ${alert.message}`);
         break;
-      
+
       case 'webhook':
         this.sendWebhookAlert(action.target, alert, action.message);
         break;
-      
+
       case 'circuit_breaker':
         this.activateCircuitBreaker(alert);
         break;
-      
+
       case 'auto_scale':
         this.triggerAutoScaling(alert);
         break;
-      
+
       default:
-        console.log(`Alert action ${action.type} to ${action.target}: ${alert.message}`);
+        console.log(
+          `Alert action ${action.type} to ${action.target}: ${alert.message}`
+        );
     }
   }
 
   /**
    * Handle auto-recovery mechanisms
    */
-  private handleAutoRecovery(threshold: PerformanceThreshold, alert: PerformanceAlert): void {
+  private handleAutoRecovery(
+    threshold: PerformanceThreshold,
+    alert: PerformanceAlert
+  ): void {
     if (!this.config.autoRecovery.enabled) return;
 
     // Circuit breaker activation
-    if (threshold.severity === 'critical' && 
-        alert.metric === 'error_rate' && 
-        alert.currentValue > this.config.autoRecovery.circuitBreakerThreshold) {
+    if (
+      threshold.severity === 'critical' &&
+      alert.metric === 'error_rate' &&
+      alert.currentValue > this.config.autoRecovery.circuitBreakerThreshold
+    ) {
       this.activateCircuitBreaker(alert);
     }
   }
@@ -499,10 +568,13 @@ export class PerformanceMonitor extends EventEmitter {
   private activateCircuitBreaker(alert: PerformanceAlert): void {
     this.circuitBreakerOpen = true;
     this.lastCircuitBreakerReset = Date.now();
-    
-    console.warn('Circuit breaker activated due to performance alert:', alert.message);
+
+    console.warn(
+      'Circuit breaker activated due to performance alert:',
+      alert.message
+    );
     this.emit('circuit_breaker_activated', alert);
-    
+
     // Auto-reset after timeout
     setTimeout(() => {
       this.circuitBreakerOpen = false;
@@ -516,7 +588,10 @@ export class PerformanceMonitor extends EventEmitter {
    */
   private triggerAutoScaling(alert: PerformanceAlert): void {
     if (this.config.autoRecovery.autoScalingEnabled) {
-      console.log('Auto-scaling triggered due to performance alert:', alert.message);
+      console.log(
+        'Auto-scaling triggered due to performance alert:',
+        alert.message
+      );
       this.emit('auto_scaling_triggered', alert);
     }
   }
@@ -524,7 +599,11 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Send webhook alert
    */
-  private async sendWebhookAlert(url: string, alert: PerformanceAlert, customMessage?: string): Promise<void> {
+  private async sendWebhookAlert(
+    url: string,
+    alert: PerformanceAlert,
+    customMessage?: string
+  ): Promise<void> {
     try {
       const payload = {
         alert_id: alert.id,
@@ -534,7 +613,7 @@ export class PerformanceMonitor extends EventEmitter {
         current_value: alert.currentValue,
         threshold: alert.threshold,
         message: customMessage || alert.message,
-        context: alert.context
+        context: alert.context,
       };
 
       // In a real implementation, you'd make an HTTP request
@@ -578,14 +657,19 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Get current metric value for threshold checking
    */
-  private getCurrentMetricValue(metric: PerformanceMetricType, timeWindow: number): number | null {
+  private getCurrentMetricValue(
+    metric: PerformanceMetricType,
+    timeWindow: number
+  ): number | null {
     const cutoffTime = new Date(Date.now() - timeWindow * 60 * 1000);
     const allMetrics: PerformanceMetricData[] = [];
 
     // Collect all metric data points within time window
     this.metrics.forEach((dataPoints, key) => {
       if (key.startsWith(metric)) {
-        const recentPoints = dataPoints.filter(dp => dp.timestamp >= cutoffTime);
+        const recentPoints = dataPoints.filter(
+          (dp) => dp.timestamp >= cutoffTime
+        );
         allMetrics.push(...recentPoints);
       }
     });
@@ -598,19 +682,21 @@ export class PerformanceMonitor extends EventEmitter {
       case 'cost':
       case 'token_usage':
       case 'memory_usage':
-        return allMetrics.reduce((sum, dp) => sum + dp.value, 0) / allMetrics.length;
-      
+        return (
+          allMetrics.reduce((sum, dp) => sum + dp.value, 0) / allMetrics.length
+        );
+
       case 'error_rate':
-        const errors = allMetrics.filter(dp => dp.value > 0).length;
+        const errors = allMetrics.filter((dp) => dp.value > 0).length;
         return errors / allMetrics.length;
-      
+
       case 'success_rate':
-        const successes = allMetrics.filter(dp => dp.value === 0).length; // 0 = success
+        const successes = allMetrics.filter((dp) => dp.value === 0).length; // 0 = success
         return successes / allMetrics.length;
-      
+
       case 'throughput':
         return allMetrics.length / (timeWindow / 60); // requests per minute
-      
+
       default:
         return allMetrics[allMetrics.length - 1]?.value || 0;
     }
@@ -624,8 +710,8 @@ export class PerformanceMonitor extends EventEmitter {
       if (dataPoints.length === 0) return;
 
       const metric = dataPoints[0].metric;
-      const values = dataPoints.map(dp => dp.value).sort((a, b) => a - b);
-      
+      const values = dataPoints.map((dp) => dp.value).sort((a, b) => a - b);
+
       const stats: PerformanceStats = {
         metric,
         timeWindow: this.config.aggregationInterval / 60000, // Convert to minutes
@@ -637,7 +723,7 @@ export class PerformanceMonitor extends EventEmitter {
         p99: values[Math.floor(values.length * 0.99)],
         count: values.length,
         trend: this.calculateTrend(dataPoints),
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       this.stats.set(key, stats);
@@ -647,14 +733,18 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Calculate trend for metrics
    */
-  private calculateTrend(dataPoints: PerformanceMetricData[]): 'increasing' | 'decreasing' | 'stable' {
+  private calculateTrend(
+    dataPoints: PerformanceMetricData[]
+  ): 'increasing' | 'decreasing' | 'stable' {
     if (dataPoints.length < 2) return 'stable';
 
     const recentHalf = dataPoints.slice(-Math.floor(dataPoints.length / 2));
     const earlierHalf = dataPoints.slice(0, Math.floor(dataPoints.length / 2));
 
-    const recentAvg = recentHalf.reduce((sum, dp) => sum + dp.value, 0) / recentHalf.length;
-    const earlierAvg = earlierHalf.reduce((sum, dp) => sum + dp.value, 0) / earlierHalf.length;
+    const recentAvg =
+      recentHalf.reduce((sum, dp) => sum + dp.value, 0) / recentHalf.length;
+    const earlierAvg =
+      earlierHalf.reduce((sum, dp) => sum + dp.value, 0) / earlierHalf.length;
 
     const change = (recentAvg - earlierAvg) / earlierAvg;
 
@@ -669,17 +759,20 @@ export class PerformanceMonitor extends EventEmitter {
     const healthStatus: SystemHealthStatus = {
       overall: 'healthy',
       components: {
-        'ai_operations': this.checkAIOperationsHealth(),
-        'telemetry': this.checkTelemetryHealth(),
-        'analytics': this.checkAnalyticsHealth(),
-        'alerting': this.checkAlertingHealth()
+        ai_operations: this.checkAIOperationsHealth(),
+        telemetry: this.checkTelemetryHealth(),
+        analytics: this.checkAnalyticsHealth(),
+        alerting: this.checkAlertingHealth(),
       },
-      activeAlerts: Array.from(this.alerts.values()).filter(a => !a.resolved).length,
-      lastUpdated: new Date()
+      activeAlerts: Array.from(this.alerts.values()).filter((a) => !a.resolved)
+        .length,
+      lastUpdated: new Date(),
     };
 
     // Determine overall status
-    const componentStatuses = Object.values(healthStatus.components).map(c => c.status);
+    const componentStatuses = Object.values(healthStatus.components).map(
+      (c) => c.status
+    );
     if (componentStatuses.includes('down')) {
       healthStatus.overall = 'down';
     } else if (componentStatuses.includes('critical')) {
@@ -696,15 +789,27 @@ export class PerformanceMonitor extends EventEmitter {
    */
   private checkAIOperationsHealth(): SystemHealthStatus['components'][string] {
     const recentErrorRate = this.getCurrentMetricValue('error_rate', 5); // Last 5 minutes
-    
+
     if (recentErrorRate === null) {
-      return { status: 'healthy', lastCheck: new Date(), message: 'No recent data' };
+      return {
+        status: 'healthy',
+        lastCheck: new Date(),
+        message: 'No recent data',
+      };
     }
 
     if (recentErrorRate > 0.5) {
-      return { status: 'critical', lastCheck: new Date(), message: 'High error rate' };
+      return {
+        status: 'critical',
+        lastCheck: new Date(),
+        message: 'High error rate',
+      };
     } else if (recentErrorRate > 0.2) {
-      return { status: 'degraded', lastCheck: new Date(), message: 'Elevated error rate' };
+      return {
+        status: 'degraded',
+        lastCheck: new Date(),
+        message: 'Elevated error rate',
+      };
     }
 
     return { status: 'healthy', lastCheck: new Date() };
@@ -717,7 +822,9 @@ export class PerformanceMonitor extends EventEmitter {
     return {
       status: this.telemetryManager ? 'healthy' : 'degraded',
       lastCheck: new Date(),
-      message: this.telemetryManager ? undefined : 'Telemetry manager not available'
+      message: this.telemetryManager
+        ? undefined
+        : 'Telemetry manager not available',
     };
   }
 
@@ -728,7 +835,9 @@ export class PerformanceMonitor extends EventEmitter {
     return {
       status: this.analyticsEngine ? 'healthy' : 'degraded',
       lastCheck: new Date(),
-      message: this.analyticsEngine ? undefined : 'Analytics engine not available'
+      message: this.analyticsEngine
+        ? undefined
+        : 'Analytics engine not available',
     };
   }
 
@@ -736,11 +845,16 @@ export class PerformanceMonitor extends EventEmitter {
    * Check alerting system health
    */
   private checkAlertingHealth(): SystemHealthStatus['components'][string] {
-    const unacknowledgedCritical = Array.from(this.alerts.values())
-      .filter(a => !a.acknowledged && a.severity === 'critical').length;
-    
+    const unacknowledgedCritical = Array.from(this.alerts.values()).filter(
+      (a) => !a.acknowledged && a.severity === 'critical'
+    ).length;
+
     if (unacknowledgedCritical > 5) {
-      return { status: 'critical', lastCheck: new Date(), message: 'Many unacknowledged critical alerts' };
+      return {
+        status: 'critical',
+        lastCheck: new Date(),
+        message: 'Many unacknowledged critical alerts',
+      };
     }
 
     return { status: 'healthy', lastCheck: new Date() };
@@ -750,10 +864,12 @@ export class PerformanceMonitor extends EventEmitter {
    * Clean up old metrics data
    */
   private cleanupOldData(): void {
-    const cutoffTime = new Date(Date.now() - this.config.retentionPeriod * 60 * 60 * 1000);
-    
+    const cutoffTime = new Date(
+      Date.now() - this.config.retentionPeriod * 60 * 60 * 1000
+    );
+
     this.metrics.forEach((dataPoints, key) => {
-      const filtered = dataPoints.filter(dp => dp.timestamp >= cutoffTime);
+      const filtered = dataPoints.filter((dp) => dp.timestamp >= cutoffTime);
       if (filtered.length !== dataPoints.length) {
         this.metrics.set(key, filtered);
       }
@@ -762,7 +878,11 @@ export class PerformanceMonitor extends EventEmitter {
     // Clean up resolved alerts older than 24 hours
     const alertCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
     this.alerts.forEach((alert, id) => {
-      if (alert.resolved && alert.resolvedAt && alert.resolvedAt < alertCutoff) {
+      if (
+        alert.resolved &&
+        alert.resolvedAt &&
+        alert.resolvedAt < alertCutoff
+      ) {
         this.alerts.delete(id);
       }
     });
@@ -788,9 +908,9 @@ export class PerformanceMonitor extends EventEmitter {
    * Get active alerts
    */
   getActiveAlerts(severity?: PerformanceAlert['severity']): PerformanceAlert[] {
-    const alerts = Array.from(this.alerts.values()).filter(a => !a.resolved);
+    const alerts = Array.from(this.alerts.values()).filter((a) => !a.resolved);
     if (severity) {
-      return alerts.filter(a => a.severity === severity);
+      return alerts.filter((a) => a.severity === severity);
     }
     return alerts;
   }
@@ -830,12 +950,12 @@ export class PerformanceMonitor extends EventEmitter {
    */
   getSystemHealth(): SystemHealthStatus {
     this.performHealthCheck();
-    
+
     return {
       overall: 'healthy', // This would be set by performHealthCheck
       components: {},
       activeAlerts: this.getActiveAlerts().length,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -849,7 +969,10 @@ export class PerformanceMonitor extends EventEmitter {
   /**
    * Utility methods
    */
-  private getMetricKey(metric: PerformanceMetricType, labels: Record<string, string>): string {
+  private getMetricKey(
+    metric: PerformanceMetricType,
+    labels: Record<string, string>
+  ): string {
     const labelStr = Object.entries(labels)
       .sort()
       .map(([k, v]) => `${k}=${v}`)
@@ -871,7 +994,7 @@ export class PerformanceMonitor extends EventEmitter {
    */
   updateConfig(updates: Partial<PerformanceMonitorConfig>): void {
     this.config = { ...this.config, ...updates };
-    
+
     // Restart monitoring with new config
     this.stopMonitoring();
     this.startMonitoring();
@@ -927,9 +1050,7 @@ export const defaultPerformanceMonitorConfig: PerformanceMonitorConfig = {
       severity: 'medium',
       enabled: true,
       consecutive: 3,
-      actions: [
-        { type: 'log', target: 'console', enabled: true }
-      ]
+      actions: [{ type: 'log', target: 'console', enabled: true }],
     },
     {
       id: 'critical-error-rate',
@@ -943,21 +1064,21 @@ export const defaultPerformanceMonitorConfig: PerformanceMonitorConfig = {
       consecutive: 2,
       actions: [
         { type: 'log', target: 'console', enabled: true },
-        { type: 'circuit_breaker', target: 'auto', enabled: true }
-      ]
-    }
+        { type: 'circuit_breaker', target: 'auto', enabled: true },
+      ],
+    },
   ],
   alerting: {
     enabled: true,
     escalationTimeout: 30, // 30 minutes
-    maxEscalationLevel: 3
+    maxEscalationLevel: 3,
   },
   autoRecovery: {
     enabled: true,
     circuitBreakerThreshold: 0.5, // 50% error rate
     autoScalingEnabled: false,
-    maxRetries: 3
-  }
+    maxRetries: 3,
+  },
 };
 
-export default PerformanceMonitor; 
+export default PerformanceMonitor;

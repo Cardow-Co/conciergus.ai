@@ -2,11 +2,11 @@
 const rehypeSanitize = () => {
   return function transformer() {
     // Mock transformer function
-    return function(tree) {
+    return function (tree) {
       return tree;
     };
   };
 };
 
 module.exports = rehypeSanitize;
-module.exports.default = rehypeSanitize; 
+module.exports.default = rehypeSanitize;

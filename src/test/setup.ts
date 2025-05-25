@@ -23,7 +23,11 @@ if (!global.TextEncoder) {
 
 // Web Streams API polyfill for AI SDK
 if (!global.ReadableStream) {
-  const { ReadableStream, WritableStream, TransformStream } = require('stream/web');
+  const {
+    ReadableStream,
+    WritableStream,
+    TransformStream,
+  } = require('stream/web');
   global.ReadableStream = ReadableStream;
   global.WritableStream = WritableStream;
   global.TransformStream = TransformStream;
@@ -32,7 +36,7 @@ if (!global.ReadableStream) {
 // Mock window.matchMedia for responsive features
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => {
+  value: jest.fn().mockImplementation((query) => {
     const mock = {
       matches: false,
       media: query,
@@ -69,18 +73,32 @@ if (!global.Response) {
       this.headers = new Headers(init?.headers);
       this.ok = this.status >= 200 && this.status < 300;
     }
-    
+
     body: any;
     status: number;
     statusText: string;
     headers: Headers;
     ok: boolean;
-    
-    async json() { return JSON.parse(this.body); }
-    async text() { return String(this.body); }
-    async blob() { return new Blob([this.body]); }
-    async arrayBuffer() { return new ArrayBuffer(0); }
-    clone() { return new Response(this.body, { status: this.status, statusText: this.statusText, headers: this.headers }); }
+
+    async json() {
+      return JSON.parse(this.body);
+    }
+    async text() {
+      return String(this.body);
+    }
+    async blob() {
+      return new Blob([this.body]);
+    }
+    async arrayBuffer() {
+      return new ArrayBuffer(0);
+    }
+    clone() {
+      return new Response(this.body, {
+        status: this.status,
+        statusText: this.statusText,
+        headers: this.headers,
+      });
+    }
   } as any;
 }
 
@@ -91,12 +109,15 @@ global.fetch = jest.fn(() =>
     status: 200,
     statusText: 'OK',
     headers: new Headers(),
-    json: () => Promise.resolve({
-      choices: [{
-        message: { content: 'Mock AI response' },
-        finish_reason: 'stop'
-      }]
-    }),
+    json: () =>
+      Promise.resolve({
+        choices: [
+          {
+            message: { content: 'Mock AI response' },
+            finish_reason: 'stop',
+          },
+        ],
+      }),
     text: () => Promise.resolve('Mock AI response'),
     body: new ReadableStream(),
   })
@@ -111,17 +132,19 @@ beforeAll(() => {
   console.error = (...args: any[]) => {
     if (
       typeof args[0] === 'string' &&
-      (
-        args[0].includes('Warning: ReactDOM.render is no longer supported') ||
+      (args[0].includes('Warning: ReactDOM.render is no longer supported') ||
         args[0].includes('Warning: validateDOMNesting') ||
         args[0].includes('Warning: Failed prop type') ||
         args[0].includes('DialogContent') ||
         args[0].includes('DialogTitle') ||
         args[0].includes('requires a') ||
         args[0].includes('for the component to be accessible') ||
-        args[0].includes('An update to TestComponent inside a test was not wrapped in act') ||
-        args[0].includes('When testing, code that causes React state updates should be wrapped into act')
-      )
+        args[0].includes(
+          'An update to TestComponent inside a test was not wrapped in act'
+        ) ||
+        args[0].includes(
+          'When testing, code that causes React state updates should be wrapped into act'
+        ))
     ) {
       return;
     }
@@ -131,15 +154,13 @@ beforeAll(() => {
   console.warn = (...args: any[]) => {
     if (
       typeof args[0] === 'string' &&
-      (
-        args[0].includes('Warning: componentWillMount') ||
+      (args[0].includes('Warning: componentWillMount') ||
         args[0].includes('Warning: componentWillReceiveProps') ||
         args[0].includes('Warning: componentWillUpdate') ||
         args[0].includes('Warning: Missing') ||
         args[0].includes('aria-describedby') ||
         args[0].includes('Description') ||
-        args[0].includes('DialogContent')
-      )
+        args[0].includes('DialogContent'))
     ) {
       return;
     }
@@ -155,11 +176,11 @@ afterAll(() => {
 // Reset mocks between tests
 beforeEach(() => {
   jest.clearAllMocks();
-  
+
   // Restore window.matchMedia mock after clearAllMocks
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: jest.fn().mockImplementation(query => {
+    value: jest.fn().mockImplementation((query) => {
       const mock = {
         matches: false,
         media: query,
@@ -185,7 +206,7 @@ beforeEach(() => {
       return mock;
     }),
   });
-  
+
   // Reset fetch mock
   (global.fetch as jest.MockedFunction<typeof fetch>).mockReset();
   (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
@@ -193,12 +214,15 @@ beforeEach(() => {
     status: 200,
     statusText: 'OK',
     headers: new Headers(),
-    json: () => Promise.resolve({
-      choices: [{
-        message: { content: 'Mock AI response' },
-        finish_reason: 'stop'
-      }]
-    }),
+    json: () =>
+      Promise.resolve({
+        choices: [
+          {
+            message: { content: 'Mock AI response' },
+            finish_reason: 'stop',
+          },
+        ],
+      }),
     text: () => Promise.resolve('Mock AI response'),
     body: new ReadableStream(),
   } as any);
@@ -211,15 +235,17 @@ beforeEach(() => {
   } catch (error) {
     // SecurityCore may not be available in all tests
   }
-  
+
   // Clear OpenTelemetry instance
   try {
-    const { ConciergusOpenTelemetry } = require('../telemetry/OpenTelemetryConfig');
+    const {
+      ConciergusOpenTelemetry,
+    } = require('../telemetry/OpenTelemetryConfig');
     ConciergusOpenTelemetry.shutdown().catch(() => {});
   } catch (error) {
     // OpenTelemetry may not be available in all tests
   }
-  
+
   // Force garbage collection if available (helps in memory-constrained environments)
   if (global.gc) {
     global.gc();
@@ -229,12 +255,14 @@ beforeEach(() => {
 afterEach(async () => {
   // Clean up any remaining instances
   try {
-    const { ConciergusOpenTelemetry } = require('../telemetry/OpenTelemetryConfig');
+    const {
+      ConciergusOpenTelemetry,
+    } = require('../telemetry/OpenTelemetryConfig');
     await ConciergusOpenTelemetry.shutdown();
   } catch (error) {
     // Ignore cleanup errors
   }
-  
+
   // Clear any timers or intervals
   jest.clearAllTimers();
   jest.useRealTimers();
@@ -244,20 +272,18 @@ afterEach(async () => {
 console.warn = (...args: any[]) => {
   if (
     typeof args[0] === 'string' &&
-    (
-      args[0].includes('Warning: componentWillMount') ||
+    (args[0].includes('Warning: componentWillMount') ||
       args[0].includes('Warning: componentWillReceiveProps') ||
       args[0].includes('Warning: componentWillUpdate') ||
       args[0].includes('Warning: Missing') ||
       args[0].includes('aria-describedby') ||
       args[0].includes('Description') ||
-              args[0].includes('DialogContent') ||
-        args[0].includes('OpenTelemetry not initialized') ||
-        args[0].includes('⚠️ Security Override:') ||
-        args[0].includes('Security Override:') ||
-        args[0].includes('⚠️ Security Warning:') ||
-        args[0].includes('Security Warning:')
-    )
+      args[0].includes('DialogContent') ||
+      args[0].includes('OpenTelemetry not initialized') ||
+      args[0].includes('⚠️ Security Override:') ||
+      args[0].includes('Security Override:') ||
+      args[0].includes('⚠️ Security Warning:') ||
+      args[0].includes('Security Warning:'))
   ) {
     return; // Suppress various warnings including OpenTelemetry and security warnings
   }
@@ -304,7 +330,10 @@ process.env.REACT_VERSION = '19.1.0';
 // Test utilities for AI SDK 5
 export const testUtils = {
   // Create mock AI SDK message
-  createMockMessage: (content: string, role: 'user' | 'assistant' = 'user') => ({
+  createMockMessage: (
+    content: string,
+    role: 'user' | 'assistant' = 'user'
+  ) => ({
     id: `msg-${Date.now()}`,
     role,
     content,
@@ -351,5 +380,6 @@ export const testUtils = {
   }),
 
   // Wait for async operations
-  waitFor: (ms: number = 100) => new Promise(resolve => setTimeout(resolve, ms)),
-}; 
+  waitFor: (ms: number = 100) =>
+    new Promise((resolve) => setTimeout(resolve, ms)),
+};

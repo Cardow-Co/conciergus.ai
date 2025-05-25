@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useGateway } from './GatewayProvider';
-import { FallbackManager, type ModelPerformanceMetrics, type FallbackResult } from './FallbackManager';
+import {
+  FallbackManager,
+  type ModelPerformanceMetrics,
+  type FallbackResult,
+} from './FallbackManager';
 
 /**
  * Hook for using fallback manager with current gateway configuration
@@ -22,7 +26,7 @@ export function useFallbackManager(): {
   resetMetrics: () => void;
 } {
   const { config } = useGateway();
-  
+
   // Create fallback manager instance
   const fallbackManager = useMemo(() => {
     return new FallbackManager(config);
@@ -65,7 +69,7 @@ export function useFallbackManager(): {
     fallbackManager,
     executeWithFallback,
     performanceMetrics,
-    resetMetrics
+    resetMetrics,
   };
 }
 
@@ -90,7 +94,9 @@ export function useFallbackChat(): {
   const { createModel, currentChain } = useGateway();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [performanceMetrics, setPerformanceMetrics] = useState<ModelPerformanceMetrics[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<
+    ModelPerformanceMetrics[]
+  >([]);
 
   const chatWithFallback = useCallback(
     async (
@@ -107,17 +113,19 @@ export function useFallbackChat(): {
 
       try {
         const chainName = options.chainName || currentChain;
-        
+
         // Extract query from last user message for complexity analysis
-        const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+        const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
         const query = lastUserMessage?.content || '';
 
         const result = await executeWithFallback(
           chainName,
           async (modelId: string, model: any) => {
             // Use AI SDK to generate response
-            const { generateText, streamText } = await import('@vercel/ai-sdk-gateway');
-            
+            const { generateText, streamText } = await import(
+              '@vercel/ai-sdk-gateway'
+            );
+
             if (options.stream) {
               return await streamText({
                 model,
@@ -137,8 +145,10 @@ export function useFallbackChat(): {
           {
             query,
             requirements: {
-              capabilities: messages.some(m => m.images) ? ['text', 'vision'] : ['text']
-            }
+              capabilities: messages.some((m) => m.images)
+                ? ['text', 'vision']
+                : ['text'],
+            },
           }
         );
 
@@ -159,7 +169,7 @@ export function useFallbackChat(): {
     chatWithFallback,
     isLoading,
     error,
-    performanceMetrics
+    performanceMetrics,
   };
 }
 
@@ -191,43 +201,49 @@ export function usePerformanceMonitor(updateInterval: number = 5000): {
   // Calculate derived metrics
   const topPerformer = useMemo(() => {
     if (metrics.length === 0) return null;
-    
+
     const sorted = metrics.sort((a, b) => {
       // Primary: success rate
       const successDiff = b.successRate - a.successRate;
       if (Math.abs(successDiff) > 0.05) return successDiff;
-      
+
       // Secondary: response time
       return a.averageResponseTime - b.averageResponseTime;
     });
-    
+
     return sorted[0]?.modelId || null;
   }, [metrics]);
 
   const worstPerformer = useMemo(() => {
     if (metrics.length === 0) return null;
-    
+
     const sorted = metrics.sort((a, b) => {
       // Primary: success rate (ascending)
       const successDiff = a.successRate - b.successRate;
       if (Math.abs(successDiff) > 0.05) return successDiff;
-      
+
       // Secondary: response time (descending)
       return b.averageResponseTime - a.averageResponseTime;
     });
-    
+
     return sorted[0]?.modelId || null;
   }, [metrics]);
 
   const averageResponseTime = useMemo(() => {
     if (metrics.length === 0) return 0;
-    return metrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / metrics.length;
+    return (
+      metrics.reduce((sum, m) => sum + m.averageResponseTime, 0) /
+      metrics.length
+    );
   }, [metrics]);
 
   const overallSuccessRate = useMemo(() => {
     if (metrics.length === 0) return 0;
     const totalRequests = metrics.reduce((sum, m) => sum + m.totalRequests, 0);
-    const totalSuccesses = metrics.reduce((sum, m) => sum + (m.totalRequests * m.successRate), 0);
+    const totalSuccesses = metrics.reduce(
+      (sum, m) => sum + m.totalRequests * m.successRate,
+      0
+    );
     return totalRequests > 0 ? totalSuccesses / totalRequests : 0;
   }, [metrics]);
 
@@ -237,7 +253,7 @@ export function usePerformanceMonitor(updateInterval: number = 5000): {
     worstPerformer,
     averageResponseTime,
     overallSuccessRate,
-    refresh
+    refresh,
   };
 }
 
@@ -280,16 +296,24 @@ export function useIntelligentModelSelection(): {
     ) => {
       // Use the fallback manager's complexity analysis
       const complexity = (fallbackManager as any).analyzeQueryComplexity(query);
-      
+
       // Get recommended model based on requirements
       const recommendedModel = selectModel(requirements || {});
-      
+
       // Get alternative models from the same cost tier
       const sameRierModels = Object.entries(availableModels)
         .filter(([id, config]) => {
           if (id === recommendedModel) return false;
-          if (requirements?.costTier && config.costTier !== requirements.costTier) return false;
-          if (requirements?.provider && config.provider !== requirements.provider) return false;
+          if (
+            requirements?.costTier &&
+            config.costTier !== requirements.costTier
+          )
+            return false;
+          if (
+            requirements?.provider &&
+            config.provider !== requirements.provider
+          )
+            return false;
           return true;
         })
         .map(([id]) => id)
@@ -298,14 +322,14 @@ export function useIntelligentModelSelection(): {
       return {
         recommendedModel,
         complexity,
-        alternativeModels: sameRierModels
+        alternativeModels: sameRierModels,
       };
     },
     [fallbackManager, selectModel, availableModels]
   );
 
   return {
-    analyzeAndSelectModel
+    analyzeAndSelectModel,
   };
 }
 
@@ -313,13 +337,11 @@ export function useIntelligentModelSelection(): {
  * Hook for cost-aware model switching
  */
 export function useCostAwareModel(): {
-  selectCostOptimalModel: (
-    requirements: {
-      capabilities?: any[];
-      maxTokens?: number;
-      budgetConstraint?: 'low' | 'medium' | 'high';
-    }
-  ) => {
+  selectCostOptimalModel: (requirements: {
+    capabilities?: any[];
+    maxTokens?: number;
+    budgetConstraint?: 'low' | 'medium' | 'high';
+  }) => {
     modelId: string;
     estimatedCost: number;
     costSavings: number;
@@ -332,7 +354,8 @@ export function useCostAwareModel(): {
     tier: 'low' | 'medium' | 'high';
   };
 } {
-  const { recommendCostOptimized, estimateCost, availableModels } = useGateway();
+  const { recommendCostOptimized, estimateCost, availableModels } =
+    useGateway();
 
   const selectCostOptimalModel = useCallback(
     (requirements: {
@@ -342,26 +365,28 @@ export function useCostAwareModel(): {
     }) => {
       const optimalModel = recommendCostOptimized({
         capabilities: requirements.capabilities,
-        maxTokens: requirements.maxTokens
+        maxTokens: requirements.maxTokens,
       });
 
       const estimatedCost = estimateCost(optimalModel);
-      
+
       // Calculate potential savings compared to high-tier model
       const highTierModels = Object.entries(availableModels)
         .filter(([_, config]) => config.costTier === 'high')
         .map(([id]) => id);
-      
-      const avgHighTierCost = highTierModels.length > 0
-        ? highTierModels.reduce((sum, id) => sum + estimateCost(id), 0) / highTierModels.length
-        : estimatedCost;
+
+      const avgHighTierCost =
+        highTierModels.length > 0
+          ? highTierModels.reduce((sum, id) => sum + estimateCost(id), 0) /
+            highTierModels.length
+          : estimatedCost;
 
       const costSavings = Math.max(0, avgHighTierCost - estimatedCost);
 
       return {
         modelId: optimalModel,
         estimatedCost,
-        costSavings
+        costSavings,
       };
     },
     [recommendCostOptimized, estimateCost, availableModels]
@@ -371,10 +396,10 @@ export function useCostAwareModel(): {
     (modelId: string, estimatedTokens: number) => {
       const cost = estimateCost(modelId);
       const config = availableModels[modelId];
-      
+
       return {
         cost: cost * (estimatedTokens / 1000), // Rough cost projection
-        tier: config?.costTier || 'medium'
+        tier: config?.costTier || 'medium',
       };
     },
     [estimateCost, availableModels]
@@ -382,12 +407,8 @@ export function useCostAwareModel(): {
 
   return {
     selectCostOptimalModel,
-    getCostProjection
+    getCostProjection,
   };
 }
 
-export {
-  FallbackManager,
-  type ModelPerformanceMetrics,
-  type FallbackResult
-}; 
+export { FallbackManager, type ModelPerformanceMetrics, type FallbackResult };

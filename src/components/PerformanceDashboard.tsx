@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  PerformanceMonitor, 
-  type PerformanceAlert, 
-  type PerformanceStats, 
+import {
+  PerformanceMonitor,
+  type PerformanceAlert,
+  type PerformanceStats,
   type SystemHealthStatus,
   type PerformanceMetricType,
-  type PerformanceThreshold
+  type PerformanceThreshold,
 } from '../telemetry/PerformanceMonitor';
 
 // ============================================================================
@@ -17,28 +17,41 @@ interface StatusIndicatorProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, size = 'md' }) => {
+const StatusIndicator: React.FC<StatusIndicatorProps> = ({
+  status,
+  size = 'md',
+}) => {
   const getStatusColor = () => {
     switch (status) {
-      case 'healthy': return 'bg-green-500';
-      case 'degraded': return 'bg-yellow-500';
-      case 'critical': return 'bg-red-500';
-      case 'down': return 'bg-red-700';
-      default: return 'bg-gray-500';
+      case 'healthy':
+        return 'bg-green-500';
+      case 'degraded':
+        return 'bg-yellow-500';
+      case 'critical':
+        return 'bg-red-500';
+      case 'down':
+        return 'bg-red-700';
+      default:
+        return 'bg-gray-500';
     }
   };
 
   const getSizeClass = () => {
     switch (size) {
-      case 'sm': return 'w-2 h-2';
-      case 'md': return 'w-3 h-3';
-      case 'lg': return 'w-4 h-4';
+      case 'sm':
+        return 'w-2 h-2';
+      case 'md':
+        return 'w-3 h-3';
+      case 'lg':
+        return 'w-4 h-4';
     }
   };
 
   return (
-    <div className={`rounded-full ${getStatusColor()} ${getSizeClass()}`} 
-         title={status} />
+    <div
+      className={`rounded-full ${getStatusColor()} ${getSizeClass()}`}
+      title={status}
+    />
   );
 };
 
@@ -51,29 +64,37 @@ interface MetricCardProps {
   className?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ 
-  title, 
-  value, 
-  unit, 
-  trend, 
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  unit,
+  trend,
   status,
-  className = '' 
+  className = '',
 }) => {
   const getTrendIcon = () => {
     switch (trend) {
-      case 'up': return '📈';
-      case 'down': return '📉';
-      case 'stable': return '➡️';
-      default: return '';
+      case 'up':
+        return '📈';
+      case 'down':
+        return '📉';
+      case 'stable':
+        return '➡️';
+      default:
+        return '';
     }
   };
 
   const getTrendColor = () => {
     switch (trend) {
-      case 'up': return 'text-green-600';
-      case 'down': return 'text-red-600';
-      case 'stable': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case 'up':
+        return 'text-green-600';
+      case 'down':
+        return 'text-red-600';
+      case 'stable':
+        return 'text-gray-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -107,11 +128,13 @@ interface SystemHealthProps {
   refreshInterval?: number;
 }
 
-const SystemHealthPanel: React.FC<SystemHealthProps> = ({ 
-  monitor, 
-  refreshInterval = 30000 
+const SystemHealthPanel: React.FC<SystemHealthProps> = ({
+  monitor,
+  refreshInterval = 30000,
 }) => {
-  const [healthStatus, setHealthStatus] = useState<SystemHealthStatus | null>(null);
+  const [healthStatus, setHealthStatus] = useState<SystemHealthStatus | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -147,7 +170,11 @@ const SystemHealthPanel: React.FC<SystemHealthProps> = ({
   }
 
   if (!healthStatus) {
-    return <div className="text-center py-8 text-red-500">Failed to load system health</div>;
+    return (
+      <div className="text-center py-8 text-red-500">
+        Failed to load system health
+      </div>
+    );
   }
 
   return (
@@ -207,9 +234,9 @@ interface PerformanceMetricsProps {
   refreshInterval?: number;
 }
 
-const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({ 
-  monitor, 
-  refreshInterval = 15000 
+const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
+  monitor,
+  refreshInterval = 15000,
 }) => {
   const [stats, setStats] = useState<PerformanceStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -234,7 +261,7 @@ const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
 
   const metricGroups = useMemo(() => {
     const groups: Record<string, PerformanceStats[]> = {};
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       const group = stat.metric;
       if (!groups[group]) groups[group] = [];
       groups[group].push(stat);
@@ -242,7 +269,10 @@ const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
     return groups;
   }, [stats]);
 
-  const formatMetricValue = (metric: PerformanceMetricType, value: number): string => {
+  const formatMetricValue = (
+    metric: PerformanceMetricType,
+    value: number
+  ): string => {
     switch (metric) {
       case 'latency':
         return `${value.toFixed(0)}ms`;
@@ -263,25 +293,30 @@ const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading performance metrics...</div>;
+    return (
+      <div className="text-center py-8">Loading performance metrics...</div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Performance Metrics</h2>
-      
+
       {Object.entries(metricGroups).map(([metricType, metricStats]) => (
         <div key={metricType} className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-700 capitalize">
             {metricType.replace('_', ' ')} Metrics
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {metricStats.map((stat, index) => (
               <MetricCard
                 key={index}
                 title="Average"
-                value={formatMetricValue(stat.metric as PerformanceMetricType, stat.average)}
+                value={formatMetricValue(
+                  stat.metric as PerformanceMetricType,
+                  stat.average
+                )}
                 trend={stat.trend}
               />
             ))}
@@ -313,27 +348,46 @@ const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
                           {stat.metric.replace('_', ' ')}
                         </td>
                         <td className="py-2">
-                          {formatMetricValue(stat.metric as PerformanceMetricType, stat.average)}
+                          {formatMetricValue(
+                            stat.metric as PerformanceMetricType,
+                            stat.average
+                          )}
                         </td>
                         <td className="py-2">
-                          {formatMetricValue(stat.metric as PerformanceMetricType, stat.min)}
+                          {formatMetricValue(
+                            stat.metric as PerformanceMetricType,
+                            stat.min
+                          )}
                         </td>
                         <td className="py-2">
-                          {formatMetricValue(stat.metric as PerformanceMetricType, stat.max)}
+                          {formatMetricValue(
+                            stat.metric as PerformanceMetricType,
+                            stat.max
+                          )}
                         </td>
                         <td className="py-2">
-                          {formatMetricValue(stat.metric as PerformanceMetricType, stat.p95)}
+                          {formatMetricValue(
+                            stat.metric as PerformanceMetricType,
+                            stat.p95
+                          )}
                         </td>
                         <td className="py-2">
-                          {formatMetricValue(stat.metric as PerformanceMetricType, stat.p99)}
+                          {formatMetricValue(
+                            stat.metric as PerformanceMetricType,
+                            stat.p99
+                          )}
                         </td>
                         <td className="py-2">{stat.count}</td>
                         <td className="py-2">
-                          <span className={`capitalize ${
-                            stat.trend === 'increasing' ? 'text-red-600' :
-                            stat.trend === 'decreasing' ? 'text-green-600' :
-                            'text-gray-600'
-                          }`}>
+                          <span
+                            className={`capitalize ${
+                              stat.trend === 'increasing'
+                                ? 'text-red-600'
+                                : stat.trend === 'decreasing'
+                                  ? 'text-green-600'
+                                  : 'text-gray-600'
+                            }`}
+                          >
                             {stat.trend}
                           </span>
                         </td>
@@ -349,7 +403,8 @@ const PerformanceMetricsPanel: React.FC<PerformanceMetricsProps> = ({
 
       {Object.keys(metricGroups).length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          No performance metrics available. Start using AI operations to see data.
+          No performance metrics available. Start using AI operations to see
+          data.
         </div>
       )}
     </div>
@@ -365,9 +420,9 @@ interface AlertsPanelProps {
   refreshInterval?: number;
 }
 
-const AlertsPanel: React.FC<AlertsPanelProps> = ({ 
-  monitor, 
-  refreshInterval = 10000 
+const AlertsPanel: React.FC<AlertsPanelProps> = ({
+  monitor,
+  refreshInterval = 10000,
 }) => {
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -389,11 +444,11 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
     // Listen for real-time alert updates
     const handleAlertTriggered = (alert: PerformanceAlert) => {
-      setAlerts(prev => [alert, ...prev]);
+      setAlerts((prev) => [alert, ...prev]);
     };
 
     const handleAlertResolved = (alert: PerformanceAlert) => {
-      setAlerts(prev => prev.filter(a => a.id !== alert.id));
+      setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
     };
 
     monitor.on('alert_triggered', handleAlertTriggered);
@@ -416,21 +471,31 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'critical':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'critical': return '🔴';
-      case 'high': return '🟠';
-      case 'medium': return '🟡';
-      case 'low': return '🔵';
-      default: return '⚪';
+      case 'critical':
+        return '🔴';
+      case 'high':
+        return '🟠';
+      case 'medium':
+        return '🟡';
+      case 'low':
+        return '🔵';
+      default:
+        return '⚪';
     }
   };
 
@@ -446,7 +511,7 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
           {alerts.length} active alert{alerts.length !== 1 ? 's' : ''}
         </div>
       </div>
-      
+
       {alerts.length === 0 ? (
         <div className="bg-green-50 border border-green-200 rounded-md p-6 text-center">
           <div className="text-4xl mb-2">✅</div>
@@ -465,67 +530,76 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
               return severityOrder[a.severity] - severityOrder[b.severity];
             })
             .map((alert) => (
-            <div 
-              key={alert.id} 
-              className={`border rounded-lg p-4 ${getSeverityColor(alert.severity)}`}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-lg">{getSeverityIcon(alert.severity)}</span>
-                    <span className="font-bold text-lg uppercase">
-                      {alert.severity}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      {alert.timestamp.toLocaleString()}
-                    </span>
-                    {alert.acknowledged && (
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        Acknowledged
+              <div
+                key={alert.id}
+                className={`border rounded-lg p-4 ${getSeverityColor(alert.severity)}`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-lg">
+                        {getSeverityIcon(alert.severity)}
                       </span>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm font-medium mb-2">{alert.message}</p>
-                  
-                  <div className="text-xs space-y-1">
-                    <div>
-                      <strong>Metric:</strong> {alert.metric} | 
-                      <strong> Current:</strong> {alert.currentValue.toFixed(2)} | 
-                      <strong> Threshold:</strong> {alert.threshold}
+                      <span className="font-bold text-lg uppercase">
+                        {alert.severity}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {alert.timestamp.toLocaleString()}
+                      </span>
+                      {alert.acknowledged && (
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                          Acknowledged
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <strong>Time Window:</strong> {alert.context.timeWindow} minutes | 
-                      <strong> Consecutive Violations:</strong> {alert.context.consecutiveViolations}
+
+                    <p className="text-sm font-medium mb-2">{alert.message}</p>
+
+                    <div className="text-xs space-y-1">
+                      <div>
+                        <strong>Metric:</strong> {alert.metric} |
+                        <strong> Current:</strong>{' '}
+                        {alert.currentValue.toFixed(2)} |
+                        <strong> Threshold:</strong> {alert.threshold}
+                      </div>
+                      <div>
+                        <strong>Time Window:</strong> {alert.context.timeWindow}{' '}
+                        minutes |<strong> Consecutive Violations:</strong>{' '}
+                        {alert.context.consecutiveViolations}
+                      </div>
+                      {alert.context.model && (
+                        <div>
+                          <strong>Model:</strong> {alert.context.model}
+                        </div>
+                      )}
+                      {alert.context.operationType && (
+                        <div>
+                          <strong>Operation:</strong>{' '}
+                          {alert.context.operationType}
+                        </div>
+                      )}
                     </div>
-                    {alert.context.model && (
-                      <div><strong>Model:</strong> {alert.context.model}</div>
-                    )}
-                    {alert.context.operationType && (
-                      <div><strong>Operation:</strong> {alert.context.operationType}</div>
-                    )}
                   </div>
-                </div>
-                
-                <div className="flex flex-col space-y-2 ml-4">
-                  {!alert.acknowledged && (
+
+                  <div className="flex flex-col space-y-2 ml-4">
+                    {!alert.acknowledged && (
+                      <button
+                        onClick={() => handleAcknowledge(alert.id)}
+                        className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      >
+                        Acknowledge
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleAcknowledge(alert.id)}
+                      onClick={() => handleResolve(alert.id)}
                       className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                     >
-                      Acknowledge
+                      Resolve
                     </button>
-                  )}
-                  <button
-                    onClick={() => handleResolve(alert.id)}
-                    className="px-3 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-                  >
-                    Resolve
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       )}
     </div>
@@ -541,17 +615,19 @@ interface PerformanceDashboardProps {
   className?: string;
 }
 
-const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ 
-  monitor, 
-  className = '' 
+const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
+  monitor,
+  className = '',
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'alerts' | 'health'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'metrics' | 'alerts' | 'health'
+  >('overview');
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'health', label: 'System Health', icon: '💚' },
     { id: 'metrics', label: 'Metrics', icon: '📈' },
-    { id: 'alerts', label: 'Alerts', icon: '🚨' }
+    { id: 'alerts', label: 'Alerts', icon: '🚨' },
   ] as const;
 
   return (
@@ -559,7 +635,9 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Performance Monitoring</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Performance Monitoring
+          </h1>
           <p className="mt-2 text-gray-600">
             Real-time performance monitoring, alerting, and system health
           </p>
@@ -593,15 +671,11 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
               <AlertsPanel monitor={monitor} />
             </div>
           )}
-          {activeTab === 'health' && (
-            <SystemHealthPanel monitor={monitor} />
-          )}
+          {activeTab === 'health' && <SystemHealthPanel monitor={monitor} />}
           {activeTab === 'metrics' && (
             <PerformanceMetricsPanel monitor={monitor} />
           )}
-          {activeTab === 'alerts' && (
-            <AlertsPanel monitor={monitor} />
-          )}
+          {activeTab === 'alerts' && <AlertsPanel monitor={monitor} />}
         </div>
       </div>
     </div>
@@ -609,10 +683,10 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
 };
 
 export default PerformanceDashboard;
-export { 
-  SystemHealthPanel, 
-  PerformanceMetricsPanel, 
+export {
+  SystemHealthPanel,
+  PerformanceMetricsPanel,
   AlertsPanel,
   StatusIndicator,
-  MetricCard
-}; 
+  MetricCard,
+};

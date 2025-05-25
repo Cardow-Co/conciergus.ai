@@ -1,10 +1,16 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from 'react';
 import { useConciergusChat } from '../context/ConciergusAISDK5Hooks';
 import { useConciergus } from '../context/useConciergus';
-import type { 
-  ToolCall, 
+import type {
+  ToolCall,
   ToolCallState,
-  EnhancedMessage 
+  EnhancedMessage,
 } from '../types/ai-sdk-5';
 
 // ==========================================
@@ -14,15 +20,15 @@ import type {
 /**
  * Tool UI render mode for different presentation patterns
  */
-export type ToolUIMode = 
-  | 'buttons'        // Tool actions as clickable buttons
-  | 'forms'          // Tool inputs as form fields
-  | 'carousels'      // Tool results as carousel/slider
-  | 'computer-use'   // Computer use interface (screenshots, actions)
-  | 'inline'         // Inline tool results within text
-  | 'modal'          // Tool UI in modal dialogs
-  | 'cards'          // Tool results as cards
-  | 'timeline';      // Tool execution as timeline
+export type ToolUIMode =
+  | 'buttons' // Tool actions as clickable buttons
+  | 'forms' // Tool inputs as form fields
+  | 'carousels' // Tool results as carousel/slider
+  | 'computer-use' // Computer use interface (screenshots, actions)
+  | 'inline' // Inline tool results within text
+  | 'modal' // Tool UI in modal dialogs
+  | 'cards' // Tool results as cards
+  | 'timeline'; // Tool execution as timeline
 
 /**
  * Tool execution priority levels
@@ -32,7 +38,11 @@ export type ToolExecutionPriority = 'low' | 'normal' | 'high' | 'critical';
 /**
  * Tool caching strategies
  */
-export type ToolCachingStrategy = 'none' | 'session' | 'persistent' | 'intelligent';
+export type ToolCachingStrategy =
+  | 'none'
+  | 'session'
+  | 'persistent'
+  | 'intelligent';
 
 /**
  * Tool UI rendering options
@@ -151,87 +161,87 @@ export interface ConciergusToolDefinition {
 export interface ConciergusToolUIRendererProps {
   /** Array of tool definitions available for execution */
   tools?: ConciergusToolDefinition[];
-  
+
   /** Current function calls from AI SDK 5 */
   functionCalls?: ToolCall[];
-  
+
   /** Tool completion handler */
   onToolComplete?: (toolCall: ToolCall, result: any) => void | Promise<void>;
-  
+
   /** Tool execution start handler */
   onToolStart?: (toolCall: ToolCall) => void;
-  
+
   /** Tool error handler */
   onToolError?: (toolCall: ToolCall, error: Error) => void;
-  
+
   /** Tool rendering options */
   renderOptions?: ToolUIRenderOptions;
-  
+
   /** Additional CSS classes */
   className?: string;
-  
+
   /** Component is disabled */
   disabled?: boolean;
-  
+
   /** Debug mode */
   debug?: boolean;
-  
+
   // === Custom Components ===
   /** Custom tool button renderer */
   toolButtonComponent?: React.ComponentType<ToolButtonProps>;
-  
+
   /** Custom tool form renderer */
   toolFormComponent?: React.ComponentType<ToolFormProps>;
-  
+
   /** Custom tool result renderer */
   toolResultComponent?: React.ComponentType<ToolResultProps>;
-  
+
   /** Custom progress indicator */
   progressComponent?: React.ComponentType<ProgressIndicatorProps>;
-  
+
   /** Custom error display */
   errorComponent?: React.ComponentType<ErrorDisplayProps>;
-  
+
   // === Events ===
   /** Tool selection handler */
   onToolSelect?: (tool: ConciergusToolDefinition) => void;
-  
+
   /** Tool execution progress handler */
   onToolProgress?: (toolCall: ToolCall, progress: number) => void;
-  
+
   /** Stream update handler */
   onStreamUpdate?: (toolCall: ToolCall, data: any) => void;
-  
+
   /** Cache events */
   onCacheHit?: (toolCall: ToolCall) => void;
   onCacheMiss?: (toolCall: ToolCall) => void;
-  
+
   // === Accessibility ===
   /** Accessibility label */
   ariaLabel?: string;
-  
+
   /** Accessibility description */
   ariaDescription?: string;
-  
+
   // === Advanced Options ===
   /** Maximum tools to display */
   maxToolsDisplay?: number;
-  
+
   /** Tool search/filter functionality */
   enableToolSearch?: boolean;
-  
+
   /** Tool categories filter */
   enableCategoryFilter?: boolean;
-  
+
   /** Export tool results functionality */
   enableResultExport?: boolean;
-  
+
   /** Tool execution history */
   enableExecutionHistory?: boolean;
-  
+
   /** Undo/redo functionality */
   enableUndoRedo?: boolean;
-  
+
   // === Extensibility ===
   /** Additional props */
   [key: string]: any;
@@ -338,7 +348,7 @@ const DefaultToolButton: React.FC<ToolButtonProps> = ({
   onClick,
   disabled,
   isLoading,
-  className = ''
+  className = '',
 }) => {
   const handleClick = useCallback(() => {
     if (!disabled && !isLoading) {
@@ -353,8 +363,10 @@ const DefaultToolButton: React.FC<ToolButtonProps> = ({
     isLoading ? 'loading' : '',
     executionState?.state === 'error' ? 'error' : '',
     executionState?.state === 'result' ? 'completed' : '',
-    className
-  ].filter(Boolean).join(' ');
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <button
@@ -370,9 +382,7 @@ const DefaultToolButton: React.FC<ToolButtonProps> = ({
           <span className="tool-icon">{tool.uiConfig.icon}</span>
         )}
         <span className="tool-name">{tool.name}</span>
-        {isLoading && (
-          <div className="tool-loading-spinner" />
-        )}
+        {isLoading && <div className="tool-loading-spinner" />}
         {executionState?.state === 'result' && (
           <span className="tool-status-icon">✓</span>
         )}
@@ -393,19 +403,22 @@ const DefaultToolForm: React.FC<ToolFormProps> = ({
   onSubmit,
   disabled,
   isLoading,
-  className = ''
+  className = '',
 }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  const handleSubmit = useCallback((event: React.FormEvent) => {
-    event.preventDefault();
-    if (!disabled && !isLoading) {
-      onSubmit(tool, formData);
-    }
-  }, [tool, formData, onSubmit, disabled, isLoading]);
+  const handleSubmit = useCallback(
+    (event: React.FormEvent) => {
+      event.preventDefault();
+      if (!disabled && !isLoading) {
+        onSubmit(tool, formData);
+      }
+    },
+    [tool, formData, onSubmit, disabled, isLoading]
+  );
 
   const handleInputChange = useCallback((field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   // Simple form generation from tool parameters
@@ -415,7 +428,7 @@ const DefaultToolForm: React.FC<ToolFormProps> = ({
     }
 
     const properties = tool.parameters.properties || {};
-    
+
     return Object.entries(properties).map(([field, schema]: [string, any]) => (
       <div key={field} className="tool-form-field">
         <label htmlFor={`${tool.name}-${field}`} className="tool-form-label">
@@ -447,11 +460,9 @@ const DefaultToolForm: React.FC<ToolFormProps> = ({
         <h3 className="tool-form-title">{tool.name}</h3>
         <p className="tool-form-description">{tool.description}</p>
       </div>
-      
-      <div className="tool-form-fields">
-        {renderFormFields()}
-      </div>
-      
+
+      <div className="tool-form-fields">{renderFormFields()}</div>
+
       <div className="tool-form-actions">
         <button
           type="submit"
@@ -475,7 +486,7 @@ const DefaultToolResult: React.FC<ToolResultProps> = ({
   mode,
   showMetadata,
   onClick,
-  className = ''
+  className = '',
 }) => {
   const handleClick = useCallback(() => {
     if (onClick) {
@@ -509,15 +520,13 @@ const DefaultToolResult: React.FC<ToolResultProps> = ({
           </span>
         )}
       </div>
-      
+
       <div className="tool-result-content">
         {result && (
-          <pre className="tool-result-data">
-            {formatResult(result)}
-          </pre>
+          <pre className="tool-result-data">{formatResult(result)}</pre>
         )}
       </div>
-      
+
       {showMetadata && executionState.metadata && (
         <div className="tool-result-metadata">
           <details>
@@ -538,21 +547,21 @@ const DefaultProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   progress,
   message = 'Executing...',
   estimatedTimeRemaining,
-  className = ''
+  className = '',
 }) => (
   <div className={`conciergus-tool-progress ${className}`}>
     <div className="progress-header">
       <span className="progress-tool">{toolCall.name}</span>
       <span className="progress-percentage">{Math.round(progress)}%</span>
     </div>
-    
+
     <div className="progress-bar-container">
-      <div 
+      <div
         className="progress-bar"
         style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
       />
     </div>
-    
+
     <div className="progress-details">
       <span className="progress-message">{message}</span>
       {estimatedTimeRemaining && (
@@ -572,7 +581,7 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
   error,
   onRetry,
   onDismiss,
-  className = ''
+  className = '',
 }) => (
   <div className={`conciergus-tool-error ${className}`}>
     <div className="error-header">
@@ -580,7 +589,7 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
       <span className="error-tool">{toolCall.name}</span>
       <span className="error-title">Execution Failed</span>
     </div>
-    
+
     <div className="error-content">
       <p className="error-message">{error.message}</p>
       {error.stack && (
@@ -590,14 +599,10 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
         </details>
       )}
     </div>
-    
+
     <div className="error-actions">
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="error-retry-button"
-        >
+        <button type="button" onClick={onRetry} className="error-retry-button">
           Retry
         </button>
       )}
@@ -620,11 +625,11 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
 
 /**
  * ConciergusToolUIRenderer Component
- * 
+ *
  * A comprehensive tool UI renderer for AI SDK 5 tool execution with support for
  * multiple display modes, streaming updates, parallel execution, and advanced
  * features like caching and retry mechanisms.
- * 
+ *
  * @example Basic usage:
  * ```tsx
  * <ConciergusToolUIRenderer
@@ -633,7 +638,7 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
  *   onToolComplete={(call, result) => console.log('Tool completed:', result)}
  * />
  * ```
- * 
+ *
  * @example Advanced usage with custom components:
  * ```tsx
  * <ConciergusToolUIRenderer
@@ -651,7 +656,9 @@ const DefaultErrorDisplay: React.FC<ErrorDisplayProps> = ({
  * />
  * ```
  */
-export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> = ({
+export const ConciergusToolUIRenderer: React.FC<
+  ConciergusToolUIRendererProps
+> = ({
   tools = [],
   functionCalls = [],
   onToolComplete,
@@ -661,25 +668,25 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
   className = '',
   disabled = false,
   debug = false,
-  
+
   // Custom components
   toolButtonComponent: ToolButtonComponent = DefaultToolButton,
   toolFormComponent: ToolFormComponent = DefaultToolForm,
   toolResultComponent: ToolResultComponent = DefaultToolResult,
   progressComponent: ProgressComponent = DefaultProgressIndicator,
   errorComponent: ErrorComponent = DefaultErrorDisplay,
-  
+
   // Events
   onToolSelect,
   onToolProgress,
   onStreamUpdate,
   onCacheHit,
   onCacheMiss,
-  
+
   // Accessibility
   ariaLabel = 'Tool execution interface',
   ariaDescription,
-  
+
   // Advanced options
   maxToolsDisplay = 20,
   enableToolSearch = false,
@@ -687,295 +694,351 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
   enableResultExport = false,
   enableExecutionHistory = false,
   enableUndoRedo = false,
-  
+
   ...rest
 }) => {
   // Context integration
   const { config: conciergusConfig } = useConciergus();
   const chatHook = useConciergusChat();
-  
+
   // Local state
-  const [toolExecutionStates, setToolExecutionStates] = useState<Map<string, ToolExecutionState>>(new Map());
+  const [toolExecutionStates, setToolExecutionStates] = useState<
+    Map<string, ToolExecutionState>
+  >(new Map());
   const [isExecuting, setIsExecuting] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [executionHistory, setExecutionHistory] = useState<ToolCall[]>([]);
-  const [toolCache, setToolCache] = useState<Map<string, { result: any; timestamp: Date }>>(new Map());
-  
+  const [toolCache, setToolCache] = useState<
+    Map<string, { result: any; timestamp: Date }>
+  >(new Map());
+
   // Refs
   const executionTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const retryTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  
+
   // Merged options with defaults
-  const finalRenderOptions = useMemo<Required<ToolUIRenderOptions>>(() => ({
-    mode: 'buttons',
-    enableStreaming: true,
-    enableParallelExecution: false,
-    maxParallelTools: 3,
-    showProgress: true,
-    showMetadata: false,
-    showArguments: true,
-    showResults: true,
-    compact: false,
-    autoExecute: false,
-    executionTimeout: 30000,
-    autoRetry: true,
-    maxRetries: 3,
-    retryDelay: 1000,
-    cachingStrategy: 'session',
-    cacheTTL: 300000, // 5 minutes
-    enableAnimations: true,
-    groupRelatedTools: true,
-    defaultPriority: 'normal',
-    sortBy: 'name',
-    sortDirection: 'asc',
-    ...renderOptions
-  }), [renderOptions]);
-  
+  const finalRenderOptions = useMemo<Required<ToolUIRenderOptions>>(
+    () => ({
+      mode: 'buttons',
+      enableStreaming: true,
+      enableParallelExecution: false,
+      maxParallelTools: 3,
+      showProgress: true,
+      showMetadata: false,
+      showArguments: true,
+      showResults: true,
+      compact: false,
+      autoExecute: false,
+      executionTimeout: 30000,
+      autoRetry: true,
+      maxRetries: 3,
+      retryDelay: 1000,
+      cachingStrategy: 'session',
+      cacheTTL: 300000, // 5 minutes
+      enableAnimations: true,
+      groupRelatedTools: true,
+      defaultPriority: 'normal',
+      sortBy: 'name',
+      sortDirection: 'asc',
+      ...renderOptions,
+    }),
+    [renderOptions]
+  );
+
   // Generate cache key for tool execution
-  const generateCacheKey = useCallback((toolName: string, args: any): string => {
-    return `${toolName}-${JSON.stringify(args)}`;
-  }, []);
-  
+  const generateCacheKey = useCallback(
+    (toolName: string, args: any): string => {
+      return `${toolName}-${JSON.stringify(args)}`;
+    },
+    []
+  );
+
   // Check cache for tool result
-  const checkCache = useCallback((toolName: string, args: any): any | null => {
-    if (finalRenderOptions.cachingStrategy === 'none') return null;
-    
-    const cacheKey = generateCacheKey(toolName, args);
-    const cached = toolCache.get(cacheKey);
-    
-    if (!cached) {
-      onCacheMiss?.({ name: toolName, args } as ToolCall);
-      return null;
-    }
-    
-    // Check TTL
-    const isExpired = Date.now() - cached.timestamp.getTime() > finalRenderOptions.cacheTTL;
-    if (isExpired) {
-      toolCache.delete(cacheKey);
-      onCacheMiss?.({ name: toolName, args } as ToolCall);
-      return null;
-    }
-    
-    onCacheHit?.({ name: toolName, args } as ToolCall);
-    return cached.result;
-  }, [finalRenderOptions, toolCache, generateCacheKey, onCacheHit, onCacheMiss]);
-  
+  const checkCache = useCallback(
+    (toolName: string, args: any): any | null => {
+      if (finalRenderOptions.cachingStrategy === 'none') return null;
+
+      const cacheKey = generateCacheKey(toolName, args);
+      const cached = toolCache.get(cacheKey);
+
+      if (!cached) {
+        onCacheMiss?.({ name: toolName, args } as ToolCall);
+        return null;
+      }
+
+      // Check TTL
+      const isExpired =
+        Date.now() - cached.timestamp.getTime() > finalRenderOptions.cacheTTL;
+      if (isExpired) {
+        toolCache.delete(cacheKey);
+        onCacheMiss?.({ name: toolName, args } as ToolCall);
+        return null;
+      }
+
+      onCacheHit?.({ name: toolName, args } as ToolCall);
+      return cached.result;
+    },
+    [finalRenderOptions, toolCache, generateCacheKey, onCacheHit, onCacheMiss]
+  );
+
   // Store result in cache
-  const storeInCache = useCallback((toolName: string, args: any, result: any) => {
-    if (finalRenderOptions.cachingStrategy === 'none') return;
-    
-    const cacheKey = generateCacheKey(toolName, args);
-    setToolCache(prev => new Map(prev).set(cacheKey, {
-      result,
-      timestamp: new Date()
-    }));
-  }, [finalRenderOptions.cachingStrategy, generateCacheKey]);
-  
+  const storeInCache = useCallback(
+    (toolName: string, args: any, result: any) => {
+      if (finalRenderOptions.cachingStrategy === 'none') return;
+
+      const cacheKey = generateCacheKey(toolName, args);
+      setToolCache((prev) =>
+        new Map(prev).set(cacheKey, {
+          result,
+          timestamp: new Date(),
+        })
+      );
+    },
+    [finalRenderOptions.cachingStrategy, generateCacheKey]
+  );
+
   // Update tool execution state
-  const updateExecutionState = useCallback((toolId: string, updates: Partial<ToolExecutionState>) => {
-    setToolExecutionStates(prev => {
-      const newMap = new Map(prev);
-      const existing = newMap.get(toolId) || { id: toolId, state: 'pending' };
-      newMap.set(toolId, { ...existing, ...updates });
-      return newMap;
-    });
-  }, []);
-  
+  const updateExecutionState = useCallback(
+    (toolId: string, updates: Partial<ToolExecutionState>) => {
+      setToolExecutionStates((prev) => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(toolId) || { id: toolId, state: 'pending' };
+        newMap.set(toolId, { ...existing, ...updates });
+        return newMap;
+      });
+    },
+    []
+  );
+
   // Execute tool with comprehensive error handling and retry logic
-  const executeTool = useCallback(async (tool: ConciergusToolDefinition, args: any = {}) => {
-    const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const toolCall: ToolCall = {
-      id: toolCallId,
-      name: tool.name,
-      args,
-      state: 'pending'
-    };
-    
-    // Check cache first
-    const cachedResult = checkCache(tool.name, args);
-    if (cachedResult) {
-      onToolComplete?.(toolCall, cachedResult);
-      return cachedResult;
-    }
-    
-    // Initialize execution state
-    updateExecutionState(toolCallId, {
-      state: 'call',
-      startTime: new Date(),
-      progress: 0,
-      retryCount: 0,
-      priority: finalRenderOptions.defaultPriority
-    });
-    
-    // Start tool execution
-    onToolStart?.(toolCall);
-    setIsExecuting(true);
-    
-    // Set execution timeout
-    const timeoutId = setTimeout(() => {
+  const executeTool = useCallback(
+    async (tool: ConciergusToolDefinition, args: any = {}) => {
+      const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const toolCall: ToolCall = {
+        id: toolCallId,
+        name: tool.name,
+        args,
+        state: 'pending',
+      };
+
+      // Check cache first
+      const cachedResult = checkCache(tool.name, args);
+      if (cachedResult) {
+        onToolComplete?.(toolCall, cachedResult);
+        return cachedResult;
+      }
+
+      // Initialize execution state
       updateExecutionState(toolCallId, {
-        state: 'error',
-        endTime: new Date(),
-        lastError: new Error('Tool execution timeout')
+        state: 'call',
+        startTime: new Date(),
+        progress: 0,
+        retryCount: 0,
+        priority: finalRenderOptions.defaultPriority,
       });
-      onToolError?.(toolCall, new Error('Tool execution timeout'));
-    }, finalRenderOptions.executionTimeout);
-    
-    executionTimeouts.current.set(toolCallId, timeoutId);
-    
-    if (debug) {
-      console.log('Executing tool:', { tool: tool.name, args, toolCallId });
-    }
-    
-    try {
-      // Simulate progress updates if streaming is enabled
-      if (finalRenderOptions.enableStreaming && finalRenderOptions.showProgress) {
-        const progressInterval = setInterval(() => {
-          const state = toolExecutionStates.get(toolCallId);
-          if (state && state.state === 'call' && (state.progress || 0) < 90) {
-            const newProgress = Math.min(90, (state.progress || 0) + Math.random() * 20);
-            updateExecutionState(toolCallId, { progress: newProgress });
-            onToolProgress?.(toolCall, newProgress);
-          }
-        }, 500);
-        
-        setTimeout(() => clearInterval(progressInterval), finalRenderOptions.executionTimeout - 1000);
-      }
-      
-      // Execute the tool
-      let result;
-      if (tool.handler) {
-        result = await tool.handler(args);
-      } else {
-        // Fallback to chat hook tool invocation if available
-        result = await chatHook.invokeTools?.([tool]);
-      }
-      
-      // Clear timeout
-      clearTimeout(timeoutId);
-      executionTimeouts.current.delete(toolCallId);
-      
-      // Update execution state with result
-      const endTime = new Date();
-      const duration = endTime.getTime() - (toolExecutionStates.get(toolCallId)?.startTime?.getTime() || endTime.getTime());
-      
-      updateExecutionState(toolCallId, {
-        state: 'result',
-        endTime,
-        duration,
-        progress: 100,
-        result
-      });
-      
-      // Store in cache
-      storeInCache(tool.name, args, result);
-      
-      // Add to execution history
-      if (enableExecutionHistory) {
-        setExecutionHistory(prev => [{ ...toolCall, result }, ...prev.slice(0, 99)]);
-      }
-      
-      // Complete tool execution
-      toolCall.result = result;
-      toolCall.state = 'result';
-      onToolComplete?.(toolCall, result);
-      
+
+      // Start tool execution
+      onToolStart?.(toolCall);
+      setIsExecuting(true);
+
+      // Set execution timeout
+      const timeoutId = setTimeout(() => {
+        updateExecutionState(toolCallId, {
+          state: 'error',
+          endTime: new Date(),
+          lastError: new Error('Tool execution timeout'),
+        });
+        onToolError?.(toolCall, new Error('Tool execution timeout'));
+      }, finalRenderOptions.executionTimeout);
+
+      executionTimeouts.current.set(toolCallId, timeoutId);
+
       if (debug) {
-        console.log('Tool execution completed:', { tool: tool.name, result, duration });
+        console.log('Executing tool:', { tool: tool.name, args, toolCallId });
       }
-      
-      return result;
-      
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error('Tool execution failed');
-      
-      // Clear timeout
-      clearTimeout(timeoutId);
-      executionTimeouts.current.delete(toolCallId);
-      
-      // Update execution state with error
-      updateExecutionState(toolCallId, {
-        state: 'error',
-        endTime: new Date(),
-        lastError: errorObj
-      });
-      
-      // Handle retry logic
-      const currentState = toolExecutionStates.get(toolCallId);
-      const retryCount = (currentState?.retryCount || 0) + 1;
-      
-      if (finalRenderOptions.autoRetry && retryCount <= finalRenderOptions.maxRetries) {
-        updateExecutionState(toolCallId, { retryCount });
-        
-        if (debug) {
-          console.log(`Tool execution failed, retrying ${retryCount}/${finalRenderOptions.maxRetries}:`, errorObj);
+
+      try {
+        // Simulate progress updates if streaming is enabled
+        if (
+          finalRenderOptions.enableStreaming &&
+          finalRenderOptions.showProgress
+        ) {
+          const progressInterval = setInterval(() => {
+            const state = toolExecutionStates.get(toolCallId);
+            if (state && state.state === 'call' && (state.progress || 0) < 90) {
+              const newProgress = Math.min(
+                90,
+                (state.progress || 0) + Math.random() * 20
+              );
+              updateExecutionState(toolCallId, { progress: newProgress });
+              onToolProgress?.(toolCall, newProgress);
+            }
+          }, 500);
+
+          setTimeout(
+            () => clearInterval(progressInterval),
+            finalRenderOptions.executionTimeout - 1000
+          );
         }
-        
-        // Schedule retry
-        const retryTimeoutId = setTimeout(() => {
-          executeTool(tool, args);
-          retryTimeouts.current.delete(toolCallId);
-        }, finalRenderOptions.retryDelay * retryCount); // Exponential backoff
-        
-        retryTimeouts.current.set(toolCallId, retryTimeoutId);
-        
-      } else {
-        onToolError?.(toolCall, errorObj);
-        
-        if (debug) {
-          console.error('Tool execution failed after retries:', errorObj);
+
+        // Execute the tool
+        let result;
+        if (tool.handler) {
+          result = await tool.handler(args);
+        } else {
+          // Fallback to chat hook tool invocation if available
+          result = await chatHook.invokeTools?.([tool]);
         }
+
+        // Clear timeout
+        clearTimeout(timeoutId);
+        executionTimeouts.current.delete(toolCallId);
+
+        // Update execution state with result
+        const endTime = new Date();
+        const duration =
+          endTime.getTime() -
+          (toolExecutionStates.get(toolCallId)?.startTime?.getTime() ||
+            endTime.getTime());
+
+        updateExecutionState(toolCallId, {
+          state: 'result',
+          endTime,
+          duration,
+          progress: 100,
+          result,
+        });
+
+        // Store in cache
+        storeInCache(tool.name, args, result);
+
+        // Add to execution history
+        if (enableExecutionHistory) {
+          setExecutionHistory((prev) => [
+            { ...toolCall, result },
+            ...prev.slice(0, 99),
+          ]);
+        }
+
+        // Complete tool execution
+        toolCall.result = result;
+        toolCall.state = 'result';
+        onToolComplete?.(toolCall, result);
+
+        if (debug) {
+          console.log('Tool execution completed:', {
+            tool: tool.name,
+            result,
+            duration,
+          });
+        }
+
+        return result;
+      } catch (error) {
+        const errorObj =
+          error instanceof Error ? error : new Error('Tool execution failed');
+
+        // Clear timeout
+        clearTimeout(timeoutId);
+        executionTimeouts.current.delete(toolCallId);
+
+        // Update execution state with error
+        updateExecutionState(toolCallId, {
+          state: 'error',
+          endTime: new Date(),
+          lastError: errorObj,
+        });
+
+        // Handle retry logic
+        const currentState = toolExecutionStates.get(toolCallId);
+        const retryCount = (currentState?.retryCount || 0) + 1;
+
+        if (
+          finalRenderOptions.autoRetry &&
+          retryCount <= finalRenderOptions.maxRetries
+        ) {
+          updateExecutionState(toolCallId, { retryCount });
+
+          if (debug) {
+            console.log(
+              `Tool execution failed, retrying ${retryCount}/${finalRenderOptions.maxRetries}:`,
+              errorObj
+            );
+          }
+
+          // Schedule retry
+          const retryTimeoutId = setTimeout(() => {
+            executeTool(tool, args);
+            retryTimeouts.current.delete(toolCallId);
+          }, finalRenderOptions.retryDelay * retryCount); // Exponential backoff
+
+          retryTimeouts.current.set(toolCallId, retryTimeoutId);
+        } else {
+          onToolError?.(toolCall, errorObj);
+
+          if (debug) {
+            console.error('Tool execution failed after retries:', errorObj);
+          }
+        }
+
+        throw errorObj;
+      } finally {
+        setIsExecuting(false);
       }
-      
-      throw errorObj;
-      
-    } finally {
-      setIsExecuting(false);
-    }
-  }, [
-    checkCache,
-    updateExecutionState,
-    finalRenderOptions,
-    onToolStart,
-    onToolComplete,
-    onToolError,
-    onToolProgress,
-    toolExecutionStates,
-    chatHook,
-    storeInCache,
-    enableExecutionHistory,
-    debug
-  ]);
-  
+    },
+    [
+      checkCache,
+      updateExecutionState,
+      finalRenderOptions,
+      onToolStart,
+      onToolComplete,
+      onToolError,
+      onToolProgress,
+      toolExecutionStates,
+      chatHook,
+      storeInCache,
+      enableExecutionHistory,
+      debug,
+    ]
+  );
+
   // Handle tool selection/execution
-  const handleToolSelect = useCallback((tool: ConciergusToolDefinition, args?: any) => {
-    onToolSelect?.(tool);
-    executeTool(tool, args);
-  }, [onToolSelect, executeTool]);
-  
+  const handleToolSelect = useCallback(
+    (tool: ConciergusToolDefinition, args?: any) => {
+      onToolSelect?.(tool);
+      executeTool(tool, args);
+    },
+    [onToolSelect, executeTool]
+  );
+
   // Filter and sort tools
   const filteredAndSortedTools = useMemo(() => {
     let filtered = tools;
-    
+
     // Apply search filter
     if (enableToolSearch && searchFilter) {
-      filtered = filtered.filter(tool =>
-        tool.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        tool.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
-        tool.uiConfig?.tags?.some(tag => tag.toLowerCase().includes(searchFilter.toLowerCase()))
+      filtered = filtered.filter(
+        (tool) =>
+          tool.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+          tool.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
+          tool.uiConfig?.tags?.some((tag) =>
+            tag.toLowerCase().includes(searchFilter.toLowerCase())
+          )
       );
     }
-    
+
     // Apply category filter
     if (enableCategoryFilter && categoryFilter !== 'all') {
-      filtered = filtered.filter(tool => tool.uiConfig?.category === categoryFilter);
+      filtered = filtered.filter(
+        (tool) => tool.uiConfig?.category === categoryFilter
+      );
     }
-    
+
     // Apply sorting
     filtered.sort((a, b) => {
       const direction = finalRenderOptions.sortDirection === 'desc' ? -1 : 1;
-      
+
       switch (finalRenderOptions.sortBy) {
         case 'name':
           return direction * a.name.localeCompare(b.name);
@@ -992,7 +1055,7 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
           return 0;
       }
     });
-    
+
     // Limit display count
     return filtered.slice(0, maxToolsDisplay);
   }, [
@@ -1003,28 +1066,28 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
     categoryFilter,
     finalRenderOptions.sortBy,
     finalRenderOptions.sortDirection,
-    maxToolsDisplay
+    maxToolsDisplay,
   ]);
-  
+
   // Get unique categories for filter
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       if (tool.uiConfig?.category) {
         cats.add(tool.uiConfig.category);
       }
     });
     return Array.from(cats);
   }, [tools]);
-  
+
   // Clean up timeouts on unmount
   useEffect(() => {
     return () => {
-      executionTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      retryTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      executionTimeouts.current.forEach((timeout) => clearTimeout(timeout));
+      retryTimeouts.current.forEach((timeout) => clearTimeout(timeout));
     };
   }, []);
-  
+
   // Component classes
   const componentClasses = [
     'conciergus-tool-ui-renderer',
@@ -1033,13 +1096,15 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
     isExecuting ? 'executing' : '',
     finalRenderOptions.compact ? 'compact' : '',
     finalRenderOptions.enableAnimations ? 'animated' : '',
-    className
-  ].filter(Boolean).join(' ');
-  
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   // Render tool search and filters
   const renderFilters = () => {
     if (!enableToolSearch && !enableCategoryFilter) return null;
-    
+
     return (
       <div className="tool-ui-filters">
         {enableToolSearch && (
@@ -1053,7 +1118,7 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
             />
           </div>
         )}
-        
+
         {enableCategoryFilter && categories.length > 0 && (
           <div className="tool-category-filter">
             <select
@@ -1062,7 +1127,7 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
               className="tool-category-select"
             >
               <option value="all">All Categories</option>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>
@@ -1073,19 +1138,21 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
       </div>
     );
   };
-  
+
   // Render tools based on mode
   const renderTools = () => {
     switch (finalRenderOptions.mode) {
       case 'buttons':
         return (
           <div className="tool-ui-buttons">
-            {filteredAndSortedTools.map(tool => (
+            {filteredAndSortedTools.map((tool) => (
               <ToolButtonComponent
                 key={tool.name}
                 tool={tool}
                 executionState={toolExecutionStates.get(tool.name)}
-                onClick={(selectedTool, args) => handleToolSelect(selectedTool, args)}
+                onClick={(selectedTool, args) =>
+                  handleToolSelect(selectedTool, args)
+                }
                 disabled={disabled}
                 isLoading={isExecuting}
                 className="tool-ui-button"
@@ -1093,16 +1160,18 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
             ))}
           </div>
         );
-      
+
       case 'forms':
         return (
           <div className="tool-ui-forms">
-            {filteredAndSortedTools.map(tool => (
+            {filteredAndSortedTools.map((tool) => (
               <ToolFormComponent
                 key={tool.name}
                 tool={tool}
                 executionState={toolExecutionStates.get(tool.name)}
-                onSubmit={(selectedTool, args) => handleToolSelect(selectedTool, args)}
+                onSubmit={(selectedTool, args) =>
+                  handleToolSelect(selectedTool, args)
+                }
                 disabled={disabled}
                 isLoading={isExecuting}
                 className="tool-ui-form"
@@ -1110,11 +1179,11 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
             ))}
           </div>
         );
-      
+
       case 'cards':
         return (
           <div className="tool-ui-cards">
-            {filteredAndSortedTools.map(tool => {
+            {filteredAndSortedTools.map((tool) => {
               const executionState = toolExecutionStates.get(tool.name);
               return (
                 <div key={tool.name} className="tool-ui-card">
@@ -1122,22 +1191,30 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
                     <h3 className="tool-card-title">{tool.name}</h3>
                     <p className="tool-card-description">{tool.description}</p>
                   </div>
-                  
+
                   <div className="tool-card-content">
                     <ToolButtonComponent
                       tool={tool}
                       executionState={executionState}
-                      onClick={(selectedTool, args) => handleToolSelect(selectedTool, args)}
+                      onClick={(selectedTool, args) =>
+                        handleToolSelect(selectedTool, args)
+                      }
                       disabled={disabled}
                       isLoading={isExecuting}
                       className="tool-card-button"
                     />
                   </div>
-                  
+
                   {executionState?.result && finalRenderOptions.showResults && (
                     <div className="tool-card-result">
                       <ToolResultComponent
-                        toolCall={{ id: tool.name, name: tool.name, args: {} } as ToolCall}
+                        toolCall={
+                          {
+                            id: tool.name,
+                            name: tool.name,
+                            args: {},
+                          } as ToolCall
+                        }
                         executionState={executionState}
                         result={executionState.result}
                         mode={finalRenderOptions.mode}
@@ -1151,55 +1228,57 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
             })}
           </div>
         );
-      
+
       default:
         return renderTools(); // Fallback to buttons mode
     }
   };
-  
+
   // Render function calls from AI SDK 5
   const renderFunctionCalls = () => {
     if (functionCalls.length === 0) return null;
-    
+
     return (
       <div className="tool-ui-function-calls">
         <h3 className="function-calls-title">Active Function Calls</h3>
-        {functionCalls.map(call => {
+        {functionCalls.map((call) => {
           const executionState = toolExecutionStates.get(call.id) || {
             id: call.id,
             state: call.state,
-            result: call.result
+            result: call.result,
           };
-          
+
           return (
             <div key={call.id} className="function-call-item">
-              {finalRenderOptions.showProgress && 
-               (call.state === 'call' || call.state === 'streaming') && (
-                <ProgressComponent
-                  toolCall={call}
-                  progress={executionState.progress || 0}
-                  className="function-call-progress"
-                />
-              )}
-              
-              {call.state === 'result' && call.result && finalRenderOptions.showResults && (
-                <ToolResultComponent
-                  toolCall={call}
-                  executionState={executionState}
-                  result={call.result}
-                  mode={finalRenderOptions.mode}
-                  showMetadata={finalRenderOptions.showMetadata}
-                  className="function-call-result"
-                />
-              )}
-              
+              {finalRenderOptions.showProgress &&
+                (call.state === 'call' || call.state === 'streaming') && (
+                  <ProgressComponent
+                    toolCall={call}
+                    progress={executionState.progress || 0}
+                    className="function-call-progress"
+                  />
+                )}
+
+              {call.state === 'result' &&
+                call.result &&
+                finalRenderOptions.showResults && (
+                  <ToolResultComponent
+                    toolCall={call}
+                    executionState={executionState}
+                    result={call.result}
+                    mode={finalRenderOptions.mode}
+                    showMetadata={finalRenderOptions.showMetadata}
+                    className="function-call-result"
+                  />
+                )}
+
               {call.state === 'error' && call.error && (
                 <ErrorComponent
                   toolCall={call}
                   error={call.error}
                   onRetry={() => {
                     // Find tool and re-execute
-                    const tool = tools.find(t => t.name === call.name);
+                    const tool = tools.find((t) => t.name === call.name);
                     if (tool) {
                       executeTool(tool, call.args);
                     }
@@ -1213,9 +1292,9 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
       </div>
     );
   };
-  
+
   return (
-    <div 
+    <div
       className={componentClasses}
       aria-label={ariaLabel}
       aria-describedby={ariaDescription ? 'tool-ui-description' : undefined}
@@ -1223,7 +1302,7 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
     >
       {/* Filters */}
       {renderFilters()}
-      
+
       {/* Available tools */}
       {filteredAndSortedTools.length > 0 && (
         <div className="tool-ui-section">
@@ -1231,10 +1310,10 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
           {renderTools()}
         </div>
       )}
-      
+
       {/* Function calls */}
       {renderFunctionCalls()}
-      
+
       {/* Execution history */}
       {enableExecutionHistory && executionHistory.length > 0 && (
         <div className="tool-ui-history">
@@ -1244,14 +1323,15 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
               <div key={`${call.id}-${index}`} className="tool-ui-history-item">
                 <span className="history-tool-name">{call.name}</span>
                 <span className="history-tool-time">
-                  {new Date().toLocaleTimeString()} {/* Would use actual timestamp */}
+                  {new Date().toLocaleTimeString()}{' '}
+                  {/* Would use actual timestamp */}
                 </span>
               </div>
             ))}
           </div>
         </div>
       )}
-      
+
       {/* Accessibility description */}
       {ariaDescription && (
         <div id="tool-ui-description" className="sr-only">
@@ -1262,4 +1342,4 @@ export const ConciergusToolUIRenderer: React.FC<ConciergusToolUIRendererProps> =
   );
 };
 
-export default ConciergusToolUIRenderer; 
+export default ConciergusToolUIRenderer;

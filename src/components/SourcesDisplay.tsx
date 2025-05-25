@@ -59,11 +59,11 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
 
   // Filter and sort sources
   const processedSources = React.useMemo(() => {
-    let filtered = sources.filter(source => {
+    const filtered = sources.filter((source) => {
       // Text filter
       if (filter) {
         const searchText = filter.toLowerCase();
-        const matchesText = 
+        const matchesText =
           source.title?.toLowerCase().includes(searchText) ||
           source.url?.toLowerCase().includes(searchText) ||
           source.snippet?.toLowerCase().includes(searchText) ||
@@ -72,7 +72,11 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
       }
 
       // Type filter
-      if (selectedTypes.size > 0 && source.type && !selectedTypes.has(source.type)) {
+      if (
+        selectedTypes.size > 0 &&
+        source.type &&
+        !selectedTypes.has(source.type)
+      ) {
         return false;
       }
 
@@ -98,21 +102,29 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
     // Limit sources if specified
     const limit = showAllSources ? undefined : maxSources;
     return limit ? filtered.slice(0, limit) : filtered;
-  }, [sources, filter, selectedTypes, currentSortBy, maxSources, showAllSources]);
+  }, [
+    sources,
+    filter,
+    selectedTypes,
+    currentSortBy,
+    maxSources,
+    showAllSources,
+  ]);
 
   // Group sources if specified
   const groupedSources = React.useMemo(() => {
     if (!groupBy) return { 'All Sources': processedSources };
 
     const groups: Record<string, Source[]> = {};
-    processedSources.forEach(source => {
+    processedSources.forEach((source) => {
       let groupKey = 'Unknown';
-      
+
       if (groupBy === 'type') {
         groupKey = source.type || 'Unknown Type';
       } else if (groupBy === 'domain') {
-        groupKey = source.metadata?.domain || 
-                  (source.url ? new URL(source.url).hostname : 'Unknown Domain');
+        groupKey =
+          source.metadata?.domain ||
+          (source.url ? new URL(source.url).hostname : 'Unknown Domain');
       }
 
       if (!groups[groupKey]) {
@@ -127,24 +139,33 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
   // Get source type icon
   const getSourceTypeIcon = (type?: string) => {
     switch (type) {
-      case 'web': return '🌐';
-      case 'document': return '📄';
-      case 'knowledge_base': return '📚';
-      case 'database': return '🗃️';
-      case 'api': return '🔌';
-      default: return '📋';
+      case 'web':
+        return '🌐';
+      case 'document':
+        return '📄';
+      case 'knowledge_base':
+        return '📚';
+      case 'database':
+        return '🗃️';
+      case 'api':
+        return '🔌';
+      default:
+        return '📋';
     }
   };
 
   // Get relevance score indicator
   const getRelevanceIndicator = (score?: number) => {
     if (!score || !showRelevanceScores) return null;
-    
+
     const percentage = Math.round(score * 100);
     const level = score > 0.8 ? 'high' : score > 0.5 ? 'medium' : 'low';
-    
+
     return (
-      <span className={`relevance-score ${level}`} title={`Relevance: ${percentage}%`}>
+      <span
+        className={`relevance-score ${level}`}
+        title={`Relevance: ${percentage}%`}
+      >
         {percentage}%
       </span>
     );
@@ -161,7 +182,9 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
       >
         <div className="source-header">
           <div className="source-header-left">
-            <span className="source-icon">{getSourceTypeIcon(source.type)}</span>
+            <span className="source-icon">
+              {getSourceTypeIcon(source.type)}
+            </span>
             <span className="source-title">
               {source.url ? (
                 <a
@@ -192,9 +215,7 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
             {(source.author || source.publishedAt) && (
               <div className="source-meta">
                 {source.author && (
-                  <span className="source-author">
-                    👤 {source.author}
-                  </span>
+                  <span className="source-author">👤 {source.author}</span>
                 )}
                 {source.publishedAt && (
                   <span className="source-date">
@@ -208,10 +229,9 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
             {showSnippets && source.snippet && (
               <div className="source-snippet">
                 <div className="snippet-content">
-                  {source.snippet.length > 200 
-                    ? `${source.snippet.substring(0, 200)}...` 
-                    : source.snippet
-                  }
+                  {source.snippet.length > 200
+                    ? `${source.snippet.substring(0, 200)}...`
+                    : source.snippet}
                 </div>
               </div>
             )}
@@ -260,7 +280,9 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
   const renderFilters = () => {
     if (!enableFiltering) return null;
 
-    const availableTypes = Array.from(new Set(sources.map(s => s.type).filter(Boolean)));
+    const availableTypes = Array.from(
+      new Set(sources.map((s) => s.type).filter(Boolean))
+    );
 
     return (
       <div className="sources-filters">
@@ -284,7 +306,7 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
         </div>
         {availableTypes.length > 1 && (
           <div className="filter-types">
-            {availableTypes.map(type => (
+            {availableTypes.map((type) => (
               <label key={type} className="type-filter">
                 <input
                   type="checkbox"
@@ -318,14 +340,14 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
       <div className={`sources-display compact ${className}`} {...rest}>
         <div className="compact-header">
           <span className="compact-icon">📚</span>
-          <span className="compact-title">
-            Sources ({sources.length})
-          </span>
+          <span className="compact-title">Sources ({sources.length})</span>
         </div>
         <div className="compact-sources">
           {processedSources.map((source, index) => (
             <div key={source.id || index} className="compact-source">
-              <span className="compact-source-icon">{getSourceTypeIcon(source.type)}</span>
+              <span className="compact-source-icon">
+                {getSourceTypeIcon(source.type)}
+              </span>
               <span className="compact-source-title">
                 {source.url ? (
                   <a
@@ -381,14 +403,18 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
                 <span className="group-count">({groupSources.length})</span>
               </div>
               <div className="group-sources">
-                {groupSources.map((source, index) => renderSource(source, index))}
+                {groupSources.map((source, index) =>
+                  renderSource(source, index)
+                )}
               </div>
             </div>
           ))
         ) : (
           // Simple list view
           <div className="sources-list">
-            {processedSources.map((source, index) => renderSource(source, index))}
+            {processedSources.map((source, index) =>
+              renderSource(source, index)
+            )}
           </div>
         )}
 
@@ -407,4 +433,4 @@ export const SourcesDisplay: FC<SourcesDisplayProps> = ({
   );
 };
 
-export default SourcesDisplay; 
+export default SourcesDisplay;

@@ -4,43 +4,50 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AssetOptimizer, type ImageOptimizationOptions } from './AssetOptimizer';
+import {
+  AssetOptimizer,
+  type ImageOptimizationOptions,
+} from './AssetOptimizer';
 
 /**
  * Optimized image props
  */
-export interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'sizes'> {
+export interface OptimizedImageProps
+  extends Omit<
+    React.ImgHTMLAttributes<HTMLImageElement>,
+    'src' | 'srcSet' | 'sizes'
+  > {
   src: string;
   alt: string;
-  
+
   // Optimization options
   width?: number;
   height?: number;
   quality?: number;
   format?: 'webp' | 'avif' | 'jpeg' | 'png';
   fit?: 'cover' | 'contain' | 'fill' | 'scale-down';
-  
+
   // Responsive options
   responsive?: boolean;
   breakpoints?: Array<{ minWidth: string; size: string }>;
   customSizes?: string;
-  
+
   // Loading options
   lazy?: boolean;
   blur?: boolean;
   blurDataUrl?: string;
   placeholder?: React.ReactNode;
-  
+
   // Performance options
   priority?: boolean; // Preload critical images
   unoptimized?: boolean; // Skip optimization
-  
+
   // Event handlers
   onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onError?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onLoadStart?: () => void;
   onLoadComplete?: (naturalWidth: number, naturalHeight: number) => void;
-  
+
   // Asset optimizer instance
   optimizer?: AssetOptimizer;
 }
@@ -77,9 +84,12 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [naturalDimensions, setNaturalDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [naturalDimensions, setNaturalDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [isIntersecting, setIsIntersecting] = useState(!lazy || priority);
-  
+
   const imgRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadStartTimeRef = useRef<number>(0);
@@ -121,13 +131,23 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       };
 
       const optimizedSrc = optimizer.optimizeImageUrl(src, optimizationOptions);
-      
+
       optimizer.preloadAsset(optimizedSrc, {
         as: 'image',
         crossorigin: 'anonymous',
       });
     }
-  }, [priority, optimizer, src, width, height, quality, format, fit, unoptimized]);
+  }, [
+    priority,
+    optimizer,
+    src,
+    width,
+    height,
+    quality,
+    format,
+    fit,
+    unoptimized,
+  ]);
 
   // Generate optimized URLs
   const getOptimizedUrls = useCallback(() => {
@@ -157,7 +177,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         format,
         fit,
       });
-      
+
       sizes = customSizes || optimizer.generateSizes(breakpoints);
     }
 
@@ -166,7 +186,19 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       srcSet,
       sizes,
     };
-  }, [src, width, height, quality, format, fit, responsive, customSizes, breakpoints, optimizer, unoptimized]);
+  }, [
+    src,
+    width,
+    height,
+    quality,
+    format,
+    fit,
+    responsive,
+    customSizes,
+    breakpoints,
+    optimizer,
+    unoptimized,
+  ]);
 
   // Handle image load start
   const handleLoadStart = useCallback(() => {
@@ -177,48 +209,54 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [onLoadStart]);
 
   // Handle image load
-  const handleLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const img = event.currentTarget;
-    const loadTime = performance.now() - loadStartTimeRef.current;
-    
-    setIsLoaded(true);
-    setIsLoading(false);
-    setNaturalDimensions({
-      width: img.naturalWidth,
-      height: img.naturalHeight,
-    });
+  const handleLoad = useCallback(
+    (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const img = event.currentTarget;
+      const loadTime = performance.now() - loadStartTimeRef.current;
 
-    // Record load metrics
-    if (optimizer) {
-      // This would be recorded automatically by the performance observer
-      // but we can emit a custom event with additional context
-      optimizer.emit('image-loaded', {
-        src,
-        loadTime,
-        naturalWidth: img.naturalWidth,
-        naturalHeight: img.naturalHeight,
-        optimized: !unoptimized,
+      setIsLoaded(true);
+      setIsLoading(false);
+      setNaturalDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
       });
-    }
 
-    onLoad?.(event);
-    onLoadComplete?.(img.naturalWidth, img.naturalHeight);
-  }, [src, optimizer, unoptimized, onLoad, onLoadComplete]);
+      // Record load metrics
+      if (optimizer) {
+        // This would be recorded automatically by the performance observer
+        // but we can emit a custom event with additional context
+        optimizer.emit('image-loaded', {
+          src,
+          loadTime,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          optimized: !unoptimized,
+        });
+      }
+
+      onLoad?.(event);
+      onLoadComplete?.(img.naturalWidth, img.naturalHeight);
+    },
+    [src, optimizer, unoptimized, onLoad, onLoadComplete]
+  );
 
   // Handle image error
-  const handleError = useCallback((event: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setHasError(true);
-    setIsLoading(false);
-    
-    if (optimizer) {
-      optimizer.emit('image-error', {
-        src,
-        error: 'Failed to load image',
-      });
-    }
+  const handleError = useCallback(
+    (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      setHasError(true);
+      setIsLoading(false);
 
-    onError?.(event);
-  }, [src, optimizer, onError]);
+      if (optimizer) {
+        optimizer.emit('image-error', {
+          src,
+          error: 'Failed to load image',
+        });
+      }
+
+      onError?.(event);
+    },
+    [src, optimizer, onError]
+  );
 
   // Get blur data URL
   const getBlurDataUrl = useCallback(() => {
@@ -265,13 +303,13 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   // Generate component classes
   const getClasses = useCallback(() => {
     const classes = [className].filter(Boolean);
-    
+
     if (isLoading) classes.push('optimized-image--loading');
     if (isLoaded) classes.push('optimized-image--loaded');
     if (hasError) classes.push('optimized-image--error');
     if (lazy) classes.push('optimized-image--lazy');
     if (responsive) classes.push('optimized-image--responsive');
-    
+
     return classes.join(' ');
   }, [className, isLoading, isLoaded, hasError, lazy, responsive]);
 
@@ -341,7 +379,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           aria-hidden="true"
         />
       )}
-      
+
       {/* Main image */}
       <img
         {...props}
@@ -372,4 +410,4 @@ OptimizedImage.defaultProps = {
   fit: 'cover',
 };
 
-export default OptimizedImage; 
+export default OptimizedImage;

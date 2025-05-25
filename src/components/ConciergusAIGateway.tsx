@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { FC } from 'react';
-import { 
-  useGateway, 
-  useGatewayModel, 
-  useSmartModel, 
+import {
+  useGateway,
+  useGatewayModel,
+  useSmartModel,
   useCostOptimizedModel,
-  GatewayAuthStatus 
+  GatewayAuthStatus,
 } from '../context/GatewayProvider';
-import { usePerformanceMonitor, useIntelligentModelSelection } from '../context/FallbackHooks';
-import type { 
-  GatewayConfig, 
-  GatewayModelConfig, 
-  FallbackChainConfig 
+import {
+  usePerformanceMonitor,
+  useIntelligentModelSelection,
+} from '../context/FallbackHooks';
+import type {
+  GatewayConfig,
+  GatewayModelConfig,
+  FallbackChainConfig,
 } from '../context/GatewayConfig';
 
 /**
@@ -88,7 +91,7 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
     estimateCost,
     recommendCostOptimized,
     telemetryEnabled,
-    setTelemetryEnabled
+    setTelemetryEnabled,
   } = useGateway();
 
   // Local state for UI management
@@ -96,17 +99,17 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
   const [selectedChain, setSelectedChain] = useState(currentChain);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [costEstimate, setCostEstimate] = useState(0);
-  
+
   // Real-time performance monitoring
-  const { 
-    metrics: performanceMetrics, 
-    topPerformer, 
-    worstPerformer, 
-    averageResponseTime, 
+  const {
+    metrics: performanceMetrics,
+    topPerformer,
+    worstPerformer,
+    averageResponseTime,
     overallSuccessRate,
-    refresh: refreshMetrics 
+    refresh: refreshMetrics,
   } = usePerformanceMonitor(5000);
-  
+
   // Intelligent model selection
   const { analyzeAndSelectModel } = useIntelligentModelSelection();
 
@@ -118,7 +121,7 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
     provider?: string;
   }>({
     capabilities: ['text'],
-    costTier: 'medium'
+    costTier: 'medium',
   });
 
   // Update cost estimate when model changes
@@ -129,24 +132,31 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
   }, [selectedModel, estimateCost, onCostUpdate]);
 
   // Handle model change
-  const handleModelChange = useCallback((modelId: string) => {
-    setSelectedModel(modelId);
-    setCurrentModel(modelId);
-    onModelChange?.(modelId);
-  }, [setCurrentModel, onModelChange]);
+  const handleModelChange = useCallback(
+    (modelId: string) => {
+      setSelectedModel(modelId);
+      setCurrentModel(modelId);
+      onModelChange?.(modelId);
+    },
+    [setCurrentModel, onModelChange]
+  );
 
   // Handle fallback chain change
-  const handleChainChange = useCallback((chainName: string) => {
-    setSelectedChain(chainName);
-    setCurrentChain(chainName);
-  }, [setCurrentChain]);
+  const handleChainChange = useCallback(
+    (chainName: string) => {
+      setSelectedChain(chainName);
+      setCurrentChain(chainName);
+    },
+    [setCurrentChain]
+  );
 
   // Smart model selection
   const { modelId: smartModelId } = useSmartModel(smartRequirements);
-  const { modelId: costOptimizedModelId, estimatedCost } = useCostOptimizedModel({
-    capabilities: smartRequirements.capabilities,
-    maxTokens: smartRequirements.maxTokens
-  });
+  const { modelId: costOptimizedModelId, estimatedCost } =
+    useCostOptimizedModel({
+      capabilities: smartRequirements.capabilities,
+      maxTokens: smartRequirements.maxTokens,
+    });
 
   // Apply smart model selection
   const applySmartSelection = () => {
@@ -163,8 +173,10 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
     'conciergus-ai-gateway',
     compactView ? 'compact' : '',
     !isAuthenticated ? 'unauthenticated' : '',
-    className
-  ].filter(Boolean).join(' ');
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={containerClasses} {...rest}>
@@ -211,7 +223,7 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                 ))}
               </select>
             </div>
-            
+
             {/* Model Info */}
             {availableModels[selectedModel] && (
               <div className="model-info">
@@ -223,7 +235,8 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                     Cost: {availableModels[selectedModel].costTier}
                   </span>
                   <span className="model-capabilities">
-                    Capabilities: {Object.entries(availableModels[selectedModel].capabilities)
+                    Capabilities:{' '}
+                    {Object.entries(availableModels[selectedModel].capabilities)
                       .filter(([_, enabled]) => enabled)
                       .map(([cap, _]) => cap)
                       .join(', ')}
@@ -248,21 +261,25 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
             <div className="requirement-group">
               <label>Capabilities:</label>
               <div className="capability-checkboxes">
-                {(['text', 'vision', 'function_calling', 'reasoning'] as const).map(cap => (
+                {(
+                  ['text', 'vision', 'function_calling', 'reasoning'] as const
+                ).map((cap) => (
                   <label key={cap} className="checkbox-label">
                     <input
                       type="checkbox"
                       checked={smartRequirements.capabilities.includes(cap)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSmartRequirements(prev => ({
+                          setSmartRequirements((prev) => ({
                             ...prev,
-                            capabilities: [...prev.capabilities, cap]
+                            capabilities: [...prev.capabilities, cap],
                           }));
                         } else {
-                          setSmartRequirements(prev => ({
+                          setSmartRequirements((prev) => ({
                             ...prev,
-                            capabilities: prev.capabilities.filter(c => c !== cap)
+                            capabilities: prev.capabilities.filter(
+                              (c) => c !== cap
+                            ),
                           }));
                         }
                       }}
@@ -272,16 +289,18 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                 ))}
               </div>
             </div>
-            
+
             <div className="requirement-group">
               <label htmlFor="cost-tier-select">Cost Tier:</label>
               <select
                 id="cost-tier-select"
                 value={smartRequirements.costTier}
-                onChange={(e) => setSmartRequirements(prev => ({
-                  ...prev,
-                  costTier: e.target.value as GatewayModelConfig['costTier']
-                }))}
+                onChange={(e) =>
+                  setSmartRequirements((prev) => ({
+                    ...prev,
+                    costTier: e.target.value as GatewayModelConfig['costTier'],
+                  }))
+                }
               >
                 <option value="low">Low Cost</option>
                 <option value="medium">Medium Cost</option>
@@ -289,7 +308,7 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
               </select>
             </div>
           </div>
-          
+
           <div className="smart-recommendations">
             <div className="recommendation">
               <strong>Smart Recommendation:</strong> {smartModelId}
@@ -297,12 +316,17 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                 Apply
               </button>
             </div>
-            
+
             {showCostOptimization && (
               <div className="recommendation">
-                <strong>Cost Optimized:</strong> {costOptimizedModelId} 
-                <span className="cost-score">(Cost Score: {estimatedCost}/10)</span>
-                <button onClick={applyCostOptimized} disabled={!isAuthenticated}>
+                <strong>Cost Optimized:</strong> {costOptimizedModelId}
+                <span className="cost-score">
+                  (Cost Score: {estimatedCost}/10)
+                </span>
+                <button
+                  onClick={applyCostOptimized}
+                  disabled={!isAuthenticated}
+                >
                   Apply
                 </button>
               </div>
@@ -331,23 +355,28 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                 ))}
               </select>
             </div>
-            
+
             {/* Chain Details */}
             {availableChains[selectedChain] && (
               <div className="chain-details">
                 <div className="chain-models">
                   <strong>Models in chain:</strong>
                   <ol>
-                    {availableChains[selectedChain].models.map((modelId, index) => (
-                      <li key={index}>
-                        {availableModels[modelId]?.name || modelId}
-                        {index === 0 && <span className="primary-badge">Primary</span>}
-                      </li>
-                    ))}
+                    {availableChains[selectedChain].models.map(
+                      (modelId, index) => (
+                        <li key={index}>
+                          {availableModels[modelId]?.name || modelId}
+                          {index === 0 && (
+                            <span className="primary-badge">Primary</span>
+                          )}
+                        </li>
+                      )
+                    )}
                   </ol>
                 </div>
                 <div className="chain-use-case">
-                  <strong>Use Case:</strong> {availableChains[selectedChain].useCase}
+                  <strong>Use Case:</strong>{' '}
+                  {availableChains[selectedChain].useCase}
                 </div>
               </div>
             )}
@@ -364,19 +393,21 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
               <span className="cost-label">Current Model Cost Score:</span>
               <span className="cost-value">{costEstimate}/10</span>
               <div className="cost-bar">
-                <div 
-                  className="cost-fill" 
+                <div
+                  className="cost-fill"
                   style={{ width: `${(costEstimate / 10) * 100}%` }}
                 />
               </div>
             </div>
-            
+
             <div className="cost-optimization">
               <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={config.costOptimization}
-                  onChange={(e) => updateConfig({ costOptimization: e.target.checked })}
+                  onChange={(e) =>
+                    updateConfig({ costOptimization: e.target.checked })
+                  }
                 />
                 Enable Cost Optimization
               </label>
@@ -394,47 +425,68 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
               🔄 Refresh
             </button>
           </div>
-          
+
           {/* Summary Stats */}
           {performanceMetrics.length > 0 && (
             <div className="metrics-summary">
               <div className="summary-stat">
                 <span className="stat-label">Overall Success Rate:</span>
-                <span className="stat-value">{(overallSuccessRate * 100).toFixed(1)}%</span>
+                <span className="stat-value">
+                  {(overallSuccessRate * 100).toFixed(1)}%
+                </span>
               </div>
               <div className="summary-stat">
                 <span className="stat-label">Average Response Time:</span>
-                <span className="stat-value">{averageResponseTime.toFixed(0)}ms</span>
+                <span className="stat-value">
+                  {averageResponseTime.toFixed(0)}ms
+                </span>
               </div>
               <div className="summary-stat">
                 <span className="stat-label">Top Performer:</span>
-                <span className="stat-value">{topPerformer ? availableModels[topPerformer]?.name || topPerformer : 'N/A'}</span>
+                <span className="stat-value">
+                  {topPerformer
+                    ? availableModels[topPerformer]?.name || topPerformer
+                    : 'N/A'}
+                </span>
               </div>
             </div>
           )}
-          
+
           {/* Detailed Metrics */}
           <div className="metrics-grid">
             {performanceMetrics.length > 0 ? (
               performanceMetrics.map((metric) => (
                 <div key={metric.modelId} className="metric-card">
                   <div className="metric-header">
-                    <strong>{availableModels[metric.modelId]?.name || metric.modelId}</strong>
-                    {metric.modelId === topPerformer && <span className="top-performer-badge">🏆</span>}
-                    {metric.modelId === worstPerformer && <span className="worst-performer-badge">⚠️</span>}
+                    <strong>
+                      {availableModels[metric.modelId]?.name || metric.modelId}
+                    </strong>
+                    {metric.modelId === topPerformer && (
+                      <span className="top-performer-badge">🏆</span>
+                    )}
+                    {metric.modelId === worstPerformer && (
+                      <span className="worst-performer-badge">⚠️</span>
+                    )}
                   </div>
                   <div className="metric-stats">
-                    <div>Success Rate: {(metric.successRate * 100).toFixed(1)}%</div>
-                    <div>Avg Response: {metric.averageResponseTime.toFixed(0)}ms</div>
+                    <div>
+                      Success Rate: {(metric.successRate * 100).toFixed(1)}%
+                    </div>
+                    <div>
+                      Avg Response: {metric.averageResponseTime.toFixed(0)}ms
+                    </div>
                     <div>Total Requests: {metric.totalRequests}</div>
-                    <div>Error Rate: {(metric.errorRate * 100).toFixed(1)}%</div>
+                    <div>
+                      Error Rate: {(metric.errorRate * 100).toFixed(1)}%
+                    </div>
                     <div>Last Used: {metric.lastUsed.toLocaleTimeString()}</div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="no-metrics">
-                No performance data available. Metrics will appear after model usage.
+                No performance data available. Metrics will appear after model
+                usage.
               </div>
             )}
           </div>
@@ -444,13 +496,13 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
       {/* Advanced Configuration */}
       {enableAdvancedConfig && (
         <div className="advanced-config-section">
-          <button 
+          <button
             className="advanced-toggle"
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           >
             {isAdvancedOpen ? '▼' : '▶'} Advanced Configuration
           </button>
-          
+
           {isAdvancedOpen && (
             <div className="advanced-controls">
               <div className="config-group">
@@ -461,10 +513,12 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                   min="1"
                   max="10"
                   value={config.retryAttempts || 3}
-                  onChange={(e) => updateConfig({ retryAttempts: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    updateConfig({ retryAttempts: parseInt(e.target.value) })
+                  }
                 />
               </div>
-              
+
               <div className="config-group">
                 <label htmlFor="timeout">Timeout (ms):</label>
                 <input
@@ -474,10 +528,12 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
                   max="300000"
                   step="1000"
                   value={config.timeout || 30000}
-                  onChange={(e) => updateConfig({ timeout: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    updateConfig({ timeout: parseInt(e.target.value) })
+                  }
                 />
               </div>
-              
+
               <div className="config-group">
                 <label className="checkbox-label">
                   <input
@@ -517,4 +573,4 @@ export const ConciergusAIGateway: FC<ConciergusAIGatewayProps> = ({
   );
 };
 
-export default ConciergusAIGateway; 
+export default ConciergusAIGateway;
