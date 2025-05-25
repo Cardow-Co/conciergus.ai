@@ -1,7 +1,7 @@
 # Task ID: 16
 # Title: Enhance Core Chat Functionality for Production
 # Status: pending
-# Dependencies: 12
+# Dependencies: 20
 # Priority: medium
 # Description: Implement advanced chat features required for production SaaS including multi-agent conversations, persistence, real-time collaboration, message formatting, file attachments, and search capabilities.
 # Details:

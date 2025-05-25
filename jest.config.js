@@ -50,6 +50,9 @@ module.exports = {
     '^dequal$': '<rootDir>/src/test/mocks/dequal.mock.js',
     '^dequal/lite$': '<rootDir>/src/test/mocks/dequal.mock.js',
     
+    // Mock zod to avoid ESM issues
+    '^zod$': '<rootDir>/src/test/mocks/zod.mock.js',
+    
     // Mock aria-query to avoid ESM issues
     '^aria-query$': '<rootDir>/src/test/mocks/aria-query.mock.js',
     
@@ -92,7 +95,7 @@ module.exports = {
   
   // Transform ignore patterns for node_modules
   transformIgnorePatterns: [
-    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize|remark|rehype|micromark|unist|vfile|unified|dedent|@adobe|@testing-library|dom-accessibility-api|dequal|aria-query|@radix-ui|@adobe/css-tools)/)',
+    'node_modules/(?!(ai|@ai-sdk|@vercel/ai-sdk-gateway|react-markdown|remark-gfm|rehype-sanitize|remark|rehype|micromark|unist|vfile|unified|dedent|@adobe|@testing-library|dom-accessibility-api|dequal|aria-query|@radix-ui|@adobe/css-tools|zod)/)',
   ],
   
   // Coverage configuration
