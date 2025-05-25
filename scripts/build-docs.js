@@ -12,19 +12,24 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const yaml = require('js-yaml');
-// Skip importing remark-gfm for now due to module issues
-// const remarkGfm = require('remark-gfm');
-const rehypeSlug = require('rehype-slug');
-const rehypeAutolinkHeadings = require('rehype-autolink-headings');
 
-// Dynamic import for ESM-only modules
-let compile;
-async function loadMdxCompiler() {
+// Dynamic imports for ESM-only modules
+let compile, rehypeSlug, rehypeAutolinkHeadings;
+
+async function loadEsmModules() {
   if (!compile) {
     const mdxModule = await import('@mdx-js/mdx');
     compile = mdxModule.compile;
   }
-  return compile;
+  if (!rehypeSlug) {
+    const rehypeSlugModule = await import('rehype-slug');
+    rehypeSlug = rehypeSlugModule.default;
+  }
+  if (!rehypeAutolinkHeadings) {
+    const rehypeAutolinkHeadingsModule = await import('rehype-autolink-headings');
+    rehypeAutolinkHeadings = rehypeAutolinkHeadingsModule.default;
+  }
+  return { compile, rehypeSlug, rehypeAutolinkHeadings };
 }
 
 // Configuration
@@ -93,8 +98,8 @@ async function processMDXFile(filePath, outputDir) {
     const content = fs.readFileSync(filePath, 'utf8');
     const { frontmatter, content: markdownContent } = extractFrontmatter(content);
     
-    // Ensure MDX compiler is loaded
-    const compilerFunction = await loadMdxCompiler();
+    // Ensure ESM modules are loaded
+    const { compile: compilerFunction } = await loadEsmModules();
     
     // Compile MDX to JavaScript (simplified for compatibility)
     const compiled = await compilerFunction(markdownContent, {
