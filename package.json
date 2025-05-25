@@ -111,7 +111,12 @@
     "dev:helper": "node scripts/dev-helper.js",
     "dev:quick-check": "node scripts/dev-helper.js quick-check",
     "dev:clean-install": "node scripts/dev-helper.js clean-install",
-    "dev:full-test": "node scripts/dev-helper.js full-test"
+    "dev:full-test": "node scripts/dev-helper.js full-test",
+    "roadmap": "node scripts/roadmap-tracker.js",
+    "roadmap:report": "node scripts/roadmap-tracker.js report",
+    "roadmap:next": "node scripts/roadmap-tracker.js next",
+    "roadmap:validate": "node scripts/roadmap-tracker.js validate",
+    "roadmap:issues": "node scripts/roadmap-tracker.js issues"
   },
   "peerDependencies": {
     "react": "^19.1.0",
