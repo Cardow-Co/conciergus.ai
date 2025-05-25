@@ -1,44 +1,68 @@
 // Types Index - Centralized Type Exports for Conciergus AI SDK 5
 // This file provides a single entry point for all TypeScript definitions
 
-// Export all AI SDK 5 enhanced types
-export * from './ai-sdk-5';
-
-// Export conversation types
-export * from './conversation';
-
-// Export utility types and helpers
-export * from './utilities';
-
-// Re-export commonly used types for convenience
+// Export AI SDK 5 enhanced types selectively to avoid conflicts
 export type {
-  // Most commonly used interfaces
-  EnhancedUIMessage as UIMessage,
-  EnhancedStreamPart as StreamPart,
+  // Core AI SDK 5 interfaces
+  EnhancedUIMessage,
+  EnhancedStreamPart,
+  EnhancedMessageListProps,
+  EnhancedMessageItemProps,
   MessageMetadata,
   Source,
   ReasoningStep,
   ToolCall,
   StreamingState,
-
-  // Component prop interfaces
-  EnhancedMessageListProps as MessageListProps,
-  EnhancedMessageItemProps as MessageItemProps,
   MessageMetadataProps,
   ReasoningTraceProps,
   SourcesDisplayProps,
   StreamingIndicatorProps,
-
-  // Type unions for convenience
   StreamPartType,
   StreamingType,
   ReasoningType,
   SourceType,
   ToolCallState,
   TelemetryEventType,
+  
+  // Additional AI SDK 5 types
+  AISDKProvider,
+  AISDKModel,
+  EnhancedChatConfig,
+  StreamingConfig,
+  TelemetryConfig,
+  SecurityConfig,
+  PerformanceConfig,
+  RateLimitConfig,
+  CacheConfig,
+  ErrorHandlingConfig,
+  RetryConfig as AIRetryConfig,
+  ValidationConfig,
+  MetadataConfig,
+  LoggingConfig,
+  DebugConfig,
+  ModelCapabilities,
+  ProviderCapabilities,
+  StreamingCapabilities,
+  TelemetryData,
+  PerformanceMetrics,
+  CostMetrics,
+  ErrorInfo,
+  RetryInfo,
+  CacheInfo,
+  SecurityInfo,
+  ValidationInfo,
+  DebugInfo,
+  LogInfo,
+  AIOperationTelemetry,
+  AITraceContext,
+  AISpanContext,
+  AIMetrics,
+  AILogs,
+  AIEvents,
+  
 } from './ai-sdk-5';
 
-// Re-export conversation types for convenience
+// Export conversation types
 export type {
   Conversation,
   ConversationMessage,
@@ -49,7 +73,7 @@ export type {
   ConversationStats,
 } from './conversation';
 
-// Re-export utility types for convenience
+// Export utility types
 export type {
   // Core utility types
   DeepPartial,
@@ -119,3 +143,11 @@ export type {
   StateMachine,
   Builder,
 } from './utilities';
+
+// Convenience aliases for commonly used types
+export type {
+  EnhancedUIMessage as UIMessage,
+  EnhancedStreamPart as StreamPart,
+  EnhancedMessageListProps as MessageListProps,
+  EnhancedMessageItemProps as MessageItemProps,
+} from './ai-sdk-5';
