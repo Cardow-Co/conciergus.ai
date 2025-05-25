@@ -1,0 +1,72 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@conciergus/chat",
+  "entryPoints": [
+    "src/index.ts",
+    "src/components.ts",
+    "src/hooks.ts"
+  ],
+  "out": "docs/api",
+  "readme": "README.md",
+  "theme": "default",
+  "tsconfig": "tsconfig.typedoc.json",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "excludeExternals": true,
+  "skipErrorChecking": true,
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/test/**",
+    "**/tests/**",
+    "**/__tests__/**",
+    "**/mocks/**",
+    "**/setup.ts",
+    "src/test/**",
+    "src/security/**",
+    "src/telemetry/**",
+    "src/debug/**",
+    "src/errors/**",
+    "src/middleware/**"
+  ],
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Core",
+    "Components", 
+    "Hooks",
+    "Types",
+    "Utilities",
+    "*"
+  ],
+  "groupOrder": [
+    "Classes",
+    "Interfaces", 
+    "Type Aliases",
+    "Functions",
+    "Variables",
+    "*"
+  ],
+  "sort": ["source-order"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "searchInComments": true,
+  "cleanOutputDir": true,
+  "includeVersion": true,
+  "disableSources": false,
+  "sourceLinkTemplate": "https://github.com/conciergus/chat/blob/{gitRevision}/{path}#L{line}",
+  "gitRevision": "main",
+  "githubPages": false,
+  "customCss": "./docs/assets/typedoc-custom.css",
+  "logLevel": "Info",
+  "treatWarningsAsErrors": false,
+  "validation": {
+    "notExported": false,
+    "invalidLink": false,
+    "notDocumented": false
+  }
+} 

@@ -1,0 +1,172 @@
+/* Custom TypeDoc Theme for @conciergus/chat */
+
+:root {
+  --color-primary: #3B82F6;
+  --color-primary-dark: #1E40AF;
+  --color-secondary: #6366F1;
+  --color-accent: #F59E0B;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+}
+
+/* Header and navigation styling */
+.tsd-page-title {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tsd-navigation a {
+  color: var(--color-gray-700);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.tsd-navigation a:hover {
+  color: var(--color-primary);
+}
+
+.tsd-navigation .current {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Code highlighting */
+code {
+  background-color: var(--color-gray-100);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875em;
+}
+
+.tsd-signature {
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.tsd-signature-type {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+/* Documentation sections */
+.tsd-comment {
+  margin: 1rem 0;
+  line-height: 1.6;
+}
+
+.tsd-comment p {
+  margin-bottom: 1rem;
+}
+
+.tsd-comment h1,
+.tsd-comment h2,
+.tsd-comment h3,
+.tsd-comment h4 {
+  color: var(--color-gray-800);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Parameters and return types */
+.tsd-parameters {
+  margin: 1rem 0;
+}
+
+.tsd-parameter {
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-gray-200);
+}
+
+.tsd-parameter-name {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Type badges */
+.tsd-kind-icon {
+  margin-right: 0.5rem;
+}
+
+.tsd-kind-class .tsd-kind-icon::before {
+  background-color: var(--color-primary);
+}
+
+.tsd-kind-interface .tsd-kind-icon::before {
+  background-color: var(--color-secondary);
+}
+
+.tsd-kind-function .tsd-kind-icon::before {
+  background-color: var(--color-success);
+}
+
+.tsd-kind-type-alias .tsd-kind-icon::before {
+  background-color: var(--color-accent);
+}
+
+/* Search styling */
+.tsd-search input {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tsd-search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .tsd-page-title {
+    font-size: 1.5rem;
+  }
+  
+  .tsd-signature {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-gray-50: #111827;
+    --color-gray-100: #1F2937;
+    --color-gray-200: #374151;
+    --color-gray-300: #4B5563;
+    --color-gray-700: #D1D5DB;
+    --color-gray-800: #F9FAFB;
+    --color-gray-900: #FFFFFF;
+  }
+  
+  body {
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-800);
+  }
+  
+  .tsd-signature {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-200);
+  }
+} 

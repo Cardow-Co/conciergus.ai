@@ -1,0 +1,39 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "exactOptionalPropertyTypes": false,
+    "verbatimModuleSyntax": false,
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "allowUnreachableCode": true,
+    "allowUnusedLabels": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx", 
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/test/**",
+    "**/tests/**",
+    "**/__tests__/**",
+    "**/mocks/**",
+    "**/setup.ts",
+    "src/test/**"
+  ],
+  "include": [
+    "src/index.ts",
+    "src/components.ts",
+    "src/hooks.ts",
+    "src/gateway.ts",
+    "src/enterprise.ts",
+    "src/components/**/*.ts",
+    "src/components/**/*.tsx",
+    "src/hooks/**/*.ts",
+    "src/context/**/*.ts",
+    "src/types/**/*.ts"
+  ]
+} 

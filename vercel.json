@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "name": "conciergus-chat-docs",
+  "buildCommand": "pnpm run docs:build",
+  "outputDirectory": "docs",
+  "framework": null,
+  "public": true,
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/storybook/(.*)",
+      "dest": "/storybook/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "docs/**": {
+      "includeFiles": "docs/**"
+    }
+  }
+} 

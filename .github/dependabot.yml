@@ -1,0 +1,65 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "conciergus/maintainers"
+    assignees:
+      - "conciergus/maintainers"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      ai-sdk:
+        patterns:
+          - "@ai-sdk/*"
+          - "ai"
+        update-types:
+          - "minor"
+          - "patch"
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
+      opentelemetry:
+        patterns:
+          - "@opentelemetry/*"
+        update-types:
+          - "minor"
+          - "patch"
+      development:
+        patterns:
+          - "@types/*"
+          - "@rollup/*"
+          - "@testing-library/*"
+          - "@typescript-eslint/*"
+          - "eslint*"
+          - "prettier"
+          - "jest"
+          - "typescript"
+          - "rollup"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "conciergus/maintainers"
+    commit-message:
+      prefix: "ci"
+      include: "scope" 
