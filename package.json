@@ -102,12 +102,10 @@
     "docs:dev": "storybook dev -p 6006",
     "docs:serve": "npx serve docs",
     "docs:preview": "pnpm run docs:build && pnpm run docs:serve",
-
     "dev:helper": "node scripts/dev-helper.js",
     "dev:quick-check": "node scripts/dev-helper.js quick-check",
     "dev:clean-install": "node scripts/dev-helper.js clean-install",
-    "dev:full-test": "node scripts/dev-helper.js full-test",
-
+    "dev:full-test": "node scripts/dev-helper.js full-test"
   },
   "peerDependencies": {
     "react": "^19.1.0",
