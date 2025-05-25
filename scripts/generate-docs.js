@@ -56,7 +56,8 @@ function validateOpenAPISpec() {
   try {
     const specPath = path.resolve(config.openapi.source);
     if (!fs.existsSync(specPath)) {
-      throw new Error(`OpenAPI spec file not found: ${specPath}`);
+      log(`OpenAPI spec file not found: ${specPath} - skipping OpenAPI docs generation`, 'warn');
+      return null;
     }
     
     const specContent = fs.readFileSync(specPath, 'utf8');
@@ -88,6 +89,11 @@ function convertYamlToJson() {
   
   try {
     const specPath = path.resolve(config.openapi.source);
+    if (!fs.existsSync(specPath)) {
+      log('OpenAPI spec file not found - skipping YAML to JSON conversion', 'warn');
+      return;
+    }
+    
     const spec = yaml.load(fs.readFileSync(specPath, 'utf8'));
     
     const outputPath = path.resolve(config.openapi.output.json);
@@ -491,10 +497,14 @@ async function main() {
         
       case 'all':
       default:
-        validateOpenAPISpec();
-        convertYamlToJson();
-        generateSwaggerUI();
-        generateRedocDocs();
+        const spec = validateOpenAPISpec();
+        if (spec) {
+          convertYamlToJson();
+          generateSwaggerUI();
+          generateRedocDocs();
+        } else {
+          log('Skipping OpenAPI documentation generation (no spec file)', 'warn');
+        }
         generateTypeDocs();
         generateChangelogDocs();
         generateIndexPage();
