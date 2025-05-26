@@ -123,7 +123,7 @@ export function useCachedChat(
   // References for tracking
   const responseTimesRef = useRef<number[]>([]);
   const cacheLatenciesRef = useRef<number[]>([]);
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Initialize cache manager if not provided
   useEffect(() => {

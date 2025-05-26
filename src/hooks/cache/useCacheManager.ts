@@ -62,8 +62,8 @@ export function useCacheManager(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const healthCheckTimerRef = useRef<NodeJS.Timeout>();
-  const initializationRef = useRef<Promise<boolean>>();
+  const healthCheckTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const initializationRef = useRef<Promise<boolean> | undefined>(undefined);
 
   /**
    * Initialize cache manager

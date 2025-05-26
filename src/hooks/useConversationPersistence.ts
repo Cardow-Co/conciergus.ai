@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMultiAgentContext } from '../context/MultiAgentContext';
+import { useMultiAgent } from '../context/MultiAgentContext';
 import {
   conversationAPI,
   ConversationAPI,
@@ -113,7 +113,7 @@ export interface ConversationPersistenceActions {
 export function useConversationPersistence(
   initialConfig: ConversationPersistenceConfig
 ): [ConversationPersistenceState, ConversationPersistenceActions] {
-  const multiAgentContext = useMultiAgentContext();
+  const multiAgentContext = useMultiAgent();
   const [config, setConfig] = useState<ConversationPersistenceConfig>({
     autoSave: true,
     autoSaveInterval: 5000, // 5 seconds
@@ -125,7 +125,7 @@ export function useConversationPersistence(
   });
 
   // API instance ref
-  const apiRef = useRef<ConversationAPI>();
+  const apiRef = useRef<ConversationAPI | undefined>(undefined);
 
   // State management
   const [state, setState] = useState<ConversationPersistenceState>({
@@ -256,7 +256,7 @@ export function useConversationPersistence(
         try {
           const conversationRequest: CreateConversationRequest = {
             ...request,
-            agentId: multiAgentContext.currentAgent?.id,
+            agentId: multiAgentContext.getCurrentAgent()?.id,
           };
 
           const result =
@@ -288,7 +288,7 @@ export function useConversationPersistence(
           return null;
         }
       },
-      [multiAgentContext.currentAgent?.id]
+      [multiAgentContext.getCurrentAgent()?.id]
     ),
 
     loadConversation: useCallback(async (conversationId) => {
@@ -373,7 +373,7 @@ export function useConversationPersistence(
         try {
           const result = await apiRef.current.updateConversation(
             conversationId,
-            { status: 'deleted' }
+            { status: 'archived' }
           );
 
           if (result.success) {
@@ -409,7 +409,7 @@ export function useConversationPersistence(
             const result = await apiRef.current.persistEnhancedMessage(
               state.currentConversationId,
               message,
-              multiAgentContext.currentAgent?.id
+              multiAgentContext.getCurrentAgent()?.id
             );
 
             setState((prev) => ({
@@ -436,7 +436,7 @@ export function useConversationPersistence(
       },
       [
         state.currentConversationId,
-        multiAgentContext.currentAgent?.id,
+        multiAgentContext.getCurrentAgent()?.id,
         config.persistenceStrategy,
       ]
     ),
@@ -452,18 +452,17 @@ export function useConversationPersistence(
             (msg) => ({
               role: msg.role,
               content: msg.content,
-              agentId: multiAgentContext.currentAgent?.id,
+              agentId: multiAgentContext.getCurrentAgent()?.id,
               metadata: {
                 ...msg.metadata,
-                generativeUI: msg.generativeUI,
-                toolResults: msg.toolResults,
-                tokens: msg.tokens,
-                model: msg.model,
-                performance: {
-                  responseTime: msg.responseTime,
-                  generationTime: msg.generationTime,
-                  processingTime: msg.processingTime,
-                },
+                model: msg.metadata?.model,
+                tokens: msg.metadata?.tokens,
+                cost: msg.metadata?.cost,
+                responseTime: msg.metadata?.responseTime,
+                reasoning: msg.metadata?.reasoning,
+                sources: msg.metadata?.sources,
+                data: msg.data,
+                toolInvocations: msg.toolInvocations,
               },
             })
           );
@@ -489,7 +488,7 @@ export function useConversationPersistence(
           return [];
         }
       },
-      [state.currentConversationId, multiAgentContext.currentAgent?.id]
+      [state.currentConversationId, multiAgentContext.getCurrentAgent()?.id]
     ),
 
     loadMessages: useCallback(async (conversationId, pagination) => {
@@ -605,7 +604,7 @@ export function useConversationPersistence(
       try {
         await apiRef.current.syncWithMultiAgentContext(
           state.currentConversationId,
-          multiAgentContext.state
+          multiAgentContext.getSharedContext()
         );
 
         setState((prev) => ({

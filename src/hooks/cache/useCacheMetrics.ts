@@ -86,7 +86,7 @@ export function useCacheMetrics(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const refreshTimerRef = useRef<NodeJS.Timeout>();
+  const refreshTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const cacheManagerRef = useRef<CacheManager | null>(
     externalCacheManager || null
   );

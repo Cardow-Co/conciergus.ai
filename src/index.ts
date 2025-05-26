@@ -53,18 +53,7 @@ export {
 } from './security';
 
 // Middleware Infrastructure (New)
-export {
-  ConciergusMiddlewarePipeline,
-  createSecureMiddlewarePipeline,
-  createEnhancedRateLimitingMiddleware,
-  createEndpointRateLimitMiddleware,
-  createAdaptiveRateLimitMiddleware,
-  standardApiRateLimit,
-  strictRateLimit,
-  lenientRateLimit,
-  createSecurityAwareMiddleware,
-  createBasicRateLimitMiddleware,
-} from './middleware';
+export * from './middleware';
 
 // Enterprise Examples (lightweight demo)
 export * from './examples/EnterpriseExamples';

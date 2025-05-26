@@ -1,232 +1,194 @@
-# Basic Chat Example
+# 🤖 Conciergus AI Gateway Demo
 
-A simple example demonstrating how to integrate Conciergus Chat into a React application using Vite.
+A comprehensive example demonstrating [Vercel AI SDK 5 Alpha](https://ai-sdk.dev/) with the AI Gateway integration using the Conciergus Chat widget.
+
+## ✨ What's New: AI Gateway Integration
+
+This example showcases the latest **Vercel AI Gateway** features:
+
+- 🔄 **Smart Fallbacks** - Automatic model switching when one fails
+- 💰 **Cost Optimization** - Intelligent model selection based on cost and capability
+- 📊 **Real-time Telemetry** - Monitor performance, costs, and usage
+- 🎯 **98+ Models** - Access to models from OpenAI, Anthropic, xAI, Google, and more
+- 🛡️ **Enterprise Ready** - Built-in authentication, rate limiting, and error handling
 
 ## 🚀 Quick Start
 
-1. **Clone and navigate to the example:**
-   ```bash
-   git clone https://github.com/Cardow-Co/conciergus.ai.git
-   cd chat/examples/basic-chat
-   ```
+### Option 1: Vercel Development (Recommended)
 
-2. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
+The AI Gateway uses OIDC tokens for authentication. No API keys needed!
 
-3. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your API keys
-   ```
+```bash
+# Install dependencies
+pnpm install
 
-4. **Start the development server:**
-   ```bash
-   pnpm dev
-   ```
+# Start with Vercel's development server (handles authentication automatically)
+npx vc dev
 
-5. **Open your browser:** Navigate to `http://localhost:3000`
+# Or if you have Vercel CLI installed globally
+vc dev
+```
 
-## 🔑 Required Setup
+Your app will be available at the URL provided by `vc dev`.
 
-### API Keys
+### Option 2: Standard Development
 
-You'll need an API key from one of the supported providers:
+If you prefer using the standard Vite dev server, you'll need to set up authentication manually:
 
-- **Anthropic Claude**: Get your key from [console.anthropic.com](https://console.anthropic.com)
-- **OpenAI**: Get your key from [platform.openai.com](https://platform.openai.com/api-keys)
+```bash
+# Pull environment variables from Vercel (if you have a linked project)
+npx vc env pull
 
-Add your key to the `.env` file:
+# Or copy the example environment file
+cp .env.example .env
 
-```env
-VITE_ANTHROPIC_API_KEY=your_anthropic_key_here
+# Start the development server
+pnpm dev
+```
+
+## 🔧 AI Gateway Configuration
+
+The example is pre-configured with optimal settings:
+
+```typescript
+const gatewayConfig = {
+  defaultModel: 'anthropic/claude-3-7-sonnet-20250219', // Latest Claude model
+  fallbackChain: 'premium', // High-quality model fallbacks
+  costOptimization: true,   // Automatic cost optimization
+  telemetryEnabled: true,   // Real-time monitoring
+  retryAttempts: 3,         // Automatic retries
+  timeout: 30000,           // 30 second timeout
+};
+```
+
+### Available Models
+
+The AI Gateway provides access to **98+ models** across providers:
+
+**Anthropic Models:**
+- `anthropic/claude-4-opus-20250514` - Most powerful reasoning
+- `anthropic/claude-3-7-sonnet-20250219` - Latest balanced model
+- `anthropic/claude-3-5-haiku-20241022` - Fastest model
+
+**OpenAI Models:**
+- `openai/gpt-4o` - Multimodal flagship
+- `openai/gpt-4o-mini` - Cost-effective
+- `openai/o1-preview` - Advanced reasoning
+
+**xAI Models:**
+- `xai/grok-3-beta` - Flagship reasoning model
+- `xai/grok-3-mini-beta` - Lightweight reasoning
+
+**And many more!** See the [AI SDK Model Library](https://ai-sdk.dev/model-library) for the complete list.
+
+### Fallback Chains
+
+Pre-configured fallback chains for different use cases:
+
+- **`premium`** - Best quality models with fallbacks
+- **`reasoning`** - Optimized for complex reasoning tasks
+- **`vision`** - For multimodal tasks with images  
+- **`budget`** - Cost-optimized model selection
+
+## 🎯 Key Features Demonstrated
+
+### 1. **Smart Model Switching**
+The widget automatically switches between models if one fails, ensuring reliability.
+
+### 2. **Real-time Telemetry**
+Monitor usage, costs, and performance metrics in real-time within the chat interface.
+
+### 3. **Cost Optimization**
+The system automatically selects the most cost-effective model for each request based on requirements.
+
+### 4. **Enhanced Error Handling**
+Comprehensive error handling with automatic retries and graceful fallbacks.
+
+### 5. **Model Selection UI**
+Built-in model switcher that allows users to select from available models.
+
+## 🛠️ Development
+
+### Project Structure
+
+```
+examples/basic-chat/
+├── src/
+│   ├── App.tsx          # Main demo component with AI Gateway integration
+│   ├── App.css          # Styling for the gateway demo
+│   └── main.tsx         # React app entry point
+├── .env.example         # Environment configuration template
+├── package.json         # Dependencies including AI SDK 5 alpha
+└── README.md           # This file
 ```
 
 ### Environment Variables
 
-```env
-# Required - Your AI provider API key
-VITE_ANTHROPIC_API_KEY=your_anthropic_key_here
+The AI Gateway uses OIDC tokens for authentication, but you can customize behavior:
 
-# Optional - Additional configuration
+```bash
+# AI Gateway Configuration (Optional)
+VITE_GATEWAY_DEFAULT_MODEL=anthropic/claude-3-7-sonnet-20250219
+VITE_GATEWAY_FALLBACK_CHAIN=premium
+VITE_GATEWAY_COST_OPTIMIZATION=true
+VITE_GATEWAY_TELEMETRY_ENABLED=true
+
+# Chat Widget Configuration (Optional)
 VITE_CHAT_THEME=light
 VITE_CHAT_POSITION=bottom-right
-VITE_CHAT_MODEL=claude-3-sonnet-20240229
+VITE_DEBUG=false
 ```
 
-## 📋 What This Example Shows
+### Building for Production
 
-This example demonstrates:
+```bash
+# Build the application
+pnpm build
 
-- ✅ **Basic Integration** - How to add the chat widget to a React app
-- ✅ **Configuration** - Setting up API keys, models, and themes
-- ✅ **Event Handling** - Responding to messages and errors
-- ✅ **Customization** - Basic UI customization options
-- ✅ **Best Practices** - Proper TypeScript usage and error handling
-
-## 🔧 Key Features Demonstrated
-
-### 1. Simple Integration
-
-```tsx
-import { ConciergusChatWidget } from '@conciergus/chat';
-
-function App() {
-  return (
-    <div>
-      <ConciergusChatWidget
-        apiKey={import.meta.env.VITE_ANTHROPIC_API_KEY}
-        provider="anthropic"
-        model="claude-3-sonnet-20240229"
-        position="bottom-right"
-        theme="light"
-      />
-    </div>
-  );
-}
+# Preview the build
+pnpm preview
 ```
 
-### 2. Event Handling
+## 🔄 How It Works
 
-```tsx
-<ConciergusChatWidget
-  onMessage={(message) => {
-    console.log('New message:', message);
-  }}
-  onError={(error) => {
-    console.error('Chat error:', error);
-  }}
-/>
-```
+### Authentication Flow
 
-### 3. Initial Messages
+1. **Development**: Use `vc dev` for automatic OIDC token management
+2. **Production**: Deploy to Vercel for automatic authentication
+3. **Fallback**: Manual API keys for other environments
 
-```tsx
-<ConciergusChatWidget
-  initialMessages={[
-    {
-      role: 'assistant',
-      content: 'Hello! How can I help you today?'
-    }
-  ]}
-/>
-```
+### Request Flow
 
-## 🎨 Customization Options
+1. User sends a message
+2. AI Gateway receives the request
+3. Routes to the configured model (e.g., Claude 3.7 Sonnet)
+4. If the model fails, automatically tries fallback models
+5. Returns the response with telemetry data
+6. Updates cost tracking and performance metrics
 
-The chat widget supports various customization options:
+### Cost Optimization
 
-- **Position**: `bottom-right`, `bottom-left`, `top-right`, `top-left`
-- **Theme**: `light`, `dark`, `auto`
-- **Size**: `small`, `medium`, `large`
-- **Colors**: Custom color schemes
-- **Messages**: Custom initial messages
+The system intelligently selects models based on:
+- Request complexity
+- Required capabilities (vision, reasoning, etc.)
+- Cost constraints
+- Performance requirements
 
-## 📁 Project Structure
+## 📚 Learn More
 
-```
-basic-chat/
-├── src/
-│   ├── App.tsx          # Main application component
-│   ├── App.css          # Application styles
-│   ├── main.tsx         # React entry point
-│   └── index.css        # Global styles
-├── public/
-│   └── vite.svg         # Vite favicon
-├── package.json         # Dependencies and scripts
-├── vite.config.ts       # Vite configuration
-├── tsconfig.json        # TypeScript configuration
-├── .env.example         # Environment variables template
-└── README.md           # This file
-```
+- [Vercel AI SDK 5 Documentation](https://ai-sdk.dev/)
+- [AI Gateway Model Library](https://ai-sdk.dev/model-library)
+- [Conciergus Chat Documentation](../../docs/)
+- [AI Gateway Setup Guide](../../docs/AI_GATEWAY_SETUP.md)
 
-## 🧪 Available Scripts
+## 🤝 Contributing
 
-- **`pnpm dev`** - Start development server
-- **`pnpm build`** - Build for production
-- **`pnpm preview`** - Preview production build
-- **`pnpm test`** - Run tests
-- **`pnpm lint`** - Lint code
-- **`pnpm lint:fix`** - Fix linting issues
-
-## 🛠️ Development Tips
-
-### 1. **Testing the Widget**
-
-Try these example prompts:
-- "Hello! How does this chat widget work?"
-- "What can you help me with?"
-- "Tell me a joke about programming"
-- "Explain how to integrate this into my app"
-
-### 2. **Debugging**
-
-Enable debug mode in your `.env`:
-```env
-VITE_DEBUG=true
-VITE_LOG_LEVEL=debug
-```
-
-### 3. **Customizing Appearance**
-
-Modify the CSS in `App.css` to match your brand:
-```css
-/* Custom chat widget styling */
-.conciergus-chat-widget {
-  --primary-color: #your-brand-color;
-  --background-color: #your-background;
-}
-```
-
-## 🔒 Security Notes
-
-- Never commit API keys to version control
-- Use environment variables for sensitive data
-- Consider using a backend proxy for production applications
-- Implement rate limiting and usage monitoring
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-**"API key not found" error:**
-- Verify your `.env` file is properly configured
-- Ensure the environment variable name matches your code
-- Check that your API key is valid and has proper permissions
-
-**Widget not appearing:**
-- Check browser console for JavaScript errors
-- Verify all dependencies are installed correctly
-- Ensure the widget component is properly imported
-
-**Build errors:**
-- Update to the latest version of `@conciergus/chat`
-- Check that all peer dependencies are installed
-- Verify TypeScript configuration is compatible
-
-### Getting Help
-
-1. Check the [main documentation](../../docs/)
-2. Review other [examples](../)
-3. Open an issue on [GitHub](https://github.com/Cardow-Co/conciergus.ai/issues)
-4. Join our [Discord community](https://discord.gg/conciergus)
-
-## 📚 Next Steps
-
-After getting this basic example working:
-
-1. **Explore Advanced Features**: Check out the [voice-chat](../voice-chat/) example
-2. **Framework Integration**: Try the [nextjs](../nextjs/) example
-3. **Enterprise Features**: Explore [ai-gateway](../ai-gateway/) and [telemetry](../telemetry/)
-4. **Custom Components**: Learn about [custom-components](../custom-components/)
+This example is part of the Conciergus AI project. See the main [Contributing Guide](../../CONTRIBUTING.md) for details on how to contribute.
 
 ## 📄 License
 
-This example is part of the Conciergus Chat project and is licensed under the MIT License.
+This example is part of the Conciergus project and is licensed under the MIT License. See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Happy coding with Conciergus Chat!** 🚀
-
-Need help? Join our community or check out the documentation! 
+**Ready to build with AI Gateway?** Start with `vc dev` and explore the power of 98+ AI models with automatic fallbacks and cost optimization! 🚀 

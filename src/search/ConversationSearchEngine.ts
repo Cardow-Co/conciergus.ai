@@ -351,30 +351,31 @@ export class ConversationSearchEngine {
     // Build the database query
     const filter: ConversationFilter = {
       search: query.query,
-      userIds: query.userIds,
-      fromDate: query.dateFrom,
-      toDate: query.dateTo,
+      userId: query.userIds?.[0], // Take first user ID since filter expects a single userId
+      dateRange: query.dateFrom || query.dateTo ? {
+        start: query.dateFrom,
+        end: query.dateTo,
+      } : undefined,
       hasAttachments: query.hasAttachments,
     };
 
     // Search using the data access layer
     const searchResult = await this.dataAccess.searchConversations({
-      filter,
+      query: query.query,
+      filters: filter,
       pagination: {
         page: Math.floor((query.offset || 0) / (query.limit || 20)) + 1,
         pageSize: query.limit || 20,
-        sortBy: query.sortBy === 'date' ? 'updated_at' : 'relevance',
-        sortOrder: query.sortOrder || 'desc',
       },
-      includeMessages: true,
-      includeAttachments: true,
+      includeMessageContent: true,
     });
 
     // Transform results and add search-specific features
     const results: SearchResult[] = [];
 
-    if (searchResult.conversations) {
-      for (const conversation of searchResult.conversations) {
+    if (searchResult.data) {
+      for (const searchResultItem of searchResult.data) {
+        const conversation = searchResultItem.conversation;
         // Find matching messages in this conversation
         const matchingMessages = await this.findMatchingMessages(
           conversation.id,
@@ -390,7 +391,7 @@ export class ConversationSearchEngine {
             contentType: message.metadata?.contentType || 'text',
             authorId:
               message.role === 'user'
-                ? message.userId || 'unknown'
+                ? conversation.userId || 'unknown'
                 : message.agentId || 'assistant',
             timestamp: new Date(message.createdAt),
             relevanceScore: this.calculateRelevanceScore(message, query),
@@ -399,7 +400,7 @@ export class ConversationSearchEngine {
               message.content,
               query.query
             ),
-            attachments: message.attachments?.map((a) => a.id),
+            attachments: message.metadata?.ui?.attachments?.map((a) => a.id),
           };
 
           // Add highlighting
@@ -463,7 +464,7 @@ export class ConversationSearchEngine {
         query.offset || 0,
         (query.offset || 0) + (query.limit || 20)
       ),
-      totalCount: searchResult.totalCount || results.length,
+      totalCount: searchResult.metadata.totalResults || results.length,
       searchTime: Date.now() - (Date.now() - 100), // Placeholder
       query,
       suggestions,
@@ -477,7 +478,7 @@ export class ConversationSearchEngine {
   ): Promise<ConversationMessage[]> {
     // This would use the database's full-text search capabilities
     // For now, we'll simulate finding matching messages
-    const messages = await this.dataAccess.getConversationMessages(
+    const messages = await this.dataAccess.getMessages(
       conversationId,
       {
         page: 1,
@@ -486,7 +487,7 @@ export class ConversationSearchEngine {
     );
 
     return (
-      messages.messages?.filter((message) => {
+      messages.data?.filter((message) => {
         // Basic text matching
         const content = message.content.toLowerCase();
         const searchTerms = query.query.toLowerCase().split(' ');

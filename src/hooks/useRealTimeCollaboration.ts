@@ -497,6 +497,15 @@ export function useSimpleRealTimeCollaboration(
     websocketUrl,
     autoConnect: true,
     enableAutoReconnect: true,
+    enableOfflineQueue: true,
+    enablePresence: true,
+    enableTypingIndicators: true,
+    enableReadReceipts: true,
+    enableConflictResolution: true,
+    typingTimeout: 3000,
+    presenceUpdateInterval: 30000,
+    offlineQueueSize: 100,
+    compressionThreshold: 1024,
   });
 
   return {

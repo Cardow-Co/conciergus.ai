@@ -17,15 +17,13 @@ export {
   PluginUtilsImpl,
 } from './PluginManager';
 
-// Example plugins
-export {
-  default as MessageTransformPlugin,
-  createMessageTransformPlugin,
-} from './examples/MessageTransformPlugin';
-export {
-  default as AnalyticsPlugin,
-  createAnalyticsPlugin,
-} from './examples/AnalyticsPlugin';
+// Example plugins with explicit imports
+import MessageTransformPlugin, { createMessageTransformPlugin } from './examples/MessageTransformPlugin';
+import AnalyticsPlugin, { createAnalyticsPlugin } from './examples/AnalyticsPlugin';
+
+// Re-export plugins
+export { MessageTransformPlugin, createMessageTransformPlugin };
+export { AnalyticsPlugin, createAnalyticsPlugin };
 
 // Plugin configuration types
 export type { MessageTransformConfig } from './examples/MessageTransformPlugin';

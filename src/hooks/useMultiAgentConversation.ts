@@ -264,7 +264,7 @@ export function useMultiAgentConversation(
 
         // Generate response using current agent
         const startTime = Date.now();
-        const response = await chat.generateResponse(message);
+        await chat.append(message);
         const responseTime = Date.now() - startTime;
 
         // Update response metrics
@@ -272,8 +272,6 @@ export function useMultiAgentConversation(
           ...prev,
           averageResponseTime: (prev.averageResponseTime + responseTime) / 2,
         }));
-
-        return response;
       } finally {
         setIsResponding(false);
       }
