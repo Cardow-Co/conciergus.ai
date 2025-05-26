@@ -1,6 +1,6 @@
 {
   "name": "@conciergus/chat",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A comprehensive React library for AI-powered chat interfaces with advanced features including multi-agent conversations, voice integration, and enterprise-grade security built on AI SDK 5 Alpha.",
   "keywords": [
     "react",
