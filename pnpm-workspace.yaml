@@ -1,5 +1,10 @@
 packages:
-  - "."
-  - "examples/*"
-  - "packages/*"
-  - "templates/*" 
+  - .
+  - examples/*
+  - packages/*
+  - templates/*
+overrides:
+  undici@>=4.5.0 <5.28.5: '>=5.28.5'
+  esbuild@<=0.24.2: '>=0.25.0'
+  prismjs@<1.30.0: '>=1.30.0'
+  undici@<5.29.0: '>=5.29.0'
