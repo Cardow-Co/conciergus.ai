@@ -147,7 +147,7 @@
     "ioredis": "^5.4.1",
     "react-markdown": "^10.1.0",
     "react-textarea-autosize": "^8.0.0",
-    "redis": "^4.7.0",
+    "redis": "^5.1.1",
     "rehype-sanitize": "^6.0.0",
     "zustand": "^5.0.2"
   },
