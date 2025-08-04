@@ -120,7 +120,7 @@
     }
   },
   "dependencies": {
-    "@ai-sdk/openai": "2.0.0-canary.20",
+    "@ai-sdk/openai": "2.0.1",
     "@ai-sdk/provider-utils": "canary",
     "@ai-sdk/react": "canary",
     "@babel/runtime": "^7.0.0",
